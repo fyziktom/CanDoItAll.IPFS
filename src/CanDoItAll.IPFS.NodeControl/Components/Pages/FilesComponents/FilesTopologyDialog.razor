@@ -1,0 +1,35 @@
+@namespace CanDoItAll.IPFS.NodeControl.Components.Pages.FilesComponents
+
+@if (Snapshot is not null)
+{
+    <Dialog IsOpen="true"
+            Eyebrow="Topology"
+            Title="@Title"
+            Subtitle="@Snapshot.RequestedPath"
+            Size="@(ModalSize.Wide)"
+            OnClose="OnClose">
+        <ChildContent>
+            <div class="node-workbench-shell">
+                <CanvasWorkbench Surface="@Surface"
+                                 StateChanged="OnStateChanged" />
+            </div>
+        </ChildContent>
+    </Dialog>
+}
+
+@code {
+    [Parameter]
+    public NodeFileSnapshot? Snapshot { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "File topology";
+
+    [Parameter]
+    public CanvasWorkbenchSurface Surface { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<string> OnStateChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+}

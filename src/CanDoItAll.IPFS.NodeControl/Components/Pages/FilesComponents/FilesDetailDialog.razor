@@ -1,0 +1,98 @@
+@namespace CanDoItAll.IPFS.NodeControl.Components.Pages.FilesComponents
+
+@if (Snapshot is not null)
+{
+    <Dialog IsOpen="true"
+            Eyebrow="File details"
+            Title="@Snapshot.DisplayName"
+            Subtitle="@Snapshot.Path"
+            Size="@(ModalSize.Wide)"
+            Class="fx-detail-dialog"
+            OnClose="OnClose">
+        <ChildContent>
+            <Stack Gap="1rem">
+                <SummaryTiles>
+                    <SummaryTile Label="Name"
+                                 Value="@FilesUiText.Shorten(Snapshot.DisplayName, 24)"
+                                 HelperText="@Snapshot.DisplayName"
+                                 Tone="info" />
+                    <SummaryTile Label="Type"
+                                 Value="@Snapshot.TypeLabel"
+                                 HelperText="Resolved from the preview snapshot."
+                                 Tone="neutral" />
+                    <SummaryTile Label="Size"
+                                 Value="@FilesUiText.FormatSize(Snapshot.Size)"
+                                 HelperText="Reported by the explorer preview API."
+                                 Tone="warning" />
+                    <SummaryTile Label="Path"
+                                 Value="@FilesUiText.Shorten(Snapshot.Path, 24)"
+                                 HelperText="@Snapshot.Path"
+                                 Tone="success" />
+                </SummaryTiles>
+
+                <FormField Text="CID">
+                    <End>
+                        <Button Text="Copy"
+                                Size="@(ButtonSize.Small)"
+                                Variant="@(Variant.Text)"
+                                ButtonStyle="@(ButtonStyle.Light)"
+                                Click="HandleCopyAsync" />
+                    </End>
+
+                    <ChildContent>
+                        <TextBox Value="@Snapshot.Target"
+                                 ReadOnly="true" />
+                    </ChildContent>
+                </FormField>
+
+                <InlineActions>
+                    @if (!string.IsNullOrWhiteSpace(OpenUrl))
+                    {
+                        <Button Text="Open in tab"
+                                ButtonStyle="@(ButtonStyle.Light)"
+                                Href="@OpenUrl"
+                                Target="_blank"
+                                Rel="noopener noreferrer" />
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(DownloadUrl))
+                    {
+                        <Button Text="Download"
+                                ButtonStyle="@(ButtonStyle.Success)"
+                                Href="@DownloadUrl" />
+                    }
+                </InlineActions>
+
+                @if (!string.IsNullOrWhiteSpace(OpenUrl))
+                {
+                    <iframe class="fx-detail-frame"
+                            src="@OpenUrl"
+                            title="@($"Details preview of {Snapshot.DisplayName}")">
+                    </iframe>
+                }
+            </Stack>
+        </ChildContent>
+    </Dialog>
+}
+
+@code {
+    [Parameter]
+    public NodePreviewSnapshot? Snapshot { get; set; }
+
+    [Parameter]
+    public string? OpenUrl { get; set; }
+
+    [Parameter]
+    public string? DownloadUrl { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnCopyTarget { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private Task HandleCopyAsync()
+        => Snapshot is null
+            ? Task.CompletedTask
+            : OnCopyTarget.InvokeAsync(Snapshot.Target);
+}

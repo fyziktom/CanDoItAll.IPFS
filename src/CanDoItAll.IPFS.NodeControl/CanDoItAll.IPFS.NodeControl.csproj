@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net10.0-windows</TargetFrameworks>
+    <AssemblyName>CanDoItAll.IPFS.NodeControl</AssemblyName>
+    <RootNamespace>CanDoItAll.IPFS.NodeControl</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.4.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.15.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.0" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.15.0" />
+    <ProjectReference Include="..\CanDoItAll.IPFS.Engine\CanDoItAll.IPFS.Engine.csproj" />
+    <ProjectReference Include="..\CanDoItAll.IPFS.Client\CanDoItAll.IPFS.Client.csproj" />
+    <ProjectReference Include="$(CanDoItAllRepoRoot)src\CanDoItAll.Components\CanDoItAll.Components.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\vendor\material-symbols\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <TargetPath>vendor\material-symbols\%(Filename)%(Extension)</TargetPath>
+    </Content>
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' != 'net10.0-windows'">
+    <Compile Remove="Services\ControlAppTrayHostedService.cs" />
+    <Compile Remove="DesktopHost\WindowsTrayHostedService.cs" />
+  </ItemGroup>
+
+  <Target Name="RemoveNodeHostExecutablePublishArtifacts" BeforeTargets="_HandleFileConflictsForPublish">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
+                             Condition="'%(ResolvedFileToPublish.RelativePath)' == 'CanDoItAll.IPFS.Engine.runtimeconfig.json'
+                             or '%(ResolvedFileToPublish.RelativePath)' == 'CanDoItAll.IPFS.Engine.deps.json'" />
+    </ItemGroup>
+  </Target>
+
+</Project>

@@ -1,0 +1,305 @@
+@page "/"
+@page "/dashboard"
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject NodeDashboardService NodeDashboardService
+@inject NodeSessionState NodeSessionState
+@inject NodeOperatorService NodeOperatorService
+@inject NotificationService NotificationService
+@inject ILogger<Home> Logger
+
+<PageTitle>Dashboard</PageTitle>
+
+<PageScaffold MaxWidthClass="max-w-[1440px]">
+    <Header>
+        <Stack Orientation="Orientation.Horizontal" Gap="0.75rem" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+            <HelpPopover AriaLabel="Show dashboard help"
+                         Heading="Dashboard"
+                         Body="Use the dashboard for a quick node-health scan, then jump into task-specific routes from the left rail."
+                         Tip="Route notes and capability guidance moved out of the default viewport to keep the landing state tighter.">
+                <PanelContent>
+                    <div class="space-y-3">
+                        <div class="space-y-2">
+                            <strong>Route map</strong>
+                            <p>Files and Content cover upload, preview, DAG, IPNS, and key work. Network and Settings cover connectivity, maintenance, and diagnostics.</p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <strong>Capabilities</strong>
+                            <div class="node-list">
+                                @foreach (var item in capabilityNotes)
+                                {
+                                    <SelectionListItem Title="@item.Feature"
+                                                       Eyebrow="Capability"
+                                                       Meta="@item.Status"
+                                                       Summary="@item.Detail">
+                                        <Status>
+                                            <StatusBadge Text="@item.Status" Tone="@item.Tone" />
+                                        </Status>
+                                    </SelectionListItem>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </PanelContent>
+            </HelpPopover>
+            <Button Text="Refresh" Click="LoadAsync" />
+            <Button Text="Settings"
+                    ButtonStyle="@(ButtonStyle.Light)"
+                    Variant="@(Variant.Outlined)"
+                    Click="OpenSettings" />
+        </Stack>
+    </Header>
+    <Lead>
+        @if (isLoading && summary is null)
+        {
+            <LoadingState Eyebrow="Dashboard" Title="Loading node summary" Description="The app is connecting to the selected endpoint and collecting the first health snapshot." />
+        }
+        else if (summary is not null)
+        {
+            <SummaryTiles>
+                <SummaryTile Label="Peer ID" Value="@Shorten(summary.PeerId, 18)" Tone="info" />
+                <SummaryTile Label="Connected peers" Value="@summary.ConnectedPeerCount.ToString("n0")" Tone="success" />
+                <SummaryTile Label="Repo size" Value="@FormatBytes(summary.RepoSizeBytes)" Tone="warning" />
+                <SummaryTile Label="Traffic" Value="@($"{FormatBytes(summary.TotalInBytes)} in / {FormatBytes(summary.TotalOutBytes)} out")" Tone="neutral" />
+            </SummaryTiles>
+        }
+    </Lead>
+
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <Alert AlertStyle="@(AlertStyle.Warning)">@errorMessage</Alert>
+        }
+
+        @if (summary is not null)
+        {
+            <Tabs SelectedIndex="@dashboardTabIndex"
+                  SelectedIndexChanged="HandleDashboardTabChanged"
+                  Variant="@(TabsVariant.ModalCompact)"
+                  AriaLabel="Dashboard workspace tabs">
+                <TabItems>
+                    <TabsItem Text="Overview">
+                        <div class="node-page-grid">
+                            <SectionCard Title="Node identity" Description="Peer, protocol, and addressability snapshot.">
+                                <HeaderActions>
+                                    <HelpPopover AriaLabel="Show advertised addresses"
+                                                 Heading="Advertised addresses"
+                                                 Body="The node reports these addresses for inbound or peer-discovery workflows."
+                                                 Tip="Long address lists stay tucked away so the dashboard can remain compact.">
+                                        <PanelContent>
+                                            @if (summary.Addresses.Count == 0)
+                                            {
+                                                <p>No advertised addresses were returned for the current session.</p>
+                                            }
+                                            else
+                                            {
+                                                <div class="node-chip-flow">
+                                                    @foreach (var address in summary.Addresses)
+                                                    {
+                                                        <StatusBadge Text="@address" Tone="neutral" />
+                                                    }
+                                                </div>
+                                            }
+                                        </PanelContent>
+                                    </HelpPopover>
+                                </HeaderActions>
+                                <ChildContent>
+                                    <div class="space-y-4">
+                                        <SummaryTiles>
+                                            <SummaryTile Label="Peer ID"
+                                                         Value="@Shorten(summary.PeerId, 24)"
+                                                         Tone="info" />
+                                            <SummaryTile Label="Agent"
+                                                         Value="@summary.AgentVersion"
+                                                         Tone="success" />
+                                            <SummaryTile Label="Protocol"
+                                                         Value="@summary.ProtocolVersion"
+                                                         Tone="warning" />
+                                            <SummaryTile Label="API version"
+                                                         Value="@summary.ApiVersion"
+                                                         Tone="neutral" />
+                                        </SummaryTiles>
+
+                                        <Cluster Gap="LayoutGap.Small">
+                                            <StatusBadge Text="@($"{summary.Addresses.Count} advertised address{(summary.Addresses.Count == 1 ? string.Empty : "es")}")" Tone="neutral" />
+                                        </Cluster>
+                                    </div>
+                                </ChildContent>
+                            </SectionCard>
+
+                            <SectionCard Title="Repository health" Description="Storage and transfer posture for the current node.">
+                                <SummaryTiles>
+                                    <SummaryTile Label="Repo path"
+                                                 Value="@Shorten(summary.RepoPath, 24)"
+                                                 Tone="neutral" />
+                                    <SummaryTile Label="Repo version"
+                                                 Value="@summary.RepoVersion"
+                                                 Tone="info" />
+                                    <SummaryTile Label="Objects"
+                                                 Value="@summary.RepoObjectCount.ToString("n0")"
+                                                 Tone="success" />
+                                    <SummaryTile Label="Storage limit"
+                                                 Value="@FormatBytes(summary.RepoStorageMaxBytes)"
+                                                 Tone="warning" />
+                                    <SummaryTile Label="Inbound rate"
+                                                 Value="@($"{summary.RateIn:n2} B/s")"
+                                                 Tone="info" />
+                                    <SummaryTile Label="Outbound rate"
+                                                 Value="@($"{summary.RateOut:n2} B/s")"
+                                                 Tone="neutral" />
+                                </SummaryTiles>
+                            </SectionCard>
+                        </div>
+                    </TabsItem>
+
+                    <TabsItem Text="Route notes">
+                        <div class="node-page-grid">
+                            <SectionCard Title="Capability map" Description="Routes currently surfaced by this app build.">
+                                <div class="node-list">
+                                    @foreach (var item in capabilityNotes)
+                                    {
+                                        <SelectionListItem Title="@item.Feature"
+                                                           Eyebrow="Capability"
+                                                           Meta="@item.Status"
+                                                           Summary="@item.Detail">
+                                            <Status>
+                                                <StatusBadge Text="@item.Status" Tone="@item.Tone" />
+                                            </Status>
+                                        </SelectionListItem>
+                                    }
+                                </div>
+                            </SectionCard>
+
+                            <SectionCard Title="Workflow map" Description="Use these route groupings to decide where to go next.">
+                                <div class="node-page-grid">
+                                    <Card>
+                                        <div class="space-y-3">
+                                            <TextBlock TextStyle="@(TextStyle.Subtitle1)" Value="File and content workflows" />
+                                            <TextBlock TextStyle="@(TextStyle.Body2)" Value="Use Files for upload, preview, and pin state. Use Content for blocks, DAG JSON, IPNS, and key management." />
+                                            <StatusBadge Text="Files + Content" Tone="success" />
+                                        </div>
+                                    </Card>
+
+                                    <Card>
+                                        <div class="space-y-3">
+                                            <TextBlock TextStyle="@(TextStyle.Subtitle1)" Value="Network and maintenance" />
+                                            <TextBlock TextStyle="@(TextStyle.Body2)" Value="Use Network for peers, filters, bootstrap, DHT, and PubSub. Use Settings for endpoint persistence, config changes, repo maintenance, and shutdown." />
+                                            <StatusBadge Text="Network + Settings" Tone="info" />
+                                        </div>
+                                    </Card>
+                                </div>
+                            </SectionCard>
+                        </div>
+                    </TabsItem>
+                </TabItems>
+            </Tabs>
+        }
+    </ChildContent>
+</PageScaffold>
+
+@code {
+    private IReadOnlyList<NodeCapabilityNote> capabilityNotes = [];
+    private NodeSummarySnapshot? summary;
+    private int dashboardTabIndex;
+    private bool isLoading;
+    private bool hasStartedInitialLoad;
+    private string? errorMessage;
+
+    protected override void OnInitialized()
+    {
+        capabilityNotes = NodeOperatorService.GetCapabilityNotes();
+        NodeSessionState.Changed += HandleNodeSessionChanged;
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !NodeSessionState.IsHydrated || hasStartedInitialLoad)
+        {
+            return Task.CompletedTask;
+        }
+
+        hasStartedInitialLoad = true;
+        return LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        Logger.LogInformation("Dashboard summary load started for target {BaseUrl}.", NodeSessionState.CurrentSettings.BaseUrl);
+
+        try
+        {
+            summary = await NodeDashboardService.GetSummaryAsync(CancellationToken.None);
+            Logger.LogInformation("Dashboard summary load completed for peer {PeerId}.", summary.PeerId);
+        }
+        catch (Exception ex)
+        {
+            summary = null;
+            errorMessage = ex.Message;
+            Logger.LogWarning(ex, "Dashboard summary load failed for target {BaseUrl}.", NodeSessionState.CurrentSettings.BaseUrl);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Dashboard load failed",
+                Detail = ex.Message
+            });
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void OpenSettings()
+        => NavigationManager.NavigateTo("/settings");
+
+    private Task HandleDashboardTabChanged(int value)
+    {
+        dashboardTabIndex = value;
+        return Task.CompletedTask;
+    }
+
+    private void HandleNodeSessionChanged()
+    {
+        if (!NodeSessionState.IsHydrated)
+        {
+            return;
+        }
+
+        hasStartedInitialLoad = true;
+        _ = InvokeAsync(LoadAsync);
+    }
+
+    public void Dispose()
+    {
+        NodeSessionState.Changed -= HandleNodeSessionChanged;
+    }
+
+    private static string FormatBytes(ulong bytes)
+    {
+        const double scale = 1024d;
+        var value = (double)bytes;
+        var units = new[] { "B", "KB", "MB", "GB", "TB" };
+        var unit = 0;
+        while (value >= scale && unit < units.Length - 1)
+        {
+            value /= scale;
+            unit++;
+        }
+
+        return $"{value:n2} {units[unit]}";
+    }
+
+    private static string Shorten(string value, int limit)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length <= limit)
+        {
+            return value;
+        }
+
+        return $"{value[..(limit - 3)]}...";
+    }
+}

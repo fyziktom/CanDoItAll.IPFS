@@ -1,0 +1,184 @@
+@page "/files"
+@page "/files/explorer"
+@implements IDisposable
+@using CanDoItAll.IPFS.NodeControl.Components.Pages.FilesComponents
+@inject IJSRuntime JSRuntime
+@inject ILogger<Files> Logger
+@inject NodeSessionState NodeSessionState
+@inject NodeOperatorService NodeOperatorService
+@inject NodeCanvasSurfaceFactory NodeCanvasSurfaceFactory
+@inject NotificationService NotificationService
+
+<PageTitle>File Explorer</PageTitle>
+
+<PageScaffold MaxWidthClass="max-w-[1850px]">
+    <Header>
+        <PageHeader Eyebrow="Files"
+                    Title="File explorer"
+                    Description="Browse pinned roots from the current node.">
+            <Actions>
+                <Button Text="Back / Up"
+                        ButtonStyle="@(ButtonStyle.Light)"
+                        Click="HandleBackOrUpAsync"
+                        Disabled="@(isBusy || !CanGoBackOrUp)" />
+
+                <Button Text="@(showPreviewPane ? "Hide preview" : "Show preview")"
+                        ButtonStyle="@(ButtonStyle.Light)"
+                        Variant="@(Variant.Outlined)"
+                        Click="TogglePreviewPane"
+                        Disabled="@isBusy" />
+
+                @if (CanDownloadSelection)
+                {
+                    <Button Text="Download"
+                            ButtonStyle="@(ButtonStyle.Success)"
+                            Href="@BuildFileContentUrl(previewSnapshot!.Target, previewSnapshot.DisplayName, download: true)" />
+                }
+                else
+                {
+                    <Button Text="Download"
+                            ButtonStyle="@(ButtonStyle.Success)"
+                            Disabled="true" />
+                }
+
+                <Button Text="Upload"
+                        Click="OpenUploadModal"
+                        Disabled="@isBusy" />
+
+                <HelpPopover AriaLabel="Show explorer help"
+                             Heading="File explorer"
+                             Body="Single-click to preview a file or folder, double-click to open it, and keep the preview hidden until you need detail."
+                             Tip="The preview rail now defaults closed so the browse surface keeps its width.">
+                    <PanelContent>
+                        <div class="space-y-2">
+                            <p>Pinned roots stay in the main panel. Details, topology, and deep preview actions remain available when you open the preview or detail dialogs.</p>
+                            <p>Use Upload to add files, folders, or text notes without leaving the explorer.</p>
+                        </div>
+                    </PanelContent>
+                </HelpPopover>
+            </Actions>
+        </PageHeader>
+    </Header>
+
+    <Lead>
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <Alert AlertStyle="@(AlertStyle.Warning)">@errorMessage</Alert>
+        }
+
+        <SummaryTiles>
+            <SummaryTile Label="Pinned content"
+                         Value="@pinnedItems.Count.ToString("n0")"
+                         Tone="info" />
+            <SummaryTile Label="Visible items"
+                         Value="@VisibleItems.Count.ToString("n0")"
+                         Tone="success" />
+            <SummaryTile Label="Current path"
+                         Value="@Shorten(currentFolderSnapshot?.NormalizedPath ?? "Pinned roots", 24)"
+                         Tone="neutral" />
+        </SummaryTiles>
+    </Lead>
+
+    <ChildContent>
+        <Row Gap="1rem">
+            <Column Size="12" SizeXL="@(showPreviewPane ? 8 : 12)">
+                <FilesExplorerPanel Title="@GetLocationTitle()"
+                                    Description="@GetLocationDescription()"
+                                    CurrentFolderSnapshot="@currentFolderSnapshot"
+                                    VisibleItems="@VisibleItems"
+                                    PinnedItems="@pinnedItems"
+                                    IsBusy="@isBusy"
+                                    IsLoading="@IsInitialExplorerLoad"
+                                    CardSizeXL="@(showPreviewPane ? 4 : 3)"
+                                    IsItemSelected="IsItemSelected"
+                                    OnOpenPinnedRoots="OpenPinnedRootsAsync"
+                                    OnOpenBreadcrumb="HandleBreadcrumbOpenAsync"
+                                    OnSelectItem="SelectItemAsync"
+                                    OnOpenItem="HandleItemDoubleClickAsync"
+                                    OnOpenContextMenu="HandleContextMenuRequestedAsync"
+                                    OnCopyTarget="CopyTextAsync" />
+            </Column>
+
+            @if (showPreviewPane)
+            {
+                <Column Size="12" SizeXL="4">
+                    <FilesPreviewPanel PreviewSnapshot="@previewSnapshot"
+                                       IsBusy="@isBusy"
+                                       IsLoading="@IsInitialExplorerLoad"
+                                       IsVirtualPreview="@IsVirtualPreview"
+                                       IsPreviewPinned="@IsPreviewPinned"
+                                       CanOpenFolder="@(previewSnapshot?.IsDirectory == true && !IsCurrentPath(previewSnapshot.Path))"
+                                       InspectPath="@inspectPath"
+                                       InspectPathChanged="HandleInspectPathChanged"
+                                       OpenUrl="@(previewSnapshot is not null && !previewSnapshot.IsDirectory ? BuildFileContentUrl(previewSnapshot.Target, previewSnapshot.DisplayName, download: false) : null)"
+                                       DownloadUrl="@(CanDownloadSelection ? BuildFileContentUrl(previewSnapshot!.Target, previewSnapshot.DisplayName, download: true) : null)"
+                                       OnCopyTarget="CopyTextAsync"
+                                       OnShare="OpenShareFromPreview"
+                                       OnOpenFolder="OpenPreviewFolderAsync"
+                                       OnOpenDetails="OpenSelectedFileDetailsAsync"
+                                       OnTogglePin="TogglePreviewPinAsync"
+                                       OnOpenTopology="OpenTopologyAsync"
+                                       OnInspect="InspectAsync"
+                                       OnCollapse="CollapsePreviewPane" />
+                </Column>
+            }
+        </Row>
+    </ChildContent>
+</PageScaffold>
+
+<FilesItemContextMenu IsOpen="@showContextMenu"
+                      Item="@contextMenuItem"
+                      Left="@contextMenuLeft"
+                      Top="@contextMenuTop"
+                      CanShare="@(contextMenuItem is not null && CanShareItem(contextMenuItem))"
+                      CanUnpin="@(contextMenuItem is not null && CanUnpinItem(contextMenuItem))"
+                      OnShare="HandleContextMenuShareAsync"
+                      OnUnpin="HandleContextMenuUnpinAsync"
+                      OnClose="CloseItemContextMenu" />
+
+<RemotePinShareModal TargetItem="shareTargetItem" OnClosed="HandleShareModalClosed" />
+
+<FilesUnpinDialog TargetItem="@unpinTargetItem"
+                  IsBusy="@isBusy"
+                  DeleteImmediately="@unpinDeleteImmediately"
+                  DeleteImmediatelyChanged="HandleUnpinDeleteImmediatelyChanged"
+                  OnCopyTarget="CopyTextAsync"
+                  OnClose="CloseUnpinModal"
+                  OnConfirm="ConfirmUnpinAsync" />
+
+<FilesUploadDialog IsOpen="@showUploadModal"
+                   IsBusy="@isBusy"
+                   ShowCreateTextPanel="@showCreateTextPanel"
+                   UploadEndpoint="@BrowserUploadEndpoint"
+                   UploadPin="@uploadPin"
+                   UploadPinChanged="HandleUploadPinChanged"
+                   UploadWrap="@uploadWrap"
+                   UploadWrapChanged="HandleUploadWrapChanged"
+                   TextFileName="@textFileName"
+                   TextFileNameChanged="HandleTextFileNameChanged"
+                   TextContent="@textContent"
+                   TextContentChanged="HandleTextContentChanged"
+                   TextPin="@textPin"
+                   TextPinChanged="HandleTextPinChanged"
+                   TextWrap="@textWrap"
+                   TextWrapChanged="HandleTextWrapChanged"
+                   OnShowFileUpload="ShowFileUploadPanel"
+                   OnShowCreateText="ShowCreateTextUploadPanel"
+                   OnChooseFiles="ChooseFilesAsync"
+                   OnChooseFolder="ChooseFolderAsync"
+                   OnUploaded="HandleDropZoneUploadCompletedAsync"
+                   OnUploadFailed="HandleDropZoneUploadFailedAsync"
+                   OnCreateText="CreateTextAsync"
+                   OnClose="CloseUploadModal" />
+
+<FilesDetailDialog Snapshot="@detailSnapshot"
+                   OpenUrl="@(detailSnapshot is not null ? BuildFileContentUrl(detailSnapshot.Target, detailSnapshot.DisplayName, download: false) : null)"
+                   DownloadUrl="@(detailSnapshot is not null ? BuildFileContentUrl(detailSnapshot.Target, detailSnapshot.DisplayName, download: true) : null)"
+                   OnCopyTarget="CopyTextAsync"
+                   OnClose="CloseDetailModal" />
+
+<FilesTopologyDialog Snapshot="@topologySnapshot"
+                     Title="@GetTopologyTitle()"
+                     Surface="@fileSurface"
+                     OnStateChanged="HandleWorkbenchStateChanged"
+                     OnClose="CloseTopologyModal" />

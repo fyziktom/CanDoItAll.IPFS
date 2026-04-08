@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <CanDoItAllRepoRoot Condition="'$(CanDoItAllRepoRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\CanDoItAll\'))</CanDoItAllRepoRoot>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <DefaultItemExcludes>
+      $(DefaultItemExcludes);
+      .artifacts/**;
+      .mcp-state/**;
+      playwright-report/**;
+      test-results/**;
+      TestResults/**;
+      coverage/**;
+      screenshots/**;
+    </DefaultItemExcludes>
+  </PropertyGroup>
+</Project>

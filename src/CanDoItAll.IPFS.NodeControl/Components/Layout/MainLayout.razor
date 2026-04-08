@@ -1,0 +1,248 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
+@inject LocalNodeBootstrapService LocalNodeBootstrapService
+@inject NodeSessionState NodeSessionState
+@inject NodeSettingsBrowserStorage NodeSettingsBrowserStorage
+@inject ServerNodeSettingsStore ServerNodeSettingsStore
+@inject RemotePinRequestStore RemotePinRequestStore
+@inject Microsoft.Extensions.Options.IOptions<NodeConnectionSettings> DefaultNodeSettingsOptions
+@inject ILogger<MainLayout> Logger
+
+<Layout class="app-shell">
+    <Header class="app-shell__header">
+        <div class="app-shell__brand">
+            <div class="app-shell__brand-row">
+                <TextBlock TextStyle="TextStyle.Subtitle1" Value="IPFS Node Control" />
+                <HelpPopover AriaLabel="Show workspace help"
+                             PanelClass="pf-help-popover__panel pf-help-popover__panel--below-start"
+                             Heading="Workspace"
+                             Body="Dashboard, files, content, network, and settings all stay bound to the current node target."
+                             Tip="Use the left rail to change task surfaces without losing the active connection context." />
+            </div>
+        </div>
+
+        <Stack Orientation="Orientation.Horizontal"
+               Wrap="FlexWrap.Wrap"
+               AlignItems="AlignItems.Center"
+               JustifyContent="JustifyContent.End"
+               Gap="0.75rem"
+               class="app-shell__target">
+            <div class="app-shell__target-pill">
+                <span class="app-shell__target-label">Target</span>
+                <strong>@NodeSessionState.CurrentSettings.Label</strong>
+            </div>
+            <div class="app-shell__target-pill app-shell__target-pill--muted">
+                @NodeSessionState.CurrentSettings.BaseUrl
+            </div>
+        </Stack>
+    </Header>
+
+    <div class="app-shell__frame">
+        <Sidebar Expanded="true" class="app-shell__sidebar">
+            <Stack Gap="0.75rem" class="app-shell__nav-stack">
+                <div class="app-shell__sidebar-copy">
+                    <TextBlock TextStyle="TextStyle.Subtitle1" Value="Workspace" />
+                </div>
+
+                @foreach (var item in GetNavigationItems())
+                {
+                    <Button Text="@item.Label"
+                            ButtonStyle="@(IsActive(item.Route) ? ButtonStyle.Primary : ButtonStyle.Light)"
+                            Variant="@(IsActive(item.Route) ? Variant.Filled : Variant.Text)"
+                            Click="@(() => Navigate(item.Route))"
+                            class="app-shell__nav-button" />
+                }
+            </Stack>
+        </Sidebar>
+
+        <Body class="app-shell__body">
+            <Notification />
+@Body
+        </Body>
+    </div>
+</Layout>
+
+@code {
+    private int pendingRequestCount;
+
+    protected override void OnInitialized()
+    {
+        NodeSessionState.Changed += HandleNodeStateChanged;
+        RemotePinRequestStore.RequestChanged += HandleRemotePinRequestChanged;
+        pendingRequestCount = CountPendingRequests();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        Logger.LogInformation("Main layout first render started bootstrap preparation for target {BaseUrl}.", NodeSessionState.CurrentSettings.BaseUrl);
+
+        NodeConnectionSettings? savedSettings = null;
+        try
+        {
+            savedSettings = await NodeSettingsBrowserStorage.LoadAsync();
+            Logger.LogInformation("Loaded persisted node settings for target {BaseUrl}.", savedSettings?.BaseUrl ?? NodeSessionState.CurrentSettings.BaseUrl);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Falling back to in-memory node settings because browser storage could not be read.");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Settings fallback in use",
+                Detail = ex.Message
+            });
+        }
+
+        NodeSessionState.Hydrate(savedSettings);
+        Logger.LogInformation("Node session hydrated for target {BaseUrl}.", NodeSessionState.CurrentSettings.BaseUrl);
+
+        try
+        {
+            await RecoverStartupTargetAsync();
+            await LocalNodeBootstrapService.EnsureNodeForCurrentTargetAsync();
+            Logger.LogInformation("Bootstrap check completed for target {BaseUrl}.", NodeSessionState.CurrentSettings.BaseUrl);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Local node bootstrap failed for target {BaseUrl}.", NodeSessionState.CurrentSettings.BaseUrl);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Local node startup skipped",
+                Detail = ex.Message
+            });
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void Navigate(string route)
+        => NavigationManager.NavigateTo(route);
+
+    private bool IsActive(string route)
+    {
+        var current = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        if (string.IsNullOrWhiteSpace(current))
+        {
+            current = "dashboard";
+        }
+
+        var normalizedRoute = route.Trim('/').ToLowerInvariant();
+        if (string.Equals(normalizedRoute, "files/explorer", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(current, "files", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return string.Equals(current, normalizedRoute, StringComparison.OrdinalIgnoreCase)
+            || current.StartsWith($"{normalizedRoute}/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void HandleNodeStateChanged()
+        => InvokeAsync(StateHasChanged);
+
+    private void HandleRemotePinRequestChanged(StoredRemotePinRequest request)
+        => _ = InvokeAsync(() =>
+        {
+            pendingRequestCount = CountPendingRequests();
+            if (request.State == RemotePinRequestState.Pending)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Info,
+                    Summary = "Pin request received",
+                    Detail = request.Request.Content.DisplayName
+                });
+            }
+
+            StateHasChanged();
+        });
+
+    private IReadOnlyList<(string Label, string Route)> GetNavigationItems()
+    {
+        var pinRequestsLabel = pendingRequestCount > 0
+            ? $"Pin requests ({pendingRequestCount})"
+            : "Pin requests";
+
+        return new List<(string Label, string Route)>
+        {
+            ("Dashboard", "/dashboard"),
+            ("Files", "/files/explorer"),
+            ("Pin requests", "/pin-requests"),
+            ("Logs", "/logs"),
+            ("Content", "/content"),
+            ("Network", "/network"),
+            ("Settings", "/settings")
+        }.Select(item => item.Label == "Pin requests"
+                ? (pinRequestsLabel, item.Route)
+                : item)
+            .ToList();
+    }
+
+    private int CountPendingRequests()
+        => RemotePinRequestStore.List().Count(request => request.State == RemotePinRequestState.Pending);
+
+    private async Task RecoverStartupTargetAsync()
+    {
+        var preferredSettings = NodeSessionState.CurrentSettings;
+        var resolvedSettings = await LocalNodeBootstrapService.ResolveStartupSettingsAsync(
+            preferredSettings,
+            DefaultNodeSettingsOptions.Value);
+        if (AreEquivalent(preferredSettings, resolvedSettings))
+        {
+            return;
+        }
+
+        Logger.LogWarning(
+            "Recovered startup node target from {PreviousBaseUrl} to {CurrentBaseUrl}.",
+            preferredSettings.BaseUrl,
+            resolvedSettings.BaseUrl);
+
+        NodeSessionState.Update(resolvedSettings);
+        try
+        {
+            ServerNodeSettingsStore.Save(resolvedSettings);
+            await NodeSettingsBrowserStorage.SaveAsync(resolvedSettings);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(
+                ex,
+                "Recovered startup node target to {BaseUrl}, but persisting the repaired settings failed.",
+                resolvedSettings.BaseUrl);
+        }
+
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Warning,
+            Summary = "Recovered local node target",
+            Detail = $"{preferredSettings.BaseUrl} did not answer the startup probe, so the app switched to {resolvedSettings.BaseUrl}."
+        });
+    }
+
+    private static bool AreEquivalent(NodeConnectionSettings left, NodeConnectionSettings right)
+    {
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
+
+        var normalizedLeft = left.Clone().Normalize();
+        var normalizedRight = right.Clone().Normalize();
+        return string.Equals(normalizedLeft.Label, normalizedRight.Label, StringComparison.Ordinal)
+            && string.Equals(normalizedLeft.BaseUrl, normalizedRight.BaseUrl, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(normalizedLeft.ApiPath, normalizedRight.ApiPath, StringComparison.OrdinalIgnoreCase)
+            && normalizedLeft.TimeoutSeconds == normalizedRight.TimeoutSeconds;
+    }
+
+    public void Dispose()
+    {
+        NodeSessionState.Changed -= HandleNodeStateChanged;
+        RemotePinRequestStore.RequestChanged -= HandleRemotePinRequestChanged;
+    }
+}

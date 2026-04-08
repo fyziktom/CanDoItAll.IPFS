@@ -1,0 +1,23 @@
+<div class="rp-toolbar">
+    <div class="rp-filters">
+        @foreach (var filter in Filters)
+        {
+            <button type="button"
+                    class="rp-filter @(filter.IsActive ? "rp-filter--active" : null)"
+                    @onclick="@(() => OnFilterSelected.InvokeAsync(filter.Filter))">
+                <span>@filter.Label</span>
+                <strong>@filter.Count</strong>
+            </button>
+        }
+    </div>
+
+    <p class="rp-toolbar__meta">@VisibleCount item@(VisibleCount == 1 ? string.Empty : "s") shown</p>
+</div>
+
+@code {
+    [Parameter] public required IReadOnlyList<PinRequestFilterSummary> Filters { get; set; }
+
+    [Parameter] public EventCallback<PinRequestFilter> OnFilterSelected { get; set; }
+
+    [Parameter] public int VisibleCount { get; set; }
+}

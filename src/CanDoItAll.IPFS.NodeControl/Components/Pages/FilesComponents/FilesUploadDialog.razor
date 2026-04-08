@@ -1,0 +1,231 @@
+@namespace CanDoItAll.IPFS.NodeControl.Components.Pages.FilesComponents
+
+@if (IsOpen)
+{
+    <Dialog IsOpen="true"
+            Eyebrow="Upload"
+            Title="Add content to the explorer"
+            Subtitle="Upload a file directly or create a small text payload without leaving the page."
+            Size="@(ModalSize.Wide)"
+            OnClose="OnClose">
+        <HeaderActions>
+            <InlineActions>
+                <Button Text="File upload"
+                        ButtonStyle="@(ShowCreateTextPanel ? ButtonStyle.Light : ButtonStyle.Info)"
+                        Click="OnShowFileUpload"
+                        Disabled="@IsBusy" />
+                <Button Text="Create text"
+                        ButtonStyle="@(ShowCreateTextPanel ? ButtonStyle.Info : ButtonStyle.Light)"
+                        Click="OnShowCreateText"
+                        Disabled="@IsBusy" />
+            </InlineActions>
+        </HeaderActions>
+
+        <ChildContent>
+            @if (!ShowCreateTextPanel)
+            {
+                <Stack Gap="1rem">
+                    <FilesBrowserUploadDropzone UploadEndpoint="@UploadEndpoint"
+                                               UploadPin="@UploadPin"
+                                               UploadWrap="@UploadWrap"
+                                               Disabled="@IsBusy"
+                                               OnChooseFiles="OnChooseFiles"
+                                               OnChooseFolder="OnChooseFolder"
+                                               Uploaded="OnUploaded"
+                                               UploadFailed="OnUploadFailed" />
+
+                    <Row Gap="1rem">
+                        <Column Size="12" SizeXL="6">
+                            <Card>
+                                <Stack Orientation="Orientation.Horizontal"
+                                       AlignItems="AlignItems.Start"
+                                       Gap="0.75rem">
+                                    <CheckBox TValue="bool"
+                                              Value="@UploadPin"
+                                              ValueChanged="UploadPinChanged"
+                                              Disabled="@IsBusy" />
+                                    <Stack Gap="0.2rem">
+                                        <TextBlock TextStyle="@(TextStyle.Subtitle2)"
+                                                   Value="Pin after upload" />
+                                        <TextBlock TextStyle="@(TextStyle.Body2)"
+                                                   Value="Keep the uploaded CID available in pinned roots." />
+                                    </Stack>
+                                </Stack>
+                            </Card>
+                        </Column>
+
+                        <Column Size="12" SizeXL="6">
+                            <Card>
+                                <Stack Orientation="Orientation.Horizontal"
+                                       AlignItems="AlignItems.Start"
+                                       Gap="0.75rem">
+                                    <CheckBox TValue="bool"
+                                              Value="@UploadWrap"
+                                              ValueChanged="UploadWrapChanged"
+                                              Disabled="@IsBusy" />
+                                    <Stack Gap="0.2rem">
+                                        <TextBlock TextStyle="@(TextStyle.Subtitle2)"
+                                                   Value="Wrap in directory" />
+                                        <TextBlock TextStyle="@(TextStyle.Body2)"
+                                                   Value="Create a folder root so the explorer can step into the result." />
+                                    </Stack>
+                                </Stack>
+                            </Card>
+                        </Column>
+                    </Row>
+                </Stack>
+            }
+            else
+            {
+                <FormStack>
+                    <FormField Text="File name">
+                        <TextBox Value="@TextFileName"
+                                 ValueChanged="TextFileNameChanged"
+                                 Immediate="true"
+                                 Placeholder="note.txt"
+                                 Disabled="@IsBusy" />
+                    </FormField>
+
+                    <Row Gap="1rem">
+                        <Column Size="12" SizeXL="6">
+                            <Card>
+                                <Stack Orientation="Orientation.Horizontal"
+                                       AlignItems="AlignItems.Start"
+                                       Gap="0.75rem">
+                                    <CheckBox TValue="bool"
+                                              Value="@TextPin"
+                                              ValueChanged="TextPinChanged"
+                                              Disabled="@IsBusy" />
+                                    <Stack Gap="0.2rem">
+                                        <TextBlock TextStyle="@(TextStyle.Subtitle2)"
+                                                   Value="Pin result" />
+                                        <TextBlock TextStyle="@(TextStyle.Body2)"
+                                                   Value="Keep the resulting CID in pinned roots." />
+                                    </Stack>
+                                </Stack>
+                            </Card>
+                        </Column>
+
+                        <Column Size="12" SizeXL="6">
+                            <Card>
+                                <Stack Orientation="Orientation.Horizontal"
+                                       AlignItems="AlignItems.Start"
+                                       Gap="0.75rem">
+                                    <CheckBox TValue="bool"
+                                              Value="@TextWrap"
+                                              ValueChanged="TextWrapChanged"
+                                              Disabled="@IsBusy" />
+                                    <Stack Gap="0.2rem">
+                                        <TextBlock TextStyle="@(TextStyle.Subtitle2)"
+                                                   Value="Wrap in directory" />
+                                        <TextBlock TextStyle="@(TextStyle.Body2)"
+                                                   Value="Return a folder root instead of a raw text file CID." />
+                                    </Stack>
+                                </Stack>
+                            </Card>
+                        </Column>
+                    </Row>
+
+                    <FormField Text="Text content">
+                        <TextArea Value="@TextContent"
+                                  ValueChanged="TextContentChanged"
+                                  Immediate="true"
+                                  Rows="10"
+                                  Placeholder="Write text content to add to IPFS."
+                                  Disabled="@IsBusy" />
+                    </FormField>
+                </FormStack>
+            }
+        </ChildContent>
+
+        <Footer>
+            <InlineActions>
+                <Button Text="Close"
+                        ButtonStyle="@(ButtonStyle.Light)"
+                        Variant="@(Variant.Text)"
+                        Click="OnClose" />
+
+                @if (ShowCreateTextPanel)
+                {
+                    <Button Text="Create text"
+                            Click="OnCreateText"
+                            Disabled="@IsBusy" />
+                }
+            </InlineActions>
+        </Footer>
+    </Dialog>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public bool IsBusy { get; set; }
+
+    [Parameter]
+    public bool ShowCreateTextPanel { get; set; }
+
+    [Parameter, EditorRequired]
+    public string UploadEndpoint { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool UploadPin { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> UploadPinChanged { get; set; }
+
+    [Parameter]
+    public bool UploadWrap { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> UploadWrapChanged { get; set; }
+
+    [Parameter]
+    public string TextFileName { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string?> TextFileNameChanged { get; set; }
+
+    [Parameter]
+    public string TextContent { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string?> TextContentChanged { get; set; }
+
+    [Parameter]
+    public bool TextPin { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> TextPinChanged { get; set; }
+
+    [Parameter]
+    public bool TextWrap { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> TextWrapChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnShowFileUpload { get; set; }
+
+    [Parameter]
+    public EventCallback OnShowCreateText { get; set; }
+
+    [Parameter]
+    public EventCallback OnChooseFiles { get; set; }
+
+    [Parameter]
+    public EventCallback OnChooseFolder { get; set; }
+
+    [Parameter]
+    public EventCallback<NodeFileSnapshot> OnUploaded { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnUploadFailed { get; set; }
+
+    [Parameter]
+    public EventCallback OnCreateText { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+}

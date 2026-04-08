@@ -1,0 +1,429 @@
+@page "/settings"
+@implements IDisposable
+@inject NodeSessionState NodeSessionState
+@inject NodeSettingsBrowserStorage NodeSettingsBrowserStorage
+@inject ServerNodeSettingsStore ServerNodeSettingsStore
+@inject NodeDashboardService NodeDashboardService
+@inject NodeOperatorService NodeOperatorService
+@inject NotificationService NotificationService
+
+<PageTitle>Settings</PageTitle>
+
+<PageScaffold MaxWidthClass="max-w-[1440px]">
+    <Header>
+        <PageHeader Eyebrow="Endpoint and maintenance"
+                    Title="Settings"
+                    Description="Endpoint, config, and maintenance controls.">
+            <Actions>
+                <Button Text="Save settings" Click="SaveSettingsAsync" />
+                <Button Text="Test connection"
+                        ButtonStyle="@(ButtonStyle.Light)"
+                        Variant="@(Variant.Outlined)"
+                        Click="TestConnectionAsync" />
+                <HelpPopover AriaLabel="Show settings help"
+                             Heading="Settings"
+                             Body="Use tabs to switch between endpoint settings, direct config edits, and maintenance actions without keeping all of them on screen at once."
+                             Tip="Settings are stored locally in the browser and applied to the scoped node session.">
+                    <PanelContent>
+                        <div class="space-y-3">
+                            <div class="space-y-2">
+                                <StatusBadge Text="Local storage" Tone="info" />
+                                <p>Saving updates both the live session state and the browser copy loaded during startup.</p>
+                            </div>
+
+                            <div class="space-y-2">
+                                <StatusBadge Text="@maintenanceCapability.Status" Tone="@maintenanceCapability.Tone" />
+                                <p>@maintenanceCapability.Detail</p>
+                                <p>Shutdown terminates the current node process exposed by the API endpoint.</p>
+                            </div>
+                        </div>
+                    </PanelContent>
+                </HelpPopover>
+            </Actions>
+        </PageHeader>
+    </Header>
+
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <Alert AlertStyle="@(AlertStyle.Warning)">@errorMessage</Alert>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(connectionMessage))
+        {
+            <Alert AlertStyle="@(AlertStyle.Info)">@connectionMessage</Alert>
+        }
+
+        <Tabs SelectedIndex="@settingsTabIndex"
+              SelectedIndexChanged="HandleSettingsTabChanged"
+              Variant="@(TabsVariant.ModalCompact)"
+              AriaLabel="Settings tabs">
+            <TabItems>
+                <TabsItem Text="Endpoint">
+                    <FormSection Title="Node endpoint" Description="Change the target node and save the values for future sessions.">
+                        <div class="node-page-grid">
+                            <FormField Text="Label">
+                                <TextBox Value="@editModel.Label"
+                                         ValueChanged="HandleLabelChanged"
+                                         Placeholder="Local IPFS node"
+                                         Disabled="@isBusy" />
+                            </FormField>
+
+                            <FormField Text="Base URL">
+                                <TextBox Value="@editModel.BaseUrl"
+                                         ValueChanged="HandleBaseUrlChanged"
+                                         Placeholder="http://127.0.0.1:5001/"
+                                         Disabled="@isBusy" />
+                            </FormField>
+
+                            <FormField Text="API path">
+                                <TextBox Value="@editModel.ApiPath"
+                                         ValueChanged="HandleApiPathChanged"
+                                         Placeholder="api/v0"
+                                         Disabled="@isBusy" />
+                            </FormField>
+
+                            <FormField Text="Timeout (seconds)">
+                                <Numeric TValue="int"
+                                         Value="@editModel.TimeoutSeconds"
+                                         ValueChanged="HandleTimeoutChanged"
+                                         Min="5"
+                                         Max="600"
+                                         Step="5"
+                                         Disabled="@isBusy" />
+                            </FormField>
+                        </div>
+
+                        <div class="node-action-row">
+                            <Button Text="Reset local copy"
+                                    ButtonStyle="@(ButtonStyle.Light)"
+                                    Variant="@(Variant.Outlined)"
+                                    Click="ResetSettingsAsync"
+                                    Disabled="@isBusy" />
+                        </div>
+                    </FormSection>
+                </TabsItem>
+
+                <TabsItem Text="Config">
+                    <SectionCard Title="Config read and write" Description="Inspect the full config, query individual keys, or set values directly through config routes.">
+                        <div class="space-y-4">
+                            <div class="node-inline-fields">
+                                <FormField Text="Config key">
+                                    <TextBox Value="@configKey"
+                                             ValueChanged="HandleConfigKeyChanged"
+                                             Placeholder="Addresses.API"
+                                             Disabled="@isBusy" />
+                                </FormField>
+
+                                <FormField Text="JSON mode">
+                                    <div class="node-toggle-card">
+                                        <CheckBox TValue="bool" Value="@configTreatValueAsJson" ValueChanged="HandleConfigTreatValueAsJsonChanged" />
+                                        <TextBlock TextStyle="@(TextStyle.Caption)" Value="Parse the value as JSON before writing it back to the node." />
+                                    </div>
+                                </FormField>
+                            </div>
+
+                            <FormField Text="Config value">
+                                <TextArea Value="@configValue"
+                                          ValueChanged="HandleConfigValueChanged"
+                                          Rows="6"
+                                          Placeholder="@configValuePlaceholder"
+                                          Disabled="@isBusy" />
+                            </FormField>
+
+                            <div class="node-action-row">
+                                <Button Text="Get key" Click="LoadConfigValueAsync" Disabled="@isBusy" />
+                                <Button Text="Set key"
+                                        ButtonStyle="@(ButtonStyle.Light)"
+                                        Variant="@(Variant.Outlined)"
+                                        Click="SaveConfigValueAsync"
+                                        Disabled="@isBusy" />
+                                <Button Text="Load full config"
+                                        ButtonStyle="@(ButtonStyle.Light)"
+                                        Variant="@(Variant.Outlined)"
+                                        Click="LoadFullConfigAsync"
+                                        Disabled="@isBusy" />
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(fullConfig))
+                            {
+                                <pre class="node-code-block">@fullConfig</pre>
+                            }
+                        </div>
+                    </SectionCard>
+                </TabsItem>
+
+                <TabsItem Text="Maintenance">
+                    <SectionCard Title="Repo and node maintenance" Description="Operational actions that change node state.">
+                        <div class="space-y-4">
+                            <Cluster Gap="LayoutGap.Small">
+                                <StatusBadge Text="@maintenanceCapability.Status" Tone="@maintenanceCapability.Tone" />
+                                <StatusBadge Text="Shutdown node" Tone="danger" />
+                            </Cluster>
+
+                            <TextBlock TextStyle="@(TextStyle.Body2)" Value="@maintenanceCapability.Detail" />
+
+                            <div class="node-action-row">
+                                <Button Text="Repo version" Click="LoadRepoVersionAsync" Disabled="@isBusy" />
+                                <Button Text="Run repo gc"
+                                        ButtonStyle="@(ButtonStyle.Light)"
+                                        Variant="@(Variant.Outlined)"
+                                        Click="RunRepoGcAsync"
+                                        Disabled="@isBusy" />
+                                <Button Text="Shutdown node"
+                                        ButtonStyle="@(ButtonStyle.Danger)"
+                                        Variant="@(Variant.Text)"
+                                        Click="ShutdownNodeAsync"
+                                        Disabled="@isBusy" />
+                            </div>
+
+                            <Alert AlertStyle="@(AlertStyle.Info)">
+                                Repo verify is intentionally omitted here because the current engine HTTP surface still returns HTTP 501 for verify requests.
+                            </Alert>
+
+                            @if (!string.IsNullOrWhiteSpace(repoVersion))
+                            {
+                                <Alert AlertStyle="@(AlertStyle.Info)">Repository version: @repoVersion</Alert>
+                            }
+                        </div>
+                    </SectionCard>
+                </TabsItem>
+            </TabItems>
+        </Tabs>
+    </ChildContent>
+</PageScaffold>
+
+@code {
+    private static readonly NodeCapabilityNote FallbackMaintenanceCapability = new(
+        "Node maintenance",
+        "Partial",
+        "warning",
+        "Config read/write, repo gc, repo version, and shutdown are supported. Repo verify remains unavailable because the current HTTP surface returns 501.");
+    private NodeConnectionSettings editModel = new();
+    private int settingsTabIndex;
+    private bool isBusy;
+    private bool configTreatValueAsJson;
+    private string? errorMessage;
+    private string? connectionMessage;
+    private string configKey = string.Empty;
+    private string configValue = string.Empty;
+    private string fullConfig = string.Empty;
+    private string repoVersion = string.Empty;
+    private string configValuePlaceholder = "true or { \"API\": \"/ip4/127.0.0.1/tcp/5009\" }";
+    private NodeCapabilityNote maintenanceCapability => NodeOperatorService.GetCapabilityNotes()
+        .FirstOrDefault(note => string.Equals(note.Feature, "Node maintenance", StringComparison.Ordinal))
+        ?? FallbackMaintenanceCapability;
+
+    protected override void OnInitialized()
+    {
+        editModel = NodeSessionState.CurrentSettings;
+        NodeSessionState.Changed += HandleNodeSessionChanged;
+    }
+
+    private Task HandleSettingsTabChanged(int value)
+    {
+        settingsTabIndex = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveSettingsAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            var normalized = editModel.Clone().Normalize();
+            NodeSessionState.Update(normalized);
+            editModel = normalized.Clone();
+            ServerNodeSettingsStore.Save(normalized);
+            await NodeSettingsBrowserStorage.SaveAsync(normalized);
+            connectionMessage = $"Saved settings for {normalized.Label}.";
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Settings saved",
+                Detail = normalized.BaseUrl
+            });
+        });
+    }
+
+    private async Task ResetSettingsAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            editModel = new NodeConnectionSettings();
+            NodeSessionState.Update(editModel);
+            ServerNodeSettingsStore.Clear();
+            await NodeSettingsBrowserStorage.ClearAsync();
+            connectionMessage = "Reset to the default local endpoint and cleared the saved browser copy.";
+        });
+    }
+
+    private async Task TestConnectionAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            var prior = NodeSessionState.CurrentSettings;
+            var candidate = editModel.Clone().Normalize();
+            NodeSessionState.Update(candidate);
+            try
+            {
+                var summary = await NodeDashboardService.GetSummaryAsync(CancellationToken.None);
+                connectionMessage = $"Connected to {summary.AgentVersion} with peer {summary.PeerId}.";
+            }
+            finally
+            {
+                NodeSessionState.Update(prior);
+            }
+        });
+    }
+
+    private async Task LoadFullConfigAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            fullConfig = await NodeOperatorService.GetFullConfigAsync(CancellationToken.None);
+        });
+    }
+
+    private async Task LoadConfigValueAsync()
+    {
+        if (string.IsNullOrWhiteSpace(configKey))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            configValue = await NodeOperatorService.GetConfigValueAsync(configKey.Trim(), CancellationToken.None);
+        });
+    }
+
+    private async Task SaveConfigValueAsync()
+    {
+        if (string.IsNullOrWhiteSpace(configKey))
+        {
+            errorMessage = "A config key is required.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.SetConfigValueAsync(configKey.Trim(), configValue, configTreatValueAsJson, CancellationToken.None);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Config updated",
+                Detail = configKey.Trim()
+            });
+        });
+    }
+
+    private async Task LoadRepoVersionAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            repoVersion = await NodeOperatorService.GetRepositoryVersionAsync(CancellationToken.None);
+        });
+    }
+
+    private async Task RunRepoGcAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.RunRepositoryGcAsync(CancellationToken.None);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Repo GC finished",
+                Detail = "Garbage collection completed on the connected node."
+            });
+        });
+    }
+
+    private async Task ShutdownNodeAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.ShutdownNodeAsync();
+            connectionMessage = "Shutdown request sent to the connected node.";
+        });
+    }
+
+    private async Task RunBusyAsync(Func<Task> operation)
+    {
+        errorMessage = null;
+        isBusy = true;
+
+        try
+        {
+            await operation();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Settings action failed",
+                Detail = ex.Message
+            });
+        }
+        finally
+        {
+            isBusy = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Task HandleLabelChanged(string? value)
+    {
+        editModel.Label = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleBaseUrlChanged(string? value)
+    {
+        editModel.BaseUrl = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleApiPathChanged(string? value)
+    {
+        editModel.ApiPath = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleTimeoutChanged(int value)
+    {
+        editModel.TimeoutSeconds = value;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleConfigKeyChanged(string? value)
+    {
+        configKey = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleConfigValueChanged(string? value)
+    {
+        configValue = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleConfigTreatValueAsJsonChanged(bool value)
+    {
+        configTreatValueAsJson = value;
+        return Task.CompletedTask;
+    }
+
+    private void HandleNodeSessionChanged()
+    {
+        editModel = NodeSessionState.CurrentSettings;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        NodeSessionState.Changed -= HandleNodeSessionChanged;
+    }
+}

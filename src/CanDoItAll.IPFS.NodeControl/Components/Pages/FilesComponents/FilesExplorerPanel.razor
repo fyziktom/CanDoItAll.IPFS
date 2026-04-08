@@ -1,0 +1,119 @@
+@namespace CanDoItAll.IPFS.NodeControl.Components.Pages.FilesComponents
+
+<SectionCard Title="@Title" Description="@Description">
+    <Stack Gap="1rem">
+        <InlineActions>
+            @if (CurrentFolderSnapshot is null)
+            {
+                <Pill Text="Pinned roots" Tone="@(PillTone.Label)" />
+            }
+            else
+            {
+                <Button Text="Pinned roots"
+                        ButtonStyle="@(ButtonStyle.Light)"
+                        Click="OnOpenPinnedRoots"
+                        Disabled="@IsBusy" />
+
+                @foreach (var breadcrumb in CurrentFolderSnapshot.Breadcrumbs)
+                {
+                    var isCurrent = string.Equals(CurrentFolderSnapshot.NormalizedPath, breadcrumb.Path, StringComparison.Ordinal);
+
+                    <Button Text="@breadcrumb.Label"
+                            ButtonStyle="@(isCurrent ? ButtonStyle.Info : ButtonStyle.Light)"
+                            Variant="@(isCurrent ? Variant.Filled : Variant.Text)"
+                            Click="@(() => OnOpenBreadcrumb.InvokeAsync(breadcrumb))"
+                            Disabled="@(IsBusy || isCurrent)" />
+                }
+            }
+        </InlineActions>
+
+        @if (IsLoading)
+        {
+            <LoadingState Eyebrow="Explorer"
+                          Title="Loading pinned content"
+                          Description="The file explorer is hydrating the current pinned inventory." />
+        }
+        else if (VisibleItems.Count == 0)
+        {
+            <EmptyState Eyebrow="Explorer"
+                        Title="@(PinnedItems.Count == 0 ? "No pinned content yet" : "This folder is empty")"
+                        Description="@(PinnedItems.Count == 0
+                            ? "Upload a file or create a wrapped text note to seed the explorer."
+                            : "The selected folder has no direct child items to render as cards.")" />
+        }
+        else
+        {
+            <Row Gap="1rem">
+                @foreach (var item in VisibleItems)
+                {
+                    <Column Size="12" SizeMD="6" SizeXL="@CardSizeXL">
+                        <FilesExplorerItemCard Item="@item"
+                                               IsSelected="@ResolveIsSelected(item)"
+                                               Disabled="@IsBusy"
+                                               IsVirtual="@IsVirtual(item)"
+                                               OnSelect="@(() => OnSelectItem.InvokeAsync(item))"
+                                               OnOpen="@(() => OnOpenItem.InvokeAsync(item))"
+                                               OnOpenContextMenu="@((MouseEventArgs args) => HandleOpenContextMenuAsync(args, item))"
+                                               OnCopyTarget="@OnCopyTarget" />
+                    </Column>
+                }
+            </Row>
+        }
+    </Stack>
+</SectionCard>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Description { get; set; } = string.Empty;
+
+    [Parameter]
+    public NodeExplorerSnapshot? CurrentFolderSnapshot { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<NodeExplorerItemSnapshot> VisibleItems { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<NodeExplorerItemSnapshot> PinnedItems { get; set; } = [];
+
+    [Parameter]
+    public bool IsBusy { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public int CardSizeXL { get; set; } = 4;
+
+    [Parameter]
+    public Func<NodeExplorerItemSnapshot, bool>? IsItemSelected { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenPinnedRoots { get; set; }
+
+    [Parameter]
+    public EventCallback<NodeExplorerBreadcrumb> OnOpenBreadcrumb { get; set; }
+
+    [Parameter]
+    public EventCallback<NodeExplorerItemSnapshot> OnSelectItem { get; set; }
+
+    [Parameter]
+    public EventCallback<NodeExplorerItemSnapshot> OnOpenItem { get; set; }
+
+    [Parameter]
+    public EventCallback<FilesContextMenuRequest> OnOpenContextMenu { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnCopyTarget { get; set; }
+
+    private bool ResolveIsSelected(NodeExplorerItemSnapshot item)
+        => IsItemSelected?.Invoke(item) ?? false;
+
+    private static bool IsVirtual(NodeExplorerItemSnapshot item)
+        => item.Path.StartsWith("/virtual/", StringComparison.OrdinalIgnoreCase);
+
+    private Task HandleOpenContextMenuAsync(MouseEventArgs args, NodeExplorerItemSnapshot item)
+        => OnOpenContextMenu.InvokeAsync(new FilesContextMenuRequest(item, args));
+}

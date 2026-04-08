@@ -1,0 +1,123 @@
+.app-shell {
+    min-height: 100dvh;
+    height: 100dvh;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at top left, rgba(14, 165, 233, 0.16), transparent 24rem),
+        linear-gradient(180deg, #f8fbff 0%, #edf3fb 100%);
+    color: #0f172a;
+}
+
+.app-shell__header {
+    position: relative;
+    z-index: 50;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(18px);
+    padding: 0.55rem 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.app-shell__brand {
+    display: grid;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.app-shell__brand-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.app-shell__target {
+    max-width: 100%;
+}
+
+.app-shell__target-pill {
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 999px;
+    padding: 0.35rem 0.68rem;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    display: inline-flex;
+    gap: 0.45rem;
+    align-items: center;
+    font-size: 0.78rem;
+}
+
+.app-shell__target-pill--muted {
+    color: #475569;
+}
+
+.app-shell__target-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #0369a1;
+}
+
+.app-shell__frame {
+    display: grid;
+    grid-template-columns: 11.5rem minmax(0, 1fr);
+    min-height: 0;
+    height: calc(100dvh - 3.4rem);
+    position: relative;
+    z-index: 0;
+}
+
+.app-shell__sidebar {
+    display: block !important;
+    position: relative;
+    z-index: 0;
+    border-right: 1px solid rgba(148, 163, 184, 0.22);
+    background: rgba(255, 255, 255, 0.8);
+    padding: 0.7rem 0.65rem;
+    backdrop-filter: blur(16px);
+    min-height: 0;
+    overflow: auto;
+}
+
+.app-shell__sidebar-copy {
+    display: grid;
+    gap: 0.1rem;
+    padding: 0.05rem 0.15rem 0.2rem;
+}
+
+.app-shell__nav-button {
+    width: 100%;
+    justify-content: flex-start;
+}
+
+.app-shell__body {
+    position: relative;
+    z-index: 0;
+    padding: 0.65rem 0.75rem;
+    overflow: auto;
+    min-height: 0;
+}
+
+@media (max-width: 900px) {
+    .app-shell__header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .app-shell__frame {
+        grid-template-columns: 1fr;
+    }
+
+    .app-shell__sidebar {
+        border-right: 0;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+    }
+
+    .app-shell__body {
+        padding: 0.7rem;
+    }
+}

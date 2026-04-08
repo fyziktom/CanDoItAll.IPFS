@@ -1,0 +1,122 @@
+@page "/logs"
+@inject ApplicationLogStore ApplicationLogStore
+
+<PageTitle>Logs</PageTitle>
+
+<PageScaffold MaxWidthClass="max-w-[1500px]">
+    <Header>
+        <PageHeader Eyebrow="Diagnostics"
+                    Title="Application logs"
+                    Description="Recent application events.">
+            <Actions>
+                <Button Text="Refresh" Click="RefreshLogs" />
+                <a class="fx-panel-button fx-panel-link--accent" href="@BuildDownloadUrl()">
+                    Download window
+                </a>
+                <HelpPopover AriaLabel="Show log help"
+                             Heading="Application logs"
+                             Body="Use the time window filters to focus the slice, then download the same slice when you need to share it."
+                             Tip="The log stream stays in an internal panel so the route controls remain easy to reach.">
+                    <PanelContent>
+                        <p>Errors and warnings summarize the selected window only. Widen the time range before downloading if the issue happened earlier.</p>
+                    </PanelContent>
+                </HelpPopover>
+            </Actions>
+        </PageHeader>
+    </Header>
+
+    <Lead>
+        <SummaryTiles>
+            <SummaryTile Label="Window" Value="@selectedWindow.Label" Tone="info" />
+            <SummaryTile Label="Entries" Value="@logSlice.Entries.Count.ToString("n0")" Tone="success" />
+            <SummaryTile Label="Errors" Value="@CountEntries("Error", "Critical").ToString("n0")" Tone="danger" />
+            <SummaryTile Label="Warnings" Value="@CountEntries("Warning").ToString("n0")" Tone="warning" />
+        </SummaryTiles>
+    </Lead>
+
+    <ChildContent>
+        <section class="log-shell">
+            <div class="rp-filters">
+                @foreach (var preset in windowPresets)
+                {
+                    <button type="button"
+                            class="rp-filter @(string.Equals(selectedWindow.Key, preset.Key, StringComparison.Ordinal) ? "rp-filter--active" : null)"
+                            @onclick="@(() => SelectWindow(preset))">
+                        <span>@preset.Label</span>
+                    </button>
+                }
+            </div>
+
+            @if (logSlice.Entries.Count == 0)
+            {
+                <div class="rp-empty">
+                    <span class="fx-location__eyebrow">Logs</span>
+                    <h2>No entries in this window</h2>
+                    <p>Refresh the page after reproducing an issue, or widen the time range before downloading the log slice.</p>
+                </div>
+            }
+            else
+            {
+                <div class="log-list">
+                    @foreach (var entry in logSlice.Entries)
+                    {
+                        <article class="log-entry">
+                            <div class="log-entry__meta">
+                                <span class="rp-state rp-state--@GetTone(entry.Level)">@entry.Level</span>
+                                <strong>@entry.Category</strong>
+                                <span>@FormatTimestamp(entry.TimestampUtc)</span>
+                            </div>
+
+                            <p class="log-entry__message">@entry.Message</p>
+
+                            @if (!string.IsNullOrWhiteSpace(entry.Exception))
+                            {
+                                <pre class="node-code-block log-entry__exception">@entry.Exception</pre>
+                            }
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </ChildContent>
+</PageScaffold>
+
+@code {
+    private IReadOnlyList<ApplicationLogWindowPreset> windowPresets = [];
+    private ApplicationLogWindowPreset selectedWindow = new("1h", "Last hour", TimeSpan.FromHours(1));
+    private ApplicationLogSlice logSlice = new("1h", "Last hour", DateTimeOffset.UtcNow, []);
+
+    protected override void OnInitialized()
+    {
+        windowPresets = ApplicationLogStore.GetWindowPresets();
+        selectedWindow = windowPresets.FirstOrDefault(preset => string.Equals(preset.Key, "1h", StringComparison.Ordinal))
+            ?? windowPresets.First();
+        RefreshLogs();
+    }
+
+    private void SelectWindow(ApplicationLogWindowPreset preset)
+    {
+        selectedWindow = preset;
+        RefreshLogs();
+    }
+
+    private void RefreshLogs()
+        => logSlice = ApplicationLogStore.ReadRecent(selectedWindow.Key);
+
+    private string BuildDownloadUrl()
+        => $"/api/logs/download?window={Uri.EscapeDataString(selectedWindow.Key)}";
+
+    private int CountEntries(params string[] levels)
+        => logSlice.Entries.Count(entry => levels.Contains(entry.Level, StringComparer.OrdinalIgnoreCase));
+
+    private static string GetTone(string level)
+        => level switch
+        {
+            "Critical" or "Error" => "error",
+            "Warning" => "warning",
+            _ => "info"
+        };
+
+    private static string FormatTimestamp(DateTimeOffset timestamp)
+        => timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
+}

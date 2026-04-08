@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CanDoItAll.IPFS.Client/CanDoItAll.IPFS.Client.csproj" />
+    <Project Path="src/CanDoItAll.IPFS.Engine/CanDoItAll.IPFS.Engine.csproj" />
+    <Project Path="src/CanDoItAll.IPFS.NodeControl/CanDoItAll.IPFS.NodeControl.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CanDoItAll.IPFS.Tests/CanDoItAll.IPFS.Tests.csproj" />
+  </Folder>
+</Solution>

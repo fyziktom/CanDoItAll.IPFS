@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+    "profiles": {
+      "http": {
+        "commandName": "Project",
+        "dotnetRunMessages": true,
+        "launchBrowser": false,
+        "applicationUrl": "http://127.0.0.1:5093",
+        "environmentVariables": {
+          "ASPNETCORE_ENVIRONMENT": "Development",
+          "IPFS_PASS": "Codex-Validation-2026",
+          "IPFS_PATH": "C:\\repositories\\CanDoItAll.IPFS\\.artifacts\\ipfs-node-data",
+          "NodeSettingsDefaults__BaseUrl": "http://127.0.0.1:5002/"
+        }
+      },
+      "https": {
+        "commandName": "Project",
+        "dotnetRunMessages": true,
+        "launchBrowser": false,
+        "applicationUrl": "https://127.0.0.1:7016;http://127.0.0.1:5093",
+        "environmentVariables": {
+          "ASPNETCORE_ENVIRONMENT": "Development",
+          "IPFS_PASS": "Codex-Validation-2026",
+          "IPFS_PATH": "C:\\repositories\\CanDoItAll.IPFS\\.artifacts\\ipfs-node-data",
+          "NodeSettingsDefaults__BaseUrl": "http://127.0.0.1:5002/"
+        }
+      }
+    }
+  }

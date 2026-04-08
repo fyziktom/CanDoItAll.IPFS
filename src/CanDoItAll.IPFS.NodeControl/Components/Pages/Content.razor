@@ -1,0 +1,832 @@
+@page "/content"
+@implements IDisposable
+@inject NodeSessionState NodeSessionState
+@inject NodeOperatorService NodeOperatorService
+@inject NotificationService NotificationService
+
+<PageTitle>Content</PageTitle>
+
+<PageScaffold MaxWidthClass="max-w-[1500px]">
+    <Header>
+        <PageHeader Eyebrow="Content APIs"
+                    Title="Blocks, DAG, IPNS, and keys"
+                    Description="Lower-level content tools for the current node.">
+            <Actions>
+                <Button Text="Refresh keys" Click="LoadKeysAsync" />
+                <HelpPopover AriaLabel="Show content help"
+                             Heading="Content route"
+                             Body="Open one tool family at a time instead of keeping every block, DAG, IPNS, and key surface visible in a single scroll stack."
+                             Tip="Capability gaps stay available here without taking a permanent rail.">
+                    <PanelContent>
+                        <div class="space-y-3">
+                            <div class="space-y-2">
+                                <StatusBadge Text="Key import/export unavailable" Tone="warning" />
+                                <p>The server only exposes create, list, rename, and remove for keys. PEM import and export remain unavailable until the HTTP API grows those routes.</p>
+                            </div>
+
+                            <div class="space-y-2">
+                                <StatusBadge Text="DHT provide/value store unavailable" Tone="warning" />
+                                <p>The repo currently supports DHT peer and provider lookup, but not value storage or explicit provider announcements.</p>
+                            </div>
+                        </div>
+                    </PanelContent>
+                </HelpPopover>
+            </Actions>
+        </PageHeader>
+    </Header>
+
+    <Lead>
+        <SummaryTiles>
+            <SummaryTile Label="Keys" Value="@keys.Count.ToString("n0")" Tone="info" />
+            <SummaryTile Label="Block CID" Value="@Shorten(blockSnapshot?.Cid ?? "none", 18)" Tone="success" />
+            <SummaryTile Label="Object links" Value="@((objectSnapshot?.Links.Count ?? 0).ToString("n0"))" Tone="warning" />
+            <SummaryTile Label="DAG request" Value="@Shorten(dagSnapshot?.Request ?? "none", 22)" Tone="neutral" />
+        </SummaryTiles>
+    </Lead>
+
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <Alert AlertStyle="@(AlertStyle.Warning)">@errorMessage</Alert>
+        }
+
+        <Tabs SelectedIndex="@contentTabIndex"
+              SelectedIndexChanged="HandleContentTabChanged"
+              Variant="@(TabsVariant.ModalCompact)"
+              AriaLabel="Content tool tabs">
+            <TabItems>
+                <TabsItem Text="Blocks + objects">
+                    <div class="node-page-grid">
+            <SectionCard Title="Block store" Description="Write UTF-8 text as a raw block, inspect a block by CID, or remove it.">
+                <div class="space-y-4">
+                    <FormField Text="Block text">
+                        <TextArea Value="@blockText"
+                                  ValueChanged="HandleBlockTextChanged"
+                                  Rows="6"
+                                  Placeholder="Write text to persist as a raw block."
+                                  Disabled="@isBusy" />
+                    </FormField>
+
+                    <div class="node-inline-fields">
+                        <FormField Text="Inspect CID">
+                            <TextBox Value="@blockCid"
+                                     ValueChanged="HandleBlockCidChanged"
+                                     Placeholder="bafy..."
+                                     Disabled="@isBusy" />
+                        </FormField>
+
+                        <FormField Text="Pin new block">
+                            <div class="node-toggle-card">
+                                <CheckBox TValue="bool" Value="@pinNewBlock" ValueChanged="HandlePinNewBlockChanged" />
+                                <TextBlock TextStyle="@(TextStyle.Caption)" Value="Pin the new block immediately after writing it." />
+                            </div>
+                        </FormField>
+                    </div>
+
+                    <div class="node-action-row">
+                        <Button Text="Put block" Click="PutBlockAsync" Disabled="@isBusy" />
+                        <Button Text="Get block"
+                                ButtonStyle="@(ButtonStyle.Light)"
+                                Variant="@(Variant.Outlined)"
+                                Click="LoadBlockAsync"
+                                Disabled="@isBusy" />
+                        <Button Text="Remove block"
+                                ButtonStyle="@(ButtonStyle.Warning)"
+                                Variant="@(Variant.Text)"
+                                Click="RemoveBlockAsync"
+                                Disabled="@isBusy" />
+                    </div>
+
+                    @if (blockSnapshot is not null)
+                    {
+                        <div class="space-y-3">
+                            <TextBlock TextStyle="@(TextStyle.Subtitle2)" Value="@blockSnapshot.Cid" />
+                            <TextBlock TextStyle="@(TextStyle.Body2)" Value="@($"{blockSnapshot.Size:n0} bytes")" />
+                            <pre class="node-code-block">@blockSnapshot.Utf8Preview</pre>
+                        </div>
+                    }
+                </div>
+            </SectionCard>
+
+            <SectionCard Title="Object tools" Description="Inspect DAG-PB object stats and create empty UnixFS directory roots.">
+                <div class="space-y-4">
+                    <div class="node-inline-fields">
+                        <FormField Text="Object CID">
+                            <TextBox Value="@objectCid"
+                                     ValueChanged="HandleObjectCidChanged"
+                                     Placeholder="bafy..."
+                                     Disabled="@isBusy" />
+                        </FormField>
+
+                        <FormField Text="Empty directory CID">
+                            <TextBox Value="@emptyDirectoryCid"
+                                     ValueChanged="HandleEmptyDirectoryCidChanged"
+                                     Placeholder="Created CID appears here"
+                                     Disabled="true" />
+                        </FormField>
+                    </div>
+
+                    <div class="node-action-row">
+                        <Button Text="Inspect object" Click="LoadObjectAsync" Disabled="@isBusy" />
+                        <Button Text="Create empty directory"
+                                ButtonStyle="@(ButtonStyle.Light)"
+                                Variant="@(Variant.Outlined)"
+                                Click="CreateEmptyDirectoryAsync"
+                                Disabled="@isBusy" />
+                    </div>
+
+                    @if (objectSnapshot is not null)
+                    {
+                        <div class="node-page-grid">
+                            <SummaryTiles>
+                                <SummaryTile Label="Links"
+                                             Value="@objectSnapshot.LinkCount.ToString("n0")"
+                                             HelperText="Direct links in the loaded DAG-PB object."
+                                             Tone="info" />
+                                <SummaryTile Label="Link size"
+                                             Value="@objectSnapshot.LinkSize.ToString("n0")"
+                                             HelperText="Combined link size returned by object/stat."
+                                             Tone="warning" />
+                                <SummaryTile Label="Block size"
+                                             Value="@objectSnapshot.BlockSize.ToString("n0")"
+                                             HelperText="Serialized block size for the object."
+                                             Tone="success" />
+                                <SummaryTile Label="Cumulative"
+                                             Value="@objectSnapshot.CumulativeSize.ToString("n0")"
+                                             HelperText="Total cumulative size including descendants."
+                                             Tone="neutral" />
+                            </SummaryTiles>
+
+                            <div class="space-y-3">
+                                <TextBlock TextStyle="@(TextStyle.Subtitle2)" Value="Data preview" />
+                                <pre class="node-code-block">@objectSnapshot.DataPreview</pre>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </SectionCard>
+                    </div>
+                </TabsItem>
+
+                <TabsItem Text="DAG JSON">
+                    <SectionCard Title="DAG JSON" Description="Inspect any dag/get target and push JSON payloads through dag/put.">
+            <div class="space-y-4">
+                <div class="node-inline-fields">
+                    <FormField Text="DAG request">
+                        <TextBox Value="@dagRequest"
+                                 ValueChanged="HandleDagRequestChanged"
+                                 Placeholder="bafy... or /ipfs/.../path"
+                                 Disabled="@isBusy" />
+                    </FormField>
+
+                    <FormField Text="Pin result">
+                        <div class="node-toggle-card">
+                            <CheckBox TValue="bool" Value="@pinDagWrites" ValueChanged="HandlePinDagWritesChanged" />
+                            <TextBlock TextStyle="@(TextStyle.Caption)" Value="Pin the CID returned by dag/put." />
+                        </div>
+                    </FormField>
+                </div>
+
+                <div class="node-action-row">
+                    <Button Text="Load DAG" Click="LoadDagAsync" Disabled="@isBusy" />
+                    <Button Text="Put DAG JSON"
+                            ButtonStyle="@(ButtonStyle.Light)"
+                            Variant="@(Variant.Outlined)"
+                            Click="PutDagAsync"
+                            Disabled="@isBusy" />
+                </div>
+
+                <FormField Text="DAG JSON input">
+                    <TextArea Value="@dagInputJson"
+                              ValueChanged="HandleDagInputJsonChanged"
+                              Rows="10"
+                              Placeholder="{ &quot;name&quot;: &quot;example&quot; }"
+                              Disabled="@isBusy" />
+                </FormField>
+
+                @if (dagSnapshot is not null)
+                {
+                    <pre class="node-code-block">@dagSnapshot.Json</pre>
+                }
+            </div>
+                    </SectionCard>
+                </TabsItem>
+
+                <TabsItem Text="Naming + keys">
+                    <SectionCard Title="Key inventory" Description="Existing key names available for IPNS publish operations.">
+                        @if (keys.Count == 0)
+                        {
+                            <EmptyState Eyebrow="Keys" Title="No keys loaded" Description="Refresh the page to load the current key list." />
+                        }
+                        else
+                        {
+                            <div class="node-list">
+                                @foreach (var key in keys)
+                                {
+                                    <SelectionListItem Title="@key.Name"
+                                                       Eyebrow="Key"
+                                                       Meta="@key.Id"
+                                                       Summary="Use this name as the publish key for IPNS updates.">
+                                        <Status>
+                                            <StatusBadge Text="Available" Tone="success" />
+                                        </Status>
+                                    </SelectionListItem>
+                                }
+                            </div>
+                        }
+                    </SectionCard>
+
+                    <div class="node-page-grid">
+            <SectionCard Title="IPNS" Description="Resolve existing names and publish new content paths through the selected key.">
+                <div class="space-y-4">
+                    <div class="node-inline-fields">
+                        <FormField Text="Resolve name">
+                            <TextBox Value="@resolveName"
+                                     ValueChanged="HandleResolveNameChanged"
+                                     Placeholder="/ipns/k51... or peer id"
+                                     Disabled="@isBusy" />
+                        </FormField>
+
+                        <FormField Text="Publish path">
+                            <TextBox Value="@publishPath"
+                                     ValueChanged="HandlePublishPathChanged"
+                                     Placeholder="/ipfs/bafy..."
+                                     Disabled="@isBusy" />
+                        </FormField>
+                    </div>
+
+                    <div class="node-inline-fields">
+                        <FormField Text="Publish key">
+                            <TextBox Value="@publishKey"
+                                     ValueChanged="HandlePublishKeyChanged"
+                                     Placeholder="self"
+                                     Disabled="@isBusy" />
+                        </FormField>
+
+                        <FormField Text="Lifetime (hours)">
+                            <Numeric TValue="int"
+                                     Value="@publishLifetimeHours"
+                                     ValueChanged="HandlePublishLifetimeChanged"
+                                     Min="1"
+                                     Max="720"
+                                     Step="1"
+                                     Disabled="@isBusy" />
+                        </FormField>
+                    </div>
+
+                    <div class="node-action-row">
+                        <Button Text="Resolve name" Click="ResolveNameAsync" Disabled="@isBusy" />
+                        <Button Text="Publish name"
+                                ButtonStyle="@(ButtonStyle.Light)"
+                                Variant="@(Variant.Outlined)"
+                                Click="PublishNameAsync"
+                                Disabled="@isBusy" />
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(resolvedPath))
+                    {
+                        <Alert AlertStyle="@(AlertStyle.Info)">@resolvedPath</Alert>
+                    }
+
+                    @if (publishedName is not null)
+                    {
+                        <SummaryTiles>
+                            <SummaryTile Label="Name path"
+                                         Value="@Shorten(publishedName.NamePath, 24)"
+                                         HelperText="@publishedName.NamePath"
+                                         Tone="info" />
+                            <SummaryTile Label="Content path"
+                                         Value="@Shorten(publishedName.ContentPath, 24)"
+                                         HelperText="@publishedName.ContentPath"
+                                         Tone="success" />
+                        </SummaryTiles>
+                    }
+                </div>
+            </SectionCard>
+
+            <SectionCard Title="Key management" Description="Create, rename, and remove named keys exposed by the current node.">
+                <div class="space-y-4">
+                    <div class="node-inline-fields">
+                        <FormField Text="New key name">
+                            <TextBox Value="@newKeyName"
+                                     ValueChanged="HandleNewKeyNameChanged"
+                                     Placeholder="operator-key"
+                                     Disabled="@isBusy" />
+                        </FormField>
+
+                        <FormField Text="Key type">
+                            <DropDown TValue="string"
+                                      Data="@keyTypeOptions"
+                                      TextProperty="@nameof(SelectOption.Text)"
+                                      ValueProperty="@nameof(SelectOption.Value)"
+                                      Value="@newKeyType"
+                                      ValueChanged="HandleNewKeyTypeChanged"
+                                      Placeholder="Key type"
+                                      Disabled="@isBusy" />
+                        </FormField>
+
+                        <FormField Text="Key size">
+                            <Numeric TValue="int"
+                                     Value="@newKeySize"
+                                     ValueChanged="HandleNewKeySizeChanged"
+                                     Min="1024"
+                                     Max="8192"
+                                     Step="256"
+                                     Disabled="@isBusy" />
+                        </FormField>
+                    </div>
+
+                    <div class="node-inline-fields">
+                        <FormField Text="Rename from">
+                            <TextBox Value="@renameKeyFrom"
+                                     ValueChanged="HandleRenameKeyFromChanged"
+                                     Placeholder="old-name"
+                                     Disabled="@isBusy" />
+                        </FormField>
+
+                        <FormField Text="Rename to">
+                            <TextBox Value="@renameKeyTo"
+                                     ValueChanged="HandleRenameKeyToChanged"
+                                     Placeholder="new-name"
+                                     Disabled="@isBusy" />
+                        </FormField>
+
+                        <FormField Text="Remove key">
+                            <TextBox Value="@removeKeyName"
+                                     ValueChanged="HandleRemoveKeyNameChanged"
+                                     Placeholder="key-name"
+                                     Disabled="@isBusy" />
+                        </FormField>
+                    </div>
+
+                    <div class="node-action-row">
+                        <Button Text="Create key" Click="CreateKeyAsync" Disabled="@isBusy" />
+                        <Button Text="Rename key"
+                                ButtonStyle="@(ButtonStyle.Light)"
+                                Variant="@(Variant.Outlined)"
+                                Click="RenameKeyAsync"
+                                Disabled="@isBusy" />
+                        <Button Text="Remove key"
+                                ButtonStyle="@(ButtonStyle.Warning)"
+                                Variant="@(Variant.Text)"
+                                Click="RemoveKeyAsync"
+                                Disabled="@isBusy" />
+                    </div>
+                </div>
+            </SectionCard>
+                    </div>
+                </TabsItem>
+            </TabItems>
+        </Tabs>
+    </ChildContent>
+</PageScaffold>
+
+@code {
+    private static readonly IReadOnlyList<SelectOption> keyTypeOptions =
+    [
+        new("RSA", "rsa"),
+        new("Ed25519", "ed25519")
+    ];
+
+    private IReadOnlyList<NodeKeySnapshot> keys = [];
+    private NodeBlockSnapshot? blockSnapshot;
+    private NodeObjectSnapshot? objectSnapshot;
+    private NodeDagSnapshot? dagSnapshot;
+    private NodeNamePublishSnapshot? publishedName;
+    private int contentTabIndex;
+    private bool isBusy;
+    private bool pinNewBlock;
+    private bool pinDagWrites = true;
+    private string? errorMessage;
+    private string blockText = string.Empty;
+    private string blockCid = string.Empty;
+    private string objectCid = string.Empty;
+    private string emptyDirectoryCid = string.Empty;
+    private string dagRequest = string.Empty;
+    private string dagInputJson = "{\n  \"name\": \"ipfs-engine\"\n}";
+    private string resolveName = string.Empty;
+    private string resolvedPath = string.Empty;
+    private string publishPath = string.Empty;
+    private string publishKey = "self";
+    private int publishLifetimeHours = 24;
+    private string newKeyName = string.Empty;
+    private string newKeyType = "rsa";
+    private int newKeySize = 2048;
+    private string renameKeyFrom = string.Empty;
+    private string renameKeyTo = string.Empty;
+    private string removeKeyName = string.Empty;
+    private bool hasStartedInitialLoad;
+
+    protected override void OnInitialized()
+    {
+        NodeSessionState.Changed += HandleNodeSessionChanged;
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !NodeSessionState.IsHydrated || hasStartedInitialLoad)
+        {
+            return Task.CompletedTask;
+        }
+
+        hasStartedInitialLoad = true;
+        return LoadKeysAsync();
+    }
+
+    private Task HandleContentTabChanged(int value)
+    {
+        contentTabIndex = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task LoadKeysAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            keys = await NodeOperatorService.ListKeysAsync(CancellationToken.None);
+        });
+    }
+
+    private async Task PutBlockAsync()
+    {
+        if (string.IsNullOrWhiteSpace(blockText))
+        {
+            errorMessage = "Block text is required.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            blockCid = await NodeOperatorService.PutBlockTextAsync(blockText, pinNewBlock, CancellationToken.None);
+            blockSnapshot = await NodeOperatorService.GetBlockAsync(blockCid, CancellationToken.None);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Block written",
+                Detail = blockCid
+            });
+        });
+    }
+
+    private async Task LoadBlockAsync()
+    {
+        if (string.IsNullOrWhiteSpace(blockCid))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            blockSnapshot = await NodeOperatorService.GetBlockAsync(blockCid.Trim(), CancellationToken.None);
+        });
+    }
+
+    private async Task RemoveBlockAsync()
+    {
+        if (string.IsNullOrWhiteSpace(blockCid))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.RemoveBlockAsync(blockCid.Trim(), ignoreMissing: true, CancellationToken.None);
+            blockSnapshot = null;
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Block removed",
+                Detail = blockCid.Trim()
+            });
+        });
+    }
+
+    private async Task LoadObjectAsync()
+    {
+        if (string.IsNullOrWhiteSpace(objectCid))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            objectSnapshot = await NodeOperatorService.GetObjectAsync(objectCid.Trim(), CancellationToken.None);
+        });
+    }
+
+    private async Task CreateEmptyDirectoryAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            emptyDirectoryCid = await NodeOperatorService.CreateEmptyDirectoryAsync(CancellationToken.None);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Empty directory created",
+                Detail = emptyDirectoryCid
+            });
+        });
+    }
+
+    private async Task LoadDagAsync()
+    {
+        if (string.IsNullOrWhiteSpace(dagRequest))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            dagSnapshot = await NodeOperatorService.GetDagAsync(dagRequest.Trim(), CancellationToken.None);
+        });
+    }
+
+    private async Task PutDagAsync()
+    {
+        if (string.IsNullOrWhiteSpace(dagInputJson))
+        {
+            errorMessage = "DAG JSON is required.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            var cid = await NodeOperatorService.PutDagJsonAsync(dagInputJson, pinDagWrites, CancellationToken.None);
+            dagRequest = cid;
+            dagSnapshot = await NodeOperatorService.GetDagAsync(cid, CancellationToken.None);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "DAG stored",
+                Detail = cid
+            });
+        });
+    }
+
+    private async Task ResolveNameAsync()
+    {
+        if (string.IsNullOrWhiteSpace(resolveName))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            resolvedPath = await NodeOperatorService.ResolveNameAsync(resolveName.Trim(), recursive: true, CancellationToken.None);
+        });
+    }
+
+    private async Task PublishNameAsync()
+    {
+        if (string.IsNullOrWhiteSpace(publishPath))
+        {
+            errorMessage = "A publish path is required.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            publishedName = await NodeOperatorService.PublishNameAsync(
+                publishPath.Trim(),
+                string.IsNullOrWhiteSpace(publishKey) ? "self" : publishKey.Trim(),
+                TimeSpan.FromHours(publishLifetimeHours),
+                CancellationToken.None);
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "IPNS name published",
+                Detail = publishedName.NamePath
+            });
+        });
+    }
+
+    private async Task CreateKeyAsync()
+    {
+        if (string.IsNullOrWhiteSpace(newKeyName))
+        {
+            errorMessage = "A key name is required.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            var key = await NodeOperatorService.CreateKeyAsync(newKeyName.Trim(), newKeyType, newKeySize, CancellationToken.None);
+            await LoadKeysAsync();
+            publishKey = key.Name;
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Key created",
+                Detail = key.Name
+            });
+        });
+    }
+
+    private async Task RenameKeyAsync()
+    {
+        if (string.IsNullOrWhiteSpace(renameKeyFrom) || string.IsNullOrWhiteSpace(renameKeyTo))
+        {
+            errorMessage = "Both rename fields are required.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.RenameKeyAsync(renameKeyFrom.Trim(), renameKeyTo.Trim(), CancellationToken.None);
+            await LoadKeysAsync();
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Key renamed",
+                Detail = $"{renameKeyFrom} -> {renameKeyTo}"
+            });
+        });
+    }
+
+    private async Task RemoveKeyAsync()
+    {
+        if (string.IsNullOrWhiteSpace(removeKeyName))
+        {
+            errorMessage = "A key name is required.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.RemoveKeyAsync(removeKeyName.Trim(), CancellationToken.None);
+            await LoadKeysAsync();
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Key removed",
+                Detail = removeKeyName.Trim()
+            });
+        });
+    }
+
+    private async Task RunBusyAsync(Func<Task> operation)
+    {
+        errorMessage = null;
+        isBusy = true;
+
+        try
+        {
+            await operation();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Content action failed",
+                Detail = ex.Message
+            });
+        }
+        finally
+        {
+            isBusy = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleNodeSessionChanged()
+    {
+        if (!NodeSessionState.IsHydrated)
+        {
+            return;
+        }
+
+        hasStartedInitialLoad = true;
+        blockSnapshot = null;
+        objectSnapshot = null;
+        dagSnapshot = null;
+        _ = InvokeAsync(LoadKeysAsync);
+    }
+
+    public void Dispose()
+    {
+        NodeSessionState.Changed -= HandleNodeSessionChanged;
+    }
+
+    private Task HandleBlockTextChanged(string? value)
+    {
+        blockText = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleBlockCidChanged(string? value)
+    {
+        blockCid = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleObjectCidChanged(string? value)
+    {
+        objectCid = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleEmptyDirectoryCidChanged(string? value)
+    {
+        emptyDirectoryCid = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleDagRequestChanged(string? value)
+    {
+        dagRequest = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleDagInputJsonChanged(string? value)
+    {
+        dagInputJson = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleResolveNameChanged(string? value)
+    {
+        resolveName = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandlePublishPathChanged(string? value)
+    {
+        publishPath = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandlePublishKeyChanged(string? value)
+    {
+        publishKey = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandlePublishLifetimeChanged(int value)
+    {
+        publishLifetimeHours = value;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleNewKeyNameChanged(string? value)
+    {
+        newKeyName = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleNewKeyTypeChanged(string? value)
+    {
+        newKeyType = string.IsNullOrWhiteSpace(value) ? "rsa" : value;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleNewKeySizeChanged(int value)
+    {
+        newKeySize = value;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleRenameKeyFromChanged(string? value)
+    {
+        renameKeyFrom = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleRenameKeyToChanged(string? value)
+    {
+        renameKeyTo = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleRemoveKeyNameChanged(string? value)
+    {
+        removeKeyName = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandlePinNewBlockChanged(bool value)
+    {
+        pinNewBlock = value;
+        return Task.CompletedTask;
+    }
+
+    private Task HandlePinDagWritesChanged(bool value)
+    {
+        pinDagWrites = value;
+        return Task.CompletedTask;
+    }
+
+    private static string Shorten(string value, int limit)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length <= limit)
+        {
+            return value;
+        }
+
+        return $"{value[..(limit - 3)]}...";
+    }
+
+    private sealed record SelectOption(string Text, string Value);
+}

@@ -1,0 +1,457 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Common.Logging;
+using ICSharpCode.SharpZipLib.Tar;
+using Ipfs.CoreApi;
+using Ipfs.Engine.UnixFileSystem;
+using Ipfs.Registry;
+using ProtoBuf;
+
+namespace Ipfs.Engine.CoreApi
+{
+    internal class FileSystemApi : IFileSystemApi
+    {
+        private static readonly ILog log = LogManager.GetLogger(typeof(FileSystemApi));
+        private readonly IpfsEngine ipfs;
+
+        private static readonly int DefaultLinksPerBlock = 174;
+
+        public FileSystemApi(IpfsEngine ipfs)
+        {
+            this.ipfs = ipfs;
+        }
+
+        public async Task<IFileSystemNode> AddFileAsync(
+            string path,
+            AddFileOptions options = default,
+            CancellationToken cancel = default)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                return await AddAsync(stream, Path.GetFileName(path), options, cancel).ConfigureAwait(false);
+            }
+        }
+
+        public async Task<IFileSystemNode> AddTextAsync(
+            string text,
+            AddFileOptions options = default,
+            CancellationToken cancel = default)
+        {
+            using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(text), false))
+            {
+                return await AddAsync(ms, "", options, cancel).ConfigureAwait(false);
+            }
+        }
+
+        public async Task<IFileSystemNode> AddAsync(
+            Stream stream,
+            string name,
+            AddFileOptions options,
+            CancellationToken cancel)
+        {
+            options ??= new AddFileOptions();
+
+            // TODO: various options
+            if (options.Trickle) throw new NotImplementedException("Trickle");
+
+            var blockService = GetBlockService(options);
+            var keyChain = await ipfs.KeyChainAsync(cancel).ConfigureAwait(false);
+
+            var chunker = new SizeChunker();
+            var nodes = await chunker.ChunkAsync(stream, name, options, blockService, keyChain, cancel).ConfigureAwait(false);
+
+            // Multiple nodes for the file?
+            FileSystemNode node = await BuildTreeAsync(nodes, options, cancel);
+
+            // Wrap in directory?
+            if (options.Wrap)
+            {
+                var link = node.ToLink(name);
+                var wlinks = new IFileSystemLink[] { link };
+                node = await CreateDirectoryAsync(wlinks, options, cancel).ConfigureAwait(false);
+            }
+            else
+            {
+                node.Name = name;
+            }
+
+            // Advertise the root node.
+            if (options.Pin && ipfs.IsStarted)
+            {
+                await ipfs.Dht.ProvideAsync(node.Id, advertise: true, cancel: cancel).ConfigureAwait(false);
+            }
+
+            // Return the file system node.
+            return node;
+        }
+
+        private async Task<FileSystemNode> BuildTreeAsync(IEnumerable<FileSystemNode> nodes, AddFileOptions options,
+            CancellationToken cancel)
+        {
+            if (nodes.Count() == 1)
+            {
+                return nodes.First();
+            }
+
+            // Bundle DefaultLinksPerBlock links into a block.
+            var tree = new List<FileSystemNode>();
+            for (int i = 0; ; ++i)
+            {
+                var bundle = nodes
+                    .Skip(DefaultLinksPerBlock * i)
+                    .Take(DefaultLinksPerBlock);
+                if (!bundle.Any())
+                {
+                    break;
+                }
+                var node = await BuildTreeNodeAsync(bundle, options, cancel);
+                tree.Add(node);
+            }
+            return await BuildTreeAsync(tree, options, cancel);
+        }
+
+        private async Task<FileSystemNode> BuildTreeNodeAsync(
+            IEnumerable<FileSystemNode> nodes,
+            AddFileOptions options,
+            CancellationToken cancel)
+        {
+            var blockService = GetBlockService(options);
+
+            // Build the DAG that contains all the file nodes.
+            var links = nodes.Select(n => n.ToLink()).ToArray();
+            var fileSize = (ulong)nodes.Sum(n => n.Size);
+            var dagSize = nodes.Sum(n => n.DagSize);
+            var dm = new DataMessage
+            {
+                Type = DataType.File,
+                FileSize = fileSize,
+                BlockSizes = nodes.Select(n => (ulong)n.Size).ToArray()
+            };
+            var pb = new MemoryStream();
+            ProtoBuf.Serializer.Serialize(pb, dm);
+            var dag = new DagNode(pb.ToArray(), links, options.Hash);
+
+            // Save it.
+            dag.Id = await blockService.PutAsync(
+                data: dag.ToArray(),
+                multiHash: options.Hash,
+                encoding: options.Encoding,
+                pin: options.Pin,
+                cancel: cancel).ConfigureAwait(false);
+
+            return new FileSystemNode
+            {
+                Id = dag.Id,
+                Size = (long)dm.FileSize,
+                DagSize = dagSize + dag.Size,
+                Links = links
+            };
+        }
+
+        public async Task<IFileSystemNode> AddDirectoryAsync(
+            string path,
+            bool recursive = true,
+            AddFileOptions options = default,
+            CancellationToken cancel = default)
+        {
+            options ??= new AddFileOptions();
+            options.Wrap = false;
+
+            // Add the files and sub-directories.
+            path = Path.GetFullPath(path);
+            var files = Directory
+                .EnumerateFiles(path)
+                .OrderBy(s => s)
+                .Select(p => AddFileAsync(p, options, cancel));
+            if (recursive)
+            {
+                var folders = Directory
+                    .EnumerateDirectories(path)
+                    .OrderBy(s => s)
+                    .Select(dir => AddDirectoryAsync(dir, recursive, options, cancel));
+                files = files.Union(folders);
+            }
+            var nodes = await Task.WhenAll(files).ConfigureAwait(false);
+
+        // Create the DAG with links to the created files and sub-directories
+        var links = nodes
+            .Select(node => node.ToLink())
+            .ToArray();
+        var fsn = await CreateDirectoryAsync(links, options, cancel).ConfigureAwait(false);
+            fsn.Name = Path.GetFileName(path);
+            return fsn;
+        }
+
+    private async Task<FileSystemNode> CreateDirectoryAsync(IEnumerable<IFileSystemLink> links, AddFileOptions options, CancellationToken cancel)
+    {
+        var materializedLinks = links?.ToArray() ?? FileSystemLink.None;
+        var totalContentSize = materializedLinks.Sum(link => Math.Max(0, link.ContentSize));
+        var dm = new DataMessage
+        {
+            Type = DataType.Directory,
+            FileSize = (ulong)totalContentSize
+        };
+        var pb = new MemoryStream();
+        ProtoBuf.Serializer.Serialize(pb, dm);
+        var dag = new DagNode(pb.ToArray(), materializedLinks, options.Hash);
+
+        // Save it.
+        var cid = await GetBlockService(options).PutAsync(
+            data: dag.ToArray(),
+            multiHash: options.Hash,
+                encoding: options.Encoding,
+                pin: options.Pin,
+                cancel: cancel).ConfigureAwait(false);
+
+        return new FileSystemNode
+        {
+            Id = cid,
+            Links = materializedLinks,
+            IsDirectory = true,
+            Size = totalContentSize,
+            DagSize = dag.Size + materializedLinks.Sum(link => link.Size)
+        };
+    }
+
+    public async Task<IFileSystemNode> ListFileAsync(string path, CancellationToken cancel = default)
+    {
+        var cid = await ipfs.ResolveIpfsPathToCidAsync(path, cancel).ConfigureAwait(false);
+        return await ReadFileSystemNodeAsync(cid, cancel).ConfigureAwait(false);
+    }
+
+        public async Task<string> ReadAllTextAsync(string path, CancellationToken cancel = default)
+        {
+            using var data = await ReadFileAsync(path, cancel).ConfigureAwait(false);
+            using var text = new StreamReader(data);
+            return await text.ReadToEndAsync().ConfigureAwait(false);
+        }
+
+        public async Task<Stream> ReadFileAsync(string path, CancellationToken cancel = default)
+        {
+            var cid = await ipfs.ResolveIpfsPathToCidAsync(path, cancel).ConfigureAwait(false);
+            var keyChain = await ipfs.KeyChainAsync(cancel).ConfigureAwait(false);
+            return await FileSystem.CreateReadStreamAsync(cid, ipfs.Block, keyChain, cancel).ConfigureAwait(false);
+        }
+
+        public async Task<Stream> ReadFileAsync(string path, long offset, long count = 0, CancellationToken cancel = default)
+        {
+            var stream = await ReadFileAsync(path, cancel).ConfigureAwait(false);
+            return new SlicedStream(stream, offset, count);
+        }
+
+        public async Task<Stream> GetAsync(string path, bool compress = false, CancellationToken cancel = default)
+        {
+            var cid = await ipfs.ResolveIpfsPathToCidAsync(path, cancel).ConfigureAwait(false);
+            var ms = new MemoryStream();
+            using (var tarStream = new TarOutputStream(ms, 1, Encoding.Default))
+            using (var archive = TarArchive.CreateOutputTarArchive(tarStream))
+            {
+                archive.IsStreamOwner = false;
+                await AddTarNodeAsync(cid, cid.Encode(), tarStream, cancel).ConfigureAwait(false);
+            }
+            ms.Position = 0;
+            return ms;
+        }
+
+        private async Task AddTarNodeAsync(Cid cid, string name, TarOutputStream tar, CancellationToken cancel)
+        {
+            var block = await ipfs.Block.GetAsync(cid, cancel).ConfigureAwait(false);
+            var dm = new DataMessage { Type = DataType.Raw };
+            DagNode dag = null;
+
+            if (cid.ContentType == "dag-pb")
+            {
+                dag = new DagNode(block.DataStream);
+                dm = Serializer.Deserialize<DataMessage>(dag.DataStream);
+            }
+            var entry = new TarEntry(new TarHeader());
+            var header = entry.TarHeader;
+            header.Mode = 0x1ff; // 777 in octal
+            header.LinkName = string.Empty;
+            header.UserName = string.Empty;
+            header.GroupName = string.Empty;
+            header.Version = "00";
+            header.Name = name;
+            header.DevMajor = 0;
+            header.DevMinor = 0;
+            header.UserId = 0;
+            header.GroupId = 0;
+            header.ModTime = DateTime.Now;
+
+            if (dm.Type == DataType.Directory)
+            {
+                header.TypeFlag = TarHeader.LF_DIR;
+                header.Size = 0;
+                tar.PutNextEntry(entry);
+                tar.CloseEntry();
+            }
+            else // Must be a file
+            {
+                var content = await ReadFileAsync(cid, cancel).ConfigureAwait(false);
+                header.TypeFlag = TarHeader.LF_NORMAL;
+                header.Size = content.Length;
+                tar.PutNextEntry(entry);
+                await content.CopyToAsync(tar);
+                tar.CloseEntry();
+            }
+
+            // Recurse over files and subdirectories
+            if (dm.Type == DataType.Directory)
+            {
+                foreach (var link in dag.Links)
+                {
+                    await AddTarNodeAsync(link.Id, $"{name}/{link.Name}", tar, cancel).ConfigureAwait(false);
+                }
+            }
+        }
+
+    private IBlockApi GetBlockService(AddFileOptions options)
+    {
+        return options.OnlyHash
+            ? new HashOnlyBlockService()
+            : ipfs.Block;
+    }
+
+    private async Task<FileSystemNode> ReadFileSystemNodeAsync(Cid cid, CancellationToken cancel)
+    {
+        var block = await ipfs.Block.GetAsync(cid, cancel).ConfigureAwait(false);
+
+        if (cid.ContentType == "raw" || cid.ContentType == "cms")
+        {
+            return new FileSystemNode
+            {
+                Id = cid,
+                Size = block.Size,
+                DagSize = block.Size,
+                Links = FileSystemLink.None
+            };
+        }
+
+        if (cid.ContentType != "dag-pb")
+        {
+            throw new NotSupportedException($"Cannot read content type '{cid.ContentType}'.");
+        }
+
+        var dag = new DagNode(block.DataStream);
+        var dm = Serializer.Deserialize<DataMessage>(dag.DataStream);
+        var isDirectory = dm.Type == DataType.Directory;
+
+        if (!isDirectory)
+        {
+            var blockSizes = dm.BlockSizes?.Select(size => (long)size).ToArray() ?? Array.Empty<long>();
+            var links = dag.Links
+                .Select((link, index) => (IFileSystemLink)new FileSystemLink
+                {
+                    Id = link.Id,
+                    Name = link.Name,
+                    Size = link.Size,
+                    IsDirectory = false,
+                    ContentSize = index < blockSizes.Length ? blockSizes[index] : link.Size,
+                    ChildCount = 0
+                })
+                .ToArray();
+
+            return new FileSystemNode
+            {
+                Id = cid,
+                Links = links,
+                IsDirectory = false,
+                Size = (long)(dm.FileSize ?? 0),
+                DagSize = dag.Size + links.Sum(link => link.Size)
+            };
+        }
+
+        var linksWithMetadata = await Task.WhenAll(
+            dag.Links.Select(link => DescribeLinkAsync(link, cancel))).ConfigureAwait(false);
+        var contentSize = dm.FileSize.HasValue
+            ? (long)dm.FileSize.Value
+            : linksWithMetadata.Sum(link => link.ContentSize);
+
+        return new FileSystemNode
+        {
+            Id = cid,
+            Links = linksWithMetadata,
+            IsDirectory = true,
+            Size = contentSize,
+            DagSize = dag.Size + linksWithMetadata.Sum(link => link.Size)
+        };
+    }
+
+    private async Task<FileSystemLink> DescribeLinkAsync(IMerkleLink link, CancellationToken cancel)
+    {
+        var child = await ReadFileSystemNodeAsync(link.Id, cancel).ConfigureAwait(false);
+
+        return new FileSystemLink
+        {
+            Id = link.Id,
+            Name = link.Name,
+            Size = link.Size != 0 ? link.Size : child.DagSize,
+            IsDirectory = child.IsDirectory,
+            ContentSize = child.Size,
+            ChildCount = child.Links.Count()
+        };
+    }
+
+    /// <summary>
+    ///   A Block service that only computes the block's hash.
+    /// </summary>
+        private class HashOnlyBlockService : IBlockApi
+        {
+            public Task<IDataBlock> GetAsync(Cid id, CancellationToken cancel = default)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task<Cid> PutAsync(
+                byte[] data,
+                string contentType = Cid.DefaultContentType,
+                string multiHash = MultiHash.DefaultAlgorithmName,
+                string encoding = MultiBase.DefaultAlgorithmName,
+                bool pin = false,
+                CancellationToken cancel = default)
+            {
+                var cid = new Cid
+                {
+                    ContentType = contentType,
+                    Encoding = encoding,
+                    Hash = MultiHash.ComputeHash(data, multiHash),
+                    Version = (contentType == "dag-pb" && multiHash == MultiHash.DefaultAlgorithmName) ? 0 : 1
+                };
+                return Task.FromResult(cid);
+            }
+
+            public Task<Cid> PutAsync(
+                Stream data,
+                string contentType = Cid.DefaultContentType,
+                string multiHash = MultiHash.DefaultAlgorithmName,
+                string encoding = MultiBase.DefaultAlgorithmName,
+                bool pin = false,
+                CancellationToken cancel = default)
+            {
+                using var ms = new MemoryStream();
+                data.CopyTo(ms);
+                return PutAsync(ms.ToArray(), contentType, multiHash, encoding, pin, cancel);
+            }
+
+            public Task<Cid> RemoveAsync(Cid id, bool ignoreNonexistent = false, CancellationToken cancel = default)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task<bool> IsLocallyAvailable(Cid id, CancellationToken cancel = default)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task<IDataBlock> StatAsync(Cid id, CancellationToken cancel = default)
+            {
+                throw new NotImplementedException();
+            }
+        }
+    }
+}

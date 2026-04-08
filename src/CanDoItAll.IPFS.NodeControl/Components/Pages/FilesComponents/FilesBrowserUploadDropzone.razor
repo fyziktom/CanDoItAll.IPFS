@@ -1,0 +1,84 @@
+@namespace CanDoItAll.IPFS.NodeControl.Components.Pages.FilesComponents
+@implements IDisposable
+@inject IJSRuntime JSRuntime
+
+<div id="files-upload-dropzone"
+     class="fx-upload-dropzone"
+     @ref="dropZoneElement"
+     data-upload-endpoint="@UploadEndpoint"
+     data-upload-pin="@BoolToDataValue(UploadPin)"
+     data-upload-wrap="@BoolToDataValue(UploadWrap)">
+    <NodeIcon Icon="Upload" />
+    <TextBlock TextStyle="@(TextStyle.Subtitle1)"
+               Value="Choose files, choose a folder, or drop content here" />
+    <TextBlock TextStyle="@(TextStyle.Body2)"
+               Value="File and folder uploads keep nested paths intact. Drag and drop supports files, folders, and subfolders." />
+
+    <InlineActions>
+        <Button Text="Choose files"
+                Click="OnChooseFiles"
+                Disabled="@Disabled" />
+        <Button Text="Choose folder"
+                ButtonStyle="@(ButtonStyle.Light)"
+                Click="OnChooseFolder"
+                Disabled="@Disabled" />
+    </InlineActions>
+</div>
+
+@code {
+    private DotNetObjectReference<FilesBrowserUploadDropzone>? dropZoneReference;
+    private ElementReference dropZoneElement;
+    private bool initialized;
+
+    [Parameter, EditorRequired]
+    public string UploadEndpoint { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool UploadPin { get; set; }
+
+    [Parameter]
+    public bool UploadWrap { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public EventCallback OnChooseFiles { get; set; }
+
+    [Parameter]
+    public EventCallback OnChooseFolder { get; set; }
+
+    [Parameter]
+    public EventCallback<NodeFileSnapshot> Uploaded { get; set; }
+
+    [Parameter]
+    public EventCallback<string> UploadFailed { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (initialized)
+        {
+            return;
+        }
+
+        dropZoneReference ??= DotNetObjectReference.Create(this);
+        await JSRuntime.InvokeVoidAsync("filesExplorer.initializeDropZone", dropZoneElement, dropZoneReference);
+        initialized = true;
+    }
+
+    [JSInvokable]
+    public Task HandleDropUploadCompletedAsync(NodeFileSnapshot uploaded)
+        => Uploaded.InvokeAsync(uploaded);
+
+    [JSInvokable]
+    public Task HandleDropUploadFailedAsync(string message)
+        => UploadFailed.InvokeAsync(message);
+
+    public void Dispose()
+    {
+        dropZoneReference?.Dispose();
+    }
+
+    private static string BoolToDataValue(bool value)
+        => value ? "true" : "false";
+}

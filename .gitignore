@@ -1,0 +1,43 @@
+## Build outputs
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+## .NET and tooling
+artifacts/
+.artifacts/
+.vs/
+project.lock.json
+project.fragment.lock.json
+*.nupkg
+*.snupkg
+*.binlog
+*.user
+
+## Test output
+[Tt]est[Rr]esult*/
+test-results/
+playwright-report/
+coverage/
+CodeCoverage/
+screenshots/
+
+## Temp and local tooling
+~$*
+*~
+node_modules/
+output/
+.mcp-state/
+.playwright
+.playwright-cli
+.codex-obj/

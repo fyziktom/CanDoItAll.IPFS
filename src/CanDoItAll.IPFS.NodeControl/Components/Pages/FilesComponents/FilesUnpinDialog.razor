@@ -1,0 +1,108 @@
+@namespace CanDoItAll.IPFS.NodeControl.Components.Pages.FilesComponents
+
+@if (TargetItem is not null)
+{
+    <Dialog IsOpen="true"
+            Eyebrow="Unpin"
+            Title="@($"Remove {TargetItem.DisplayName}")"
+            Subtitle="Unpinning removes the protected pin from this node. Garbage collection is optional and only removes blocks that are no longer referenced elsewhere."
+            OnClose="OnClose">
+        <ChildContent>
+            <Stack Gap="1rem">
+                <SummaryTiles>
+                    <SummaryTile Label="Name"
+                                 Value="@TargetItem.DisplayName"
+                                 HelperText="Current explorer selection queued for unpin."
+                                 Tone="info" />
+                    <SummaryTile Label="Type"
+                                 Value="@TargetItem.TypeLabel"
+                                 HelperText="Resolved from the explorer inventory."
+                                 Tone="neutral" />
+                    <SummaryTile Label="Scope"
+                                 Value="@(TargetItem.IsDirectory ? FilesUiText.CountLabel(TargetItem.ChildCount) : FilesUiText.FormatSize(TargetItem.Size))"
+                                 HelperText="Directory item count or file size."
+                                 Tone="warning" />
+                    <SummaryTile Label="Path"
+                                 Value="@FilesUiText.Shorten(TargetItem.Path, 22)"
+                                 HelperText="@TargetItem.Path"
+                                 Tone="success" />
+                </SummaryTiles>
+
+                <FormField Text="CID">
+                    <End>
+                        <Button Text="Copy"
+                                Size="@(ButtonSize.Small)"
+                                Variant="@(Variant.Text)"
+                                ButtonStyle="@(ButtonStyle.Light)"
+                                Click="HandleCopyAsync" />
+                    </End>
+
+                    <ChildContent>
+                        <TextBox Value="@TargetItem.Target"
+                                 ReadOnly="true" />
+                    </ChildContent>
+                </FormField>
+
+                <SectionCard Title="Garbage collection"
+                             Description="Repository GC is optional after unpinning. Blocks may still remain if other content references them.">
+                    <Stack Orientation="Orientation.Horizontal"
+                           AlignItems="AlignItems.Start"
+                           Gap="0.75rem">
+                        <CheckBox TValue="bool"
+                                  Value="@DeleteImmediately"
+                                  ValueChanged="DeleteImmediatelyChanged"
+                                  Disabled="@IsBusy" />
+
+                        <Stack Gap="0.2rem">
+                            <TextBlock TextStyle="@(TextStyle.Subtitle2)"
+                                       Value="Delete immediately" />
+                            <TextBlock TextStyle="@(TextStyle.Body2)"
+                                       Value="Run repository GC after unpinning. This only removes blocks that are no longer referenced elsewhere." />
+                        </Stack>
+                    </Stack>
+                </SectionCard>
+            </Stack>
+        </ChildContent>
+
+        <Footer>
+            <InlineActions>
+                <Button Text="Cancel"
+                        ButtonStyle="@(ButtonStyle.Light)"
+                        Variant="@(Variant.Text)"
+                        Click="OnClose" />
+                <Button Text="@(DeleteImmediately ? "Unpin and collect" : "Unpin")"
+                        ButtonStyle="@(ButtonStyle.Warning)"
+                        Click="OnConfirm"
+                        Disabled="@IsBusy" />
+            </InlineActions>
+        </Footer>
+    </Dialog>
+}
+
+@code {
+    [Parameter]
+    public NodeExplorerItemSnapshot? TargetItem { get; set; }
+
+    [Parameter]
+    public bool IsBusy { get; set; }
+
+    [Parameter]
+    public bool DeleteImmediately { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> DeleteImmediatelyChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnCopyTarget { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback OnConfirm { get; set; }
+
+    private Task HandleCopyAsync()
+        => TargetItem is null
+            ? Task.CompletedTask
+            : OnCopyTarget.InvokeAsync(TargetItem.Target);
+}

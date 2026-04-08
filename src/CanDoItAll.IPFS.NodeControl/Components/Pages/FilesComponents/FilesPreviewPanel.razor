@@ -1,0 +1,267 @@
+@namespace CanDoItAll.IPFS.NodeControl.Components.Pages.FilesComponents
+
+<SectionCard Title="Preview"
+             Description="Single-click loads details here. Double-click opens folders or the file-details dialog.">
+    <HeaderActions>
+        <Button Text="Hide"
+                ButtonStyle="@(ButtonStyle.Light)"
+                Variant="@(Variant.Text)"
+                Click="OnCollapse" />
+    </HeaderActions>
+
+    <ChildContent>
+        <Stack Gap="1rem">
+            @if (IsLoading)
+            {
+                <LoadingState Eyebrow="Details"
+                              Title="Loading preview"
+                              Description="The explorer is resolving selection details for the current node view." />
+            }
+            else if (PreviewSnapshot is null)
+            {
+                <EmptyState Eyebrow="Selection"
+                            Title="Choose a file or folder"
+                            Description="Single-click loads details here. Double-click opens folders or the file-details dialog." />
+            }
+            else
+            {
+                <PanelCard>
+                    <Stack Gap="1rem">
+                        <Stack Orientation="Orientation.Horizontal"
+                               AlignItems="AlignItems.Center"
+                               JustifyContent="JustifyContent.SpaceBetween"
+                               Wrap="@(FlexWrap.Wrap)"
+                               Gap="1rem">
+                            <Stack Orientation="Orientation.Horizontal"
+                                   AlignItems="AlignItems.Center"
+                                   Gap="0.85rem"
+                                   class="min-w-0">
+                                <NodeIcon Icon="@(PreviewSnapshot.IsDirectory ? "Folder" : "File")"
+                                          Class="@($"fx-preview__icon {(PreviewSnapshot.IsDirectory ? "fx-card__icon--folder" : "fx-card__icon--file")}")" />
+
+                                <Stack Gap="0.25rem" class="min-w-0">
+                                    <TextBlock TextStyle="@(TextStyle.Subtitle1)"
+                                               Value="@PreviewSnapshot.DisplayName"
+                                               class="break-all" />
+                                    <TextBlock TextStyle="@(TextStyle.Caption)"
+                                               Value="@PreviewSnapshot.TypeLabel" />
+                                </Stack>
+                            </Stack>
+
+                            <Pill Text="@FilesUiText.PreviewSizeOrCount(PreviewSnapshot)" Tone="@(PillTone.Ok)" />
+                        </Stack>
+                    </Stack>
+                </PanelCard>
+
+                <Row Gap="0.75rem">
+                    <Column Size="12">
+                        <SummaryTile Label="Name"
+                                     Value="@FilesUiText.Shorten(PreviewSnapshot.DisplayName, 24)"
+                                     HelperText="@PreviewSnapshot.DisplayName"
+                                     Tone="info" />
+                    </Column>
+                    <Column Size="12">
+                        <SummaryTile Label="Type"
+                                     Value="@PreviewSnapshot.TypeLabel"
+                                     HelperText="Resolved from the active explorer snapshot."
+                                     Tone="neutral" />
+                    </Column>
+                    <Column Size="12">
+                        <SummaryTile Label="Path"
+                                     Value="@FilesUiText.Shorten(PreviewSnapshot.Path, 20)"
+                                     HelperText="@PreviewSnapshot.Path"
+                                     Tone="warning" />
+                    </Column>
+                    <Column Size="12">
+                        <SummaryTile Label="Footprint"
+                                     Value="@FilesUiText.PreviewSizeOrCount(PreviewSnapshot)"
+                                     HelperText="Directory item count or file size."
+                                     Tone="success" />
+                    </Column>
+                </Row>
+
+                @if (IsVirtualPreview)
+                {
+                    <FormField Text="Branch">
+                        <ChildContent>
+                            <TextBox Value="@PreviewSnapshot.DisplayName"
+                                     ReadOnly="true" />
+                        </ChildContent>
+                    </FormField>
+                }
+                else
+                {
+                    <FormField Text="CID">
+                        <End>
+                            <Button Text="Copy"
+                                    Size="@(ButtonSize.Small)"
+                                    Variant="@(Variant.Text)"
+                                    ButtonStyle="@(ButtonStyle.Light)"
+                                    Click="HandleCopyAsync"
+                                    Disabled="@IsBusy" />
+                        </End>
+
+                        <ChildContent>
+                            <TextBox Value="@PreviewSnapshot.Target"
+                                     ReadOnly="true" />
+                        </ChildContent>
+                    </FormField>
+                }
+
+                <InlineActions>
+                    <Button Text="Share"
+                            Click="OnShare"
+                            Disabled="@(IsBusy || IsVirtualPreview)" />
+
+                    @if (PreviewSnapshot.IsDirectory)
+                    {
+                        <Button Text="Open folder"
+                                ButtonStyle="@(ButtonStyle.Light)"
+                                Click="OnOpenFolder"
+                                Disabled="@(IsBusy || !CanOpenFolder)" />
+                    }
+                    else
+                    {
+                        <Button Text="Details"
+                                ButtonStyle="@(ButtonStyle.Light)"
+                                Click="OnOpenDetails"
+                                Disabled="@IsBusy" />
+
+                        @if (!string.IsNullOrWhiteSpace(OpenUrl))
+                        {
+                            <Button Text="Open"
+                                    ButtonStyle="@(ButtonStyle.Light)"
+                                    Href="@OpenUrl"
+                                    Target="_blank"
+                                    Rel="noopener noreferrer" />
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(DownloadUrl))
+                        {
+                            <Button Text="Download"
+                                    ButtonStyle="@(ButtonStyle.Success)"
+                                    Href="@DownloadUrl" />
+                        }
+                    }
+
+                    <Button Text="@(IsPreviewPinned ? "Unpin" : "Pin")"
+                            ButtonStyle="@(ButtonStyle.Warning)"
+                            Variant="@(Variant.Text)"
+                            Click="OnTogglePin"
+                            Disabled="@(IsBusy || IsVirtualPreview)" />
+
+                    <Button Text="Topology"
+                            ButtonStyle="@(ButtonStyle.Light)"
+                            Click="OnOpenTopology"
+                            Disabled="@(IsBusy || IsVirtualPreview)" />
+                </InlineActions>
+
+                @if (PreviewSnapshot.IsDirectory)
+                {
+                    <Callout>
+                        Single-click shows folder information here. Double-click opens the folder in the explorer grid.
+                    </Callout>
+                }
+                else if (FilesUiText.HasTextPreview(PreviewSnapshot))
+                {
+                    <FormField Text="Preview">
+                        <ChildContent>
+                            <pre class="node-code-block node-code-block--preview">@PreviewSnapshot.PreviewText</pre>
+                        </ChildContent>
+                    </FormField>
+                }
+                else if (FilesUiText.CanRenderInlineFrame(PreviewSnapshot) && !string.IsNullOrWhiteSpace(OpenUrl))
+                {
+                    <iframe class="fx-preview__frame"
+                            src="@OpenUrl"
+                            title="@($"Preview of {PreviewSnapshot.DisplayName}")">
+                    </iframe>
+                }
+                else
+                {
+                    <Callout>
+                        This file type stays in details-only mode here so single-click selection never triggers a browser download.
+                    </Callout>
+                }
+
+                <FormField Text="Browse CID or path">
+                    <End>
+                        <Button Text="Browse"
+                                ButtonStyle="@(ButtonStyle.Light)"
+                                Click="OnInspect"
+                                Disabled="@(IsBusy || string.IsNullOrWhiteSpace(InspectPath))" />
+                    </End>
+
+                    <ChildContent>
+                        <TextBox Value="@InspectPath"
+                                 ValueChanged="InspectPathChanged"
+                                 Immediate="true"
+                                 Placeholder="/ipfs/... or raw CID"
+                                 Disabled="@IsBusy" />
+                    </ChildContent>
+                </FormField>
+            }
+        </Stack>
+    </ChildContent>
+</SectionCard>
+
+@code {
+    [Parameter]
+    public NodePreviewSnapshot? PreviewSnapshot { get; set; }
+
+    [Parameter]
+    public bool IsBusy { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public bool IsVirtualPreview { get; set; }
+
+    [Parameter]
+    public bool IsPreviewPinned { get; set; }
+
+    [Parameter]
+    public bool CanOpenFolder { get; set; }
+
+    [Parameter]
+    public string InspectPath { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string?> InspectPathChanged { get; set; }
+
+    [Parameter]
+    public string? OpenUrl { get; set; }
+
+    [Parameter]
+    public string? DownloadUrl { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnCopyTarget { get; set; }
+
+    [Parameter]
+    public EventCallback OnShare { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenFolder { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenDetails { get; set; }
+
+    [Parameter]
+    public EventCallback OnTogglePin { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenTopology { get; set; }
+
+    [Parameter]
+    public EventCallback OnInspect { get; set; }
+
+    [Parameter]
+    public EventCallback OnCollapse { get; set; }
+
+    private Task HandleCopyAsync()
+        => PreviewSnapshot is null
+            ? Task.CompletedTask
+            : OnCopyTarget.InvokeAsync(PreviewSnapshot.Target);
+}

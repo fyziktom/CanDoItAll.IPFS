@@ -1,0 +1,95 @@
+@using static CanDoItAll.IPFS.NodeControl.Components.Pages.PinRequestsComponents.PinRequestPresentation
+
+<article class="rp-card">
+    <div class="rp-card__badges">
+        <span class="rp-state rp-state--@GetStateTone(Request.State)">@Request.State</span>
+        <span class="rp-state rp-state--@GetSecurityTone(Request.SecurityDisposition)">@GetSecurityBadgeLabel(Request)</span>
+        <span class="rp-pill">@GetContentLabel(Request.Request.Content)</span>
+        <span class="rp-pill">@FormatSize(Request.Request.Content.Size)</span>
+    </div>
+
+    <div class="rp-card__body">
+        <h2 title="@Request.Request.Content.DisplayName">@Request.Request.Content.DisplayName</h2>
+        <p class="rp-card__summary">@GetCardSummary(Request)</p>
+
+        <div class="rp-card__meta">
+            <div class="rp-card__meta-row">
+                <span class="rp-card__label">From</span>
+                <strong title="@GetPrimarySenderAddress(Request)">@GetSenderOrigin(Request)</strong>
+            </div>
+
+            <div class="rp-copy-stack">
+                <span class="rp-card__label">Sender</span>
+                <div class="rp-copy-line">
+                    <code title="@Request.Request.Sender.PeerId">@FormatCompactId(Request.Request.Sender.PeerId)</code>
+                    <button type="button"
+                            class="rp-copy-button"
+                            @onclick='@(() => OnCopy.InvokeAsync(new PinRequestCopyRequest(Request.Request.Sender.PeerId, "Sender ID")))'>
+                        Copy
+                    </button>
+                </div>
+            </div>
+
+            <div class="rp-copy-stack">
+                <span class="rp-card__label">CID</span>
+                <div class="rp-copy-line">
+                    <code title="@Request.Request.Content.Cid">@FormatCompactId(Request.Request.Content.Cid)</code>
+                    <button type="button"
+                            class="rp-copy-button"
+                            @onclick='@(() => OnCopy.InvokeAsync(new PinRequestCopyRequest(Request.Request.Content.Cid, "CID")))'>
+                        Copy
+                    </button>
+                    <button type="button"
+                            class="rp-copy-button"
+                            @onclick='@(() => OnCopy.InvokeAsync(new PinRequestCopyRequest(BuildIpfsAddress(Request.Request.Content.Cid), "IPFS address")))'>
+                        Copy address
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="rp-card__footer">
+        <span class="rp-card__timestamp">@GetTimelineLabel(Request)</span>
+
+        <div class="rp-card__actions">
+            <button type="button"
+                    class="fx-panel-button"
+                    @onclick="@(() => OnOpenDetails.InvokeAsync(Request.Request.RequestId))"
+                    disabled="@IsBusy">
+                Details
+            </button>
+
+            @if (Request.State == RemotePinRequestState.Pending)
+            {
+                <button type="button"
+                        class="fx-panel-button fx-panel-link--accent"
+                        @onclick="@(() => OnAccept.InvokeAsync(Request.Request.RequestId))"
+                        disabled="@IsBusy">
+                    @(IsBusy ? "Accepting..." : "Accept")
+                </button>
+
+                <button type="button"
+                        class="fx-panel-button"
+                        @onclick="@(() => OnReject.InvokeAsync(Request.Request.RequestId))"
+                        disabled="@IsBusy">
+                    @(IsBusy ? "Rejecting..." : "Reject")
+                </button>
+            }
+        </div>
+    </div>
+</article>
+
+@code {
+    [Parameter] public EventCallback<string> OnAccept { get; set; }
+
+    [Parameter] public EventCallback<PinRequestCopyRequest> OnCopy { get; set; }
+
+    [Parameter] public EventCallback<string> OnOpenDetails { get; set; }
+
+    [Parameter] public EventCallback<string> OnReject { get; set; }
+
+    [Parameter] public required StoredRemotePinRequest Request { get; set; }
+
+    [Parameter] public bool IsBusy { get; set; }
+}

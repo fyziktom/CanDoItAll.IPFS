@@ -1,0 +1,59 @@
+@namespace CanDoItAll.IPFS.NodeControl.Components.Pages.FilesComponents
+
+@if (IsOpen && Item is not null)
+{
+    <div class="fx-context-backdrop" @onclick="OnClose">
+        <PanelCard class="fx-context-menu"
+                   style="@($"top:{Top}px; left:{Left}px;")"
+                   @onclick:stopPropagation="true">
+            <Stack Gap="0.5rem">
+                @if (CanShare)
+                {
+                    <Button Text="Share"
+                            ButtonStyle="@(ButtonStyle.Light)"
+                            Variant="@(Variant.Text)"
+                            Click="OnShare"
+                            class="w-full justify-start" />
+                }
+
+                @if (CanUnpin)
+                {
+                    <Button Text="Unpin"
+                            ButtonStyle="@(ButtonStyle.Warning)"
+                            Variant="@(Variant.Text)"
+                            Click="OnUnpin"
+                            class="w-full justify-start" />
+                }
+            </Stack>
+        </PanelCard>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public NodeExplorerItemSnapshot? Item { get; set; }
+
+    [Parameter]
+    public double Left { get; set; }
+
+    [Parameter]
+    public double Top { get; set; }
+
+    [Parameter]
+    public bool CanShare { get; set; }
+
+    [Parameter]
+    public bool CanUnpin { get; set; }
+
+    [Parameter]
+    public EventCallback OnShare { get; set; }
+
+    [Parameter]
+    public EventCallback OnUnpin { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+}

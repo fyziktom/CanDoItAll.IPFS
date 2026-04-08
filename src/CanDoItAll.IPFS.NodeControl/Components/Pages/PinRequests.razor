@@ -1,0 +1,297 @@
+@page "/pin-requests"
+@implements IDisposable
+@using CanDoItAll.IPFS.NodeControl.Components.Pages.PinRequestsComponents
+@inject IJSRuntime JSRuntime
+@inject ILogger<PinRequests> Logger
+@inject NotificationService NotificationService
+@inject RemotePinRequestStore RemotePinRequestStore
+@inject RemotePinRequestWorkflowService RemotePinRequestWorkflowService
+
+<PageTitle>Pin Requests</PageTitle>
+
+<div class="mx-auto flex w-full min-w-0 flex-col gap-3 max-w-[1600px]">
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <Alert AlertStyle="@(AlertStyle.Warning)">@errorMessage</Alert>
+    }
+
+    <section class="rp-shell">
+        <div class="rp-header">
+            <div class="rp-header__copy">
+                <span class="fx-location__eyebrow">Inbox</span>
+                <div class="flex items-center gap-2">
+                    <h1>Pin requests</h1>
+                    <HelpPopover AriaLabel="Show pin request help"
+                                 Heading="Pin requests"
+                                 Body="Review incoming pin shares, confirm who sent them, then accept only the content you want on this receiver."
+                                 Tip="Details stay in the modal so the inbox grid can remain compact." />
+                </div>
+            </div>
+
+            <div class="rp-header__actions">
+                <div class="app-shell__target-pill">
+                    <span class="app-shell__target-label">Pending</span>
+                    <strong>@pendingCount</strong>
+                </div>
+
+                <label class="fx-panel-button rp-import-button">
+                    Import request
+                    <InputFile OnChange="HandleImportAsync" accept=".json,application/json" class="rp-import-button__input" />
+                </label>
+            </div>
+        </div>
+
+        @if (requests.Count == 0)
+        {
+            <div class="rp-empty">
+                <span class="fx-location__eyebrow">Requests</span>
+                <h2>No pin requests yet</h2>
+                <p>Live deliveries and offline imports land in the same inbox. Pending requests will also light up the app-shell navigation.</p>
+            </div>
+        }
+        else
+        {
+            <PinRequestsFilterToolbar Filters="@filterSummaries"
+                                      VisibleCount="@visibleRequests.Count"
+                                      OnFilterSelected="SetFilter" />
+
+            @if (visibleRequests.Count == 0)
+            {
+                <div class="rp-empty">
+                    <span class="fx-location__eyebrow">Filtered</span>
+                    <h2>No matching requests</h2>
+                    <p>Change the filter to inspect accepted, rejected, failed, or pending requests.</p>
+                </div>
+            }
+            else
+            {
+                <div class="rp-card-grid">
+                    @foreach (var request in visibleRequests)
+                    {
+                        <PinRequestCard Request="request"
+                                        IsBusy="@IsBusy(request.Request.RequestId)"
+                                        OnOpenDetails="OpenDetails"
+                                        OnAccept="AcceptAsync"
+                                        OnReject="RejectAsync"
+                                        OnCopy="CopyTextAsync" />
+                    }
+                </div>
+            }
+        }
+    </section>
+</div>
+
+@if (SelectedRequest is { } selectedRequest)
+{
+    <PinRequestDetailsDialog Request="selectedRequest"
+                             IsBusy="@IsBusy(selectedRequest.Request.RequestId)"
+                             OnClose="CloseDetails"
+                             OnAccept="AcceptAsync"
+                             OnReject="RejectAsync"
+                             OnCopy="CopyTextAsync" />
+}
+
+@code {
+    private IReadOnlyList<StoredRemotePinRequest> requests = [];
+    private IReadOnlyList<StoredRemotePinRequest> visibleRequests = [];
+    private IReadOnlyList<PinRequestFilterSummary> filterSummaries = [];
+    private string? busyRequestId;
+    private string? errorMessage;
+    private string? selectedRequestId;
+    private int pendingCount;
+    private PinRequestFilter activeFilter = PinRequestFilter.All;
+
+    private StoredRemotePinRequest? SelectedRequest
+        => string.IsNullOrWhiteSpace(selectedRequestId)
+            ? null
+            : requests.FirstOrDefault(item => string.Equals(item.Request.RequestId, selectedRequestId, StringComparison.Ordinal));
+
+    protected override void OnInitialized()
+    {
+        RemotePinRequestStore.RequestChanged += HandleRequestChanged;
+        RefreshRequests();
+    }
+
+    private async Task HandleImportAsync(InputFileChangeEventArgs args)
+    {
+        errorMessage = null;
+        var file = args.File;
+        if (file is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await using var stream = file.OpenReadStream(1024L * 1024L, CancellationToken.None);
+            var request = await RemotePinRequestContractSerializer.DeserializeAsync(stream, CancellationToken.None).ConfigureAwait(false);
+            var stored = RemotePinRequestWorkflowService.Enqueue(request);
+            RefreshRequests();
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Info,
+                Summary = "Request imported",
+                Detail = stored.Request.Content.DisplayName
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Pin request import failed.");
+            errorMessage = ex.Message;
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Import failed",
+                Detail = ex.Message
+            });
+        }
+    }
+
+    private async Task AcceptAsync(string requestId)
+    {
+        await RunRequestActionAsync(requestId, async () =>
+        {
+            var updated = await RemotePinRequestWorkflowService.AcceptAsync(requestId, CancellationToken.None).ConfigureAwait(false);
+            RefreshRequests();
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = updated.State == RemotePinRequestState.Accepted
+                    ? NotificationSeverity.Success
+                    : NotificationSeverity.Warning,
+                Summary = updated.State == RemotePinRequestState.Accepted ? "Pin accepted" : "Pin failed",
+                Detail = updated.ResponseMessage ?? updated.Request.Content.DisplayName
+            });
+        });
+    }
+
+    private async Task RejectAsync(string requestId)
+    {
+        await RunRequestActionAsync(requestId, () =>
+        {
+            var updated = RemotePinRequestWorkflowService.Reject(requestId);
+            RefreshRequests();
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Pin rejected",
+                Detail = updated.Request.Content.DisplayName
+            });
+            return Task.CompletedTask;
+        });
+    }
+
+    private async Task RunRequestActionAsync(string requestId, Func<Task> action)
+    {
+        errorMessage = null;
+        busyRequestId = requestId;
+
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Pin request action failed for request {RequestId}.", requestId);
+            errorMessage = ex.Message;
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Pin request action failed",
+                Detail = ex.Message
+            });
+        }
+        finally
+        {
+            busyRequestId = null;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleRequestChanged(StoredRemotePinRequest _request)
+        => _ = InvokeAsync(() =>
+        {
+            RefreshRequests();
+            StateHasChanged();
+        });
+
+    private void RefreshRequests()
+    {
+        requests = RemotePinRequestStore.List();
+        pendingCount = requests.Count(item => item.State == RemotePinRequestState.Pending);
+        visibleRequests = PinRequestPresentation.FilterRequests(requests, activeFilter);
+        filterSummaries = BuildFilterSummaries(requests, activeFilter);
+
+        if (selectedRequestId is not null
+            && !requests.Any(item => string.Equals(item.Request.RequestId, selectedRequestId, StringComparison.Ordinal)))
+        {
+            selectedRequestId = null;
+        }
+    }
+
+    private bool IsBusy(string requestId)
+        => string.Equals(busyRequestId, requestId, StringComparison.Ordinal);
+
+    private void OpenDetails(string requestId)
+    {
+        errorMessage = null;
+        selectedRequestId = requestId;
+    }
+
+    private void CloseDetails()
+        => selectedRequestId = null;
+
+    private void SetFilter(PinRequestFilter filter)
+    {
+        activeFilter = filter;
+        visibleRequests = PinRequestPresentation.FilterRequests(requests, activeFilter);
+        filterSummaries = BuildFilterSummaries(requests, activeFilter);
+    }
+
+    private Task CopyTextAsync(PinRequestCopyRequest copyRequest)
+        => CopyTextAsync(copyRequest.Value, copyRequest.Label);
+
+    private async Task CopyTextAsync(string value, string label)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", value).ConfigureAwait(false);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = $"{label} copied",
+                Detail = PinRequestPresentation.FormatCompactId(value)
+            });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = $"Could not copy {label.ToLowerInvariant()}",
+                Detail = ex.Message
+            });
+        }
+    }
+
+    private static IReadOnlyList<PinRequestFilterSummary> BuildFilterSummaries(
+        IReadOnlyList<StoredRemotePinRequest> source,
+        PinRequestFilter activeFilter)
+        => Enum.GetValues<PinRequestFilter>()
+            .Select(filter => new PinRequestFilterSummary(
+                filter,
+                PinRequestPresentation.GetFilterLabel(filter),
+                PinRequestPresentation.FilterRequests(source, filter).Count,
+                filter == activeFilter))
+            .ToList();
+
+    public void Dispose()
+    {
+        RemotePinRequestStore.RequestChanged -= HandleRequestChanged;
+    }
+}

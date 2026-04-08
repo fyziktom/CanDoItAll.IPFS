@@ -1,0 +1,81 @@
+@namespace CanDoItAll.IPFS.NodeControl.Components.Pages.FilesComponents
+
+<ActionCard Active="@IsSelected" class="fx-item-card h-full">
+    <Stack Gap="0.85rem" AlignItems="AlignItems.Stretch" class="h-full">
+        <button type="button"
+                class="fx-card-button"
+                disabled="@Disabled"
+                @onclick="OnSelect"
+                @ondblclick="OnOpen"
+                @oncontextmenu:preventDefault="true"
+                @oncontextmenu="OnOpenContextMenu">
+            <Stack Gap="0.75rem" AlignItems="AlignItems.Center" class="w-full">
+                <NodeIcon Icon="@(Item.IsDirectory ? "Folder" : "File")"
+                          Class="@($"fx-card__icon {(Item.IsDirectory ? "fx-card__icon--folder" : "fx-card__icon--file")}")" />
+
+                <Stack Gap="0.25rem" AlignItems="AlignItems.Center" class="w-full">
+                    <TextBlock TextStyle="@(TextStyle.Subtitle2)"
+                               Value="@FilesUiText.Shorten(Item.DisplayName, 28)"
+                               title="@Item.DisplayName"
+                               class="text-center break-all" />
+                    <TextBlock TextStyle="@(TextStyle.Caption)"
+                               Value="@Item.TypeLabel"
+                               class="text-center" />
+                </Stack>
+            </Stack>
+        </button>
+
+        <CardActions Secondary="true">
+            @if (IsVirtual)
+            {
+                <Pill Text="@FilesUiText.CountLabel(Item.ChildCount)" Tone="@(PillTone.Label)" />
+            }
+            else
+            {
+                <Stack Orientation="Orientation.Horizontal"
+                       AlignItems="AlignItems.Center"
+                       JustifyContent="JustifyContent.SpaceBetween"
+                       Wrap="@(FlexWrap.Wrap)"
+                       Gap="0.5rem"
+                       class="w-full">
+                    <MonoText Text="@FilesUiText.Shorten(Item.Target, 16)" class="break-all" />
+                    <Button Text="Copy"
+                            Size="@(ButtonSize.Small)"
+                            Variant="@(Variant.Text)"
+                            ButtonStyle="@(ButtonStyle.Light)"
+                            Click="HandleCopyAsync"
+                            Disabled="@Disabled" />
+                </Stack>
+            }
+        </CardActions>
+    </Stack>
+</ActionCard>
+
+@code {
+    [Parameter, EditorRequired]
+    public NodeExplorerItemSnapshot Item { get; set; } = default!;
+
+    [Parameter]
+    public bool IsSelected { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public bool IsVirtual { get; set; }
+
+    [Parameter]
+    public EventCallback OnSelect { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnOpenContextMenu { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnCopyTarget { get; set; }
+
+    private Task HandleCopyAsync()
+        => OnCopyTarget.InvokeAsync(Item.Target);
+}

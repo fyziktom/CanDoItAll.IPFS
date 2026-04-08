@@ -1,0 +1,212 @@
+@using static CanDoItAll.IPFS.NodeControl.Components.Pages.PinRequestsComponents.PinRequestPresentation
+
+<Dialog IsOpen="true"
+        Eyebrow="Pin request"
+        Title="@Request.Request.Content.DisplayName"
+        Subtitle="@GetCardSummary(Request)"
+        Size="@(ModalSize.Wide)"
+        OnClose="OnClose">
+    <HeaderActions>
+        <span class="rp-state rp-state--@GetStateTone(Request.State)">@Request.State</span>
+    </HeaderActions>
+
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(GetSecurityCalloutMessage(Request)))
+        {
+            <div class="rps-callout rps-callout--@GetSecurityTone(Request.SecurityDisposition)">
+                <strong>@GetSecurityHeading(Request)</strong>
+                <p>@GetSecurityCalloutMessage(Request)</p>
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Request.ResponseMessage))
+        {
+            <div class="rps-callout rps-callout--@GetStateTone(Request.State)">
+                <strong>@GetResultHeading(Request.State)</strong>
+                <p>@Request.ResponseMessage</p>
+            </div>
+        }
+
+        <div class="rp-details-layout">
+            <section class="rp-details-panel">
+                <div class="rp-details-panel__header">
+                    <span class="fx-location__eyebrow">Content</span>
+                    <h3>Content</h3>
+                </div>
+
+                <div class="rp-details__facts">
+                    <div class="fx-fact">
+                        <span>Type</span>
+                        <strong>@GetContentLabel(Request.Request.Content)</strong>
+                    </div>
+
+                    <div class="fx-fact">
+                        <span>Size</span>
+                        <strong>@FormatSize(Request.Request.Content.Size)</strong>
+                    </div>
+
+                    <div class="fx-fact">
+                        <span>Direct items</span>
+                        <strong>@Request.Request.Content.ChildCount</strong>
+                    </div>
+
+                    <div class="fx-fact">
+                        <span>Requested path</span>
+                        <strong>@Request.Request.Content.RequestedPath</strong>
+                    </div>
+                </div>
+
+                <div class="rp-copy-stack">
+                    <span class="fx-field-label">CID</span>
+                    <div class="rp-copy-line">
+                        <code title="@Request.Request.Content.Cid">@FormatCompactId(Request.Request.Content.Cid)</code>
+                        <button type="button"
+                                class="rp-copy-button"
+                                @onclick='@(() => OnCopy.InvokeAsync(new PinRequestCopyRequest(Request.Request.Content.Cid, "CID")))'>
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="rp-copy-stack">
+                    <span class="fx-field-label">IPFS address</span>
+                    <div class="rp-copy-line">
+                        <code title="@BuildIpfsAddress(Request.Request.Content.Cid)">@BuildIpfsAddress(Request.Request.Content.Cid)</code>
+                        <button type="button"
+                                class="rp-copy-button"
+                                @onclick='@(() => OnCopy.InvokeAsync(new PinRequestCopyRequest(BuildIpfsAddress(Request.Request.Content.Cid), "IPFS address")))'>
+                            Copy
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="rp-details-panel">
+                <div class="rp-details-panel__header">
+                    <span class="fx-location__eyebrow">Sender</span>
+                    <h3>Sender</h3>
+                </div>
+
+                <div class="rp-details__facts">
+                    <div class="fx-fact">
+                        <span>Origin</span>
+                        <strong>@GetSenderOrigin(Request)</strong>
+                    </div>
+
+                    <div class="fx-fact">
+                        <span>Requested</span>
+                        <strong>@FormatTimestamp(Request.Request.RequestedAtUtc)</strong>
+                    </div>
+
+                    <div class="fx-fact">
+                        <span>Received</span>
+                        <strong>@FormatTimestamp(Request.ReceivedAtUtc)</strong>
+                    </div>
+
+                    <div class="fx-fact">
+                        <span>Updated</span>
+                        <strong>@(Request.RespondedAtUtc.HasValue ? FormatTimestamp(Request.RespondedAtUtc.Value) : "Waiting")</strong>
+                    </div>
+
+                    <div class="fx-fact">
+                        <span>Envelope</span>
+                        <strong>@GetEnvelopeLabel(Request.Request)</strong>
+                    </div>
+
+                    <div class="fx-fact">
+                        <span>Trust</span>
+                        <strong>@GetSecurityLabel(Request)</strong>
+                    </div>
+                </div>
+
+                <div class="rp-copy-stack">
+                    <span class="fx-field-label">Sender ID</span>
+                    <div class="rp-copy-line">
+                        <code title="@Request.Request.Sender.PeerId">@FormatCompactId(Request.Request.Sender.PeerId)</code>
+                        <button type="button"
+                                class="rp-copy-button"
+                                @onclick='@(() => OnCopy.InvokeAsync(new PinRequestCopyRequest(Request.Request.Sender.PeerId, "Sender ID")))'>
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="rp-copy-stack">
+                    <span class="fx-field-label">Primary address</span>
+                    <div class="rp-copy-line">
+                        <code title="@GetPrimarySenderAddress(Request)">@GetPrimarySenderAddress(Request)</code>
+                        <button type="button"
+                                class="rp-copy-button"
+                                @onclick='@(() => OnCopy.InvokeAsync(new PinRequestCopyRequest(GetPrimarySenderAddress(Request), "Sender address")))'>
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="rp-details__facts">
+                    <div class="fx-fact">
+                        <span>Control app</span>
+                        <strong>@Request.Request.Sender.ControlAppUrl</strong>
+                    </div>
+
+                    <div class="fx-fact">
+                        <span>Sender node API</span>
+                        <strong>@Request.Request.Sender.NodeBaseUrl</strong>
+                    </div>
+
+                    <div class="fx-fact">
+                        <span>Key ID</span>
+                        <strong>@(string.IsNullOrWhiteSpace(Request.Request.KeyId) ? "Compatibility" : Request.Request.KeyId)</strong>
+                    </div>
+
+                    <div class="fx-fact">
+                        <span>Expires</span>
+                        <strong>@(Request.Request.ExpiresAtUtc.HasValue ? FormatTimestamp(Request.Request.ExpiresAtUtc.Value) : "No expiry")</strong>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="rp-details__note">
+            <span class="fx-field-label">Note</span>
+            <p>@(string.IsNullOrWhiteSpace(Request.Request.Note) ? "No note supplied." : Request.Request.Note)</p>
+        </div>
+    </ChildContent>
+
+    <Footer>
+        @if (Request.State == RemotePinRequestState.Pending)
+        {
+            <Stack Orientation="Orientation.Horizontal"
+                   Wrap="FlexWrap.Wrap"
+                   Gap="0.65rem"
+                   class="rp-details__actions">
+                <Button Text="@(IsBusy ? "Accepting..." : "Accept")"
+                        Click="@(() => OnAccept.InvokeAsync(Request.Request.RequestId))"
+                        Disabled="@IsBusy" />
+                <Button Text="@(IsBusy ? "Rejecting..." : "Reject")"
+                        ButtonStyle="@(ButtonStyle.Light)"
+                        Variant="@(Variant.Outlined)"
+                        Click="@(() => OnReject.InvokeAsync(Request.Request.RequestId))"
+                        Disabled="@IsBusy" />
+            </Stack>
+        }
+        else
+        {
+            <div class="rp-history">@GetHistoryMessage(Request)</div>
+        }
+    </Footer>
+</Dialog>
+
+@code {
+    [Parameter] public EventCallback<string> OnAccept { get; set; }
+
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    [Parameter] public EventCallback<PinRequestCopyRequest> OnCopy { get; set; }
+
+    [Parameter] public EventCallback<string> OnReject { get; set; }
+
+    [Parameter] public required StoredRemotePinRequest Request { get; set; }
+
+    [Parameter] public bool IsBusy { get; set; }
+}

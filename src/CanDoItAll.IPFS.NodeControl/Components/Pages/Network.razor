@@ -1,0 +1,821 @@
+@page "/network"
+@implements IDisposable
+@implements IAsyncDisposable
+@inject IpfsClientFactory IpfsClientFactory
+@inject NodeSessionState NodeSessionState
+@inject NodeOperatorService NodeOperatorService
+@inject NodeCanvasSurfaceFactory NodeCanvasSurfaceFactory
+@inject NotificationService NotificationService
+
+<PageTitle>Network</PageTitle>
+
+<PageScaffold MaxWidthClass="max-w-[1500px]">
+    <Header>
+        <PageHeader Eyebrow="Network APIs"
+                    Title="Swarm, bootstrap, DHT, and PubSub"
+                    Description="Peer connectivity and topic traffic for the current node.">
+            <Actions>
+                <Button Text="Refresh" Click="LoadAsync" />
+                <Button Text="Stop PubSub"
+                        ButtonStyle="@(ButtonStyle.Warning)"
+                        Variant="@(Variant.Text)"
+                        Click="StopSubscriptionAsync"
+                        Disabled="@(!isSubscribed)" />
+                <HelpPopover AriaLabel="Show network help"
+                             Heading="Network route"
+                             Body="Use tabs to separate swarm controls, topology, DHT lookups, and PubSub work instead of keeping every network surface stacked on one page."
+                             Tip="The topology canvas now lives in its own tab so the default view can focus on current network actions.">
+                    <PanelContent>
+                        <div class="space-y-2">
+                            <p>Swarm, topology, DHT, and PubSub each keep their own action surfaces so the route stays usable without a long vertical stack.</p>
+                        </div>
+                    </PanelContent>
+                </HelpPopover>
+            </Actions>
+        </PageHeader>
+    </Header>
+
+    <Lead>
+        <SummaryTiles>
+            <SummaryTile Label="Connected peers" Value="@((snapshot?.ConnectedPeers.Count ?? 0).ToString("n0"))" Tone="success" />
+            <SummaryTile Label="Bootstrap" Value="@((snapshot?.BootstrapPeers.Count ?? 0).ToString("n0"))" Tone="warning" />
+            <SummaryTile Label="Filters" Value="@((snapshot?.AddressFilters.Count ?? 0).ToString("n0"))" Tone="info" />
+            <SummaryTile Label="PubSub topics" Value="@((snapshot?.PubSubTopics.Count ?? 0).ToString("n0"))" Tone="neutral" />
+        </SummaryTiles>
+    </Lead>
+
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <Alert AlertStyle="@(AlertStyle.Warning)">@errorMessage</Alert>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(connectionMessage))
+        {
+            <Alert AlertStyle="@(AlertStyle.Info)">@connectionMessage</Alert>
+        }
+
+        <Tabs SelectedIndex="@networkTabIndex"
+              SelectedIndexChanged="HandleNetworkTabChanged"
+              Variant="@(TabsVariant.ModalCompact)"
+              AriaLabel="Network tool tabs">
+            <TabItems>
+                <TabsItem Text="Swarm">
+                    <SectionCard Title="Swarm and bootstrap" Description="Peer connections, bootstrap management, and address filters.">
+                        <div class="space-y-4">
+                            <div class="node-inline-fields">
+                                <FormField Text="Peer multiaddress">
+                                    <TextBox Value="@connectAddress"
+                                             ValueChanged="HandleConnectAddressChanged"
+                                             Placeholder="/ip4/.../tcp/.../p2p/..."
+                                             Disabled="@isBusy" />
+                                </FormField>
+
+                                <FormField Text="Bootstrap address">
+                                    <TextBox Value="@bootstrapAddress"
+                                             ValueChanged="HandleBootstrapAddressChanged"
+                                             Placeholder="/ip4/.../tcp/.../p2p/..."
+                                             Disabled="@isBusy" />
+                                </FormField>
+
+                                <FormField Text="Filter address">
+                                    <TextBox Value="@filterAddress"
+                                             ValueChanged="HandleFilterAddressChanged"
+                                             Placeholder="/ip4/.../ipcidr/..."
+                                             Disabled="@isBusy" />
+                                </FormField>
+                            </div>
+
+                            <div class="node-inline-fields">
+                                <FormField Text="Known node host or API URL">
+                                    <TextBox Value="@knownNodeHost"
+                                             ValueChanged="HandleKnownNodeHostChanged"
+                                             Placeholder="192.168.0.191 or http://rpi3:5001"
+                                             Disabled="@isBusy" />
+                                </FormField>
+
+                                <FormField Text="Known node API port">
+                                    <Numeric TValue="int"
+                                             Value="@knownNodeApiPort"
+                                             ValueChanged="HandleKnownNodeApiPortChanged"
+                                             Min="1"
+                                             Max="65535"
+                                             Step="1"
+                                             Disabled="@isBusy" />
+                                </FormField>
+
+                                <FormField Text="Known node swarm port">
+                                    <Numeric TValue="int"
+                                             Value="@knownNodeSwarmPort"
+                                             ValueChanged="HandleKnownNodeSwarmPortChanged"
+                                             Min="1"
+                                             Max="65535"
+                                             Step="1"
+                                             Disabled="@isBusy" />
+                                </FormField>
+                            </div>
+
+                            <div class="node-action-row">
+                                <Button Text="Connect" Click="ConnectAsync" Disabled="@isBusy" />
+                                <Button Text="Disconnect"
+                                        ButtonStyle="@(ButtonStyle.Light)"
+                                        Variant="@(Variant.Outlined)"
+                                        Click="DisconnectAsync"
+                                        Disabled="@isBusy" />
+                                <Button Text="Add bootstrap"
+                                        ButtonStyle="@(ButtonStyle.Light)"
+                                        Variant="@(Variant.Outlined)"
+                                        Click="AddBootstrapAsync"
+                                        Disabled="@isBusy" />
+                                <Button Text="Remove bootstrap"
+                                        ButtonStyle="@(ButtonStyle.Warning)"
+                                        Variant="@(Variant.Text)"
+                                        Click="RemoveBootstrapAsync"
+                                        Disabled="@isBusy" />
+                                <Button Text="Resolve and connect"
+                                        ButtonStyle="@(ButtonStyle.Light)"
+                                        Variant="@(Variant.Outlined)"
+                                        Click="ConnectKnownNodeAsync"
+                                        Disabled="@isBusy" />
+                            </div>
+
+                            <div class="node-action-row">
+                                <Button Text="Restore defaults"
+                                        ButtonStyle="@(ButtonStyle.Light)"
+                                        Variant="@(Variant.Outlined)"
+                                        Click="RestoreDefaultBootstrapAsync"
+                                        Disabled="@isBusy" />
+                                <Button Text="Clear bootstrap"
+                                        ButtonStyle="@(ButtonStyle.Warning)"
+                                        Variant="@(Variant.Text)"
+                                        Click="ClearBootstrapAsync"
+                                        Disabled="@isBusy" />
+                                <Button Text="Add filter"
+                                        ButtonStyle="@(ButtonStyle.Light)"
+                                        Variant="@(Variant.Outlined)"
+                                        Click="AddFilterAsync"
+                                        Disabled="@isBusy" />
+                                <Button Text="Remove filter"
+                                        ButtonStyle="@(ButtonStyle.Warning)"
+                                        Variant="@(Variant.Text)"
+                                        Click="RemoveFilterAsync"
+                                        Disabled="@isBusy" />
+                            </div>
+                        </div>
+                    </SectionCard>
+                </TabsItem>
+
+                <TabsItem Text="Topology">
+                    <SectionCard Title="Network workbench" Description="Canvas topology for peers, bootstrap entries, filters, and local PubSub topics.">
+                        <div class="node-workbench-shell">
+                            <CanvasWorkbench Surface="@networkSurface"
+                                             SelectionChanged="HandleWorkbenchSelectionChanged"
+                                             StateChanged="HandleWorkbenchStateChanged">
+                                <ToolbarLeftContent>
+                                    <div class="flex flex-wrap gap-2">
+                                        <StatusBadge Text="Peer topology" Tone="info" />
+                                        @if (isSubscribed)
+                                        {
+                                            <StatusBadge Text="PubSub live" Tone="success" />
+                                        }
+                                    </div>
+                                </ToolbarLeftContent>
+                            </CanvasWorkbench>
+                        </div>
+                    </SectionCard>
+                </TabsItem>
+
+                <TabsItem Text="DHT">
+                    <SectionCard Title="DHT lookups" Description="Find a peer or resolve providers for a CID.">
+                        <div class="space-y-4">
+                            <div class="node-inline-fields">
+                                <FormField Text="Peer ID">
+                                    <TextBox Value="@dhtPeerId"
+                                             ValueChanged="HandleDhtPeerIdChanged"
+                                             Placeholder="12D3KooW..."
+                                             Disabled="@isBusy" />
+                                </FormField>
+
+                                <FormField Text="Provider CID">
+                                    <TextBox Value="@providerCid"
+                                             ValueChanged="HandleProviderCidChanged"
+                                             Placeholder="bafy..."
+                                             Disabled="@isBusy" />
+                                </FormField>
+                            </div>
+
+                            <div class="node-action-row">
+                                <Button Text="Find peer" Click="FindPeerAsync" Disabled="@isBusy" />
+                                <Button Text="Find providers"
+                                        ButtonStyle="@(ButtonStyle.Light)"
+                                        Variant="@(Variant.Outlined)"
+                                        Click="FindProvidersAsync"
+                                        Disabled="@isBusy" />
+                            </div>
+
+                            @if (dhtPeerResult is not null)
+                            {
+                                <SummaryTiles>
+                                    <SummaryTile Label="Peer"
+                                                 Value="@Shorten(dhtPeerResult.Id, 24)"
+                                                 Tone="info" />
+                                    <SummaryTile Label="Agent"
+                                                 Value="@dhtPeerResult.AgentVersion"
+                                                 Tone="success" />
+                                    <SummaryTile Label="Address count"
+                                                 Value="@dhtPeerResult.Addresses.Count.ToString("n0")"
+                                                 Tone="warning" />
+                                </SummaryTiles>
+                            }
+
+                            @if (providerResults.Count > 0)
+                            {
+                                <div class="node-list">
+                                    @foreach (var provider in providerResults)
+                                    {
+                                        <SelectionListItem Title="@Shorten(provider.Id, 20)"
+                                                           Eyebrow="Provider"
+                                                           Meta="@provider.AgentVersion"
+                                                           Summary="@provider.ConnectedAddress">
+                                            <Status>
+                                                <StatusBadge Text="Provider" Tone="info" />
+                                            </Status>
+                                        </SelectionListItem>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </SectionCard>
+                </TabsItem>
+                <TabsItem Text="PubSub">
+                    <div class="space-y-4">
+                        <SectionCard Title="PubSub publish and peers" Description="Inspect peers for a topic, publish a text message, and manage the live subscription.">
+                            <div class="space-y-4">
+                                <div class="node-inline-fields">
+                                    <FormField Text="Topic">
+                                        <TextBox Value="@pubSubTopic"
+                                                 ValueChanged="HandlePubSubTopicChanged"
+                                                 Placeholder="operators"
+                                                 Disabled="@isBusy" />
+                                    </FormField>
+
+                                    <FormField Text="Subscription topic">
+                                        <TextBox Value="@subscriptionTopic"
+                                                 ValueChanged="HandleSubscriptionTopicChanged"
+                                                 Placeholder="operators"
+                                                 Disabled="@isBusy" />
+                                    </FormField>
+                                </div>
+
+                                <FormField Text="Message">
+                                    <TextArea Value="@pubSubMessage"
+                                              ValueChanged="HandlePubSubMessageChanged"
+                                              Rows="5"
+                                              Placeholder="Broadcast a text payload to the chosen topic."
+                                              Disabled="@isBusy" />
+                                </FormField>
+
+                                <div class="node-action-row">
+                                    <Button Text="List topic peers" Click="LoadPubSubPeersAsync" Disabled="@isBusy" />
+                                    <Button Text="Publish message"
+                                            ButtonStyle="@(ButtonStyle.Light)"
+                                            Variant="@(Variant.Outlined)"
+                                            Click="PublishPubSubAsync"
+                                            Disabled="@isBusy" />
+                                    <Button Text="Subscribe"
+                                            ButtonStyle="@(ButtonStyle.Light)"
+                                            Variant="@(Variant.Outlined)"
+                                            Click="StartSubscriptionAsync"
+                                            Disabled="@isBusy" />
+                                </div>
+
+                                @if (pubSubPeers.Count > 0)
+                                {
+                                    <div class="node-list">
+                                        @foreach (var peer in pubSubPeers)
+                                        {
+                                            <SelectionListItem Title="@Shorten(peer.Id, 20)"
+                                                               Eyebrow="PubSub peer"
+                                                               Meta="@peer.AgentVersion"
+                                                               Summary="@peer.ProtocolVersion">
+                                                <Status>
+                                                    <StatusBadge Text="Topic peer" Tone="success" />
+                                                </Status>
+                                            </SelectionListItem>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </SectionCard>
+
+                        <SectionCard Title="Live subscription feed" Description="Messages streamed from pubsub/sub for the active topic.">
+                            @if (subscriptionMessages.Count == 0)
+                            {
+                                <EmptyState Eyebrow="PubSub" Title="No messages yet" Description="Subscribe to a topic and publish traffic to see live messages appear here." />
+                            }
+                            else
+                            {
+                                <div class="max-h-[calc(100dvh-26rem)] overflow-y-auto pr-2">
+                                    <div class="node-list">
+                                        @foreach (var message in subscriptionMessages)
+                                        {
+                                            <SelectionListItem Title="@message.Topic"
+                                                               Eyebrow="@message.Timestamp.ToLocalTime().ToString("u")"
+                                                               Meta="@message.Sender"
+                                                               Summary="@message.Payload">
+                                                <Status>
+                                                    <StatusBadge Text="Live" Tone="info" />
+                                                </Status>
+                                            </SelectionListItem>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </SectionCard>
+                    </div>
+                </TabsItem>
+            </TabItems>
+        </Tabs>
+    </ChildContent>
+</PageScaffold>
+
+@code {
+    private readonly List<SubscriptionMessage> subscriptionMessages = [];
+    private NodeNetworkSnapshot? snapshot;
+    private IReadOnlyList<NodePeerSnapshot> pubSubPeers = [];
+    private IReadOnlyList<NodePeerSnapshot> providerResults = [];
+    private NodePeerSnapshot? dhtPeerResult;
+    private int networkTabIndex;
+    private string? errorMessage;
+    private string? connectionMessage;
+    private string networkCanvasState = string.Empty;
+    private string connectAddress = string.Empty;
+    private string bootstrapAddress = string.Empty;
+    private string filterAddress = string.Empty;
+    private string knownNodeHost = string.Empty;
+    private int knownNodeApiPort = 5001;
+    private int knownNodeSwarmPort = 4001;
+    private string dhtPeerId = string.Empty;
+    private string providerCid = string.Empty;
+    private string pubSubTopic = string.Empty;
+    private string pubSubMessage = string.Empty;
+    private string subscriptionTopic = string.Empty;
+    private bool isBusy;
+    private bool isSubscribed;
+    private bool hasStartedInitialLoad;
+    private CancellationTokenSource? subscriptionCts;
+    private IpfsClientLease? subscriptionLease;
+
+    private CanvasWorkbenchSurface networkSurface => NodeCanvasSurfaceFactory.CreateNetworkSurface(snapshot ?? new NodeNetworkSnapshot(), networkCanvasState);
+
+    protected override void OnInitialized()
+    {
+        NodeSessionState.Changed += HandleNodeSessionChanged;
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !NodeSessionState.IsHydrated || hasStartedInitialLoad)
+        {
+            return Task.CompletedTask;
+        }
+
+        hasStartedInitialLoad = true;
+        return LoadAsync();
+    }
+
+    private Task HandleNetworkTabChanged(int value)
+    {
+        networkTabIndex = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task LoadAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            snapshot = await NodeOperatorService.GetNetworkSnapshotAsync(CancellationToken.None);
+        });
+    }
+
+    private async Task ConnectAsync()
+    {
+        if (string.IsNullOrWhiteSpace(connectAddress))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.ConnectAsync(connectAddress.Trim(), CancellationToken.None);
+            await LoadAsync();
+        });
+    }
+
+    private async Task DisconnectAsync()
+    {
+        if (string.IsNullOrWhiteSpace(connectAddress))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.DisconnectAsync(connectAddress.Trim(), CancellationToken.None);
+            await LoadAsync();
+        });
+    }
+
+    private async Task ConnectKnownNodeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(knownNodeHost))
+        {
+            errorMessage = "A known node host or API URL is required.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            var resolved = await NodeOperatorService.ConnectByKnownNodeApiAsync(
+                knownNodeHost.Trim(),
+                knownNodeApiPort,
+                knownNodeSwarmPort,
+                CancellationToken.None);
+
+            connectAddress = resolved.DialAddress;
+            bootstrapAddress = resolved.DialAddress;
+            dhtPeerId = resolved.PeerId;
+
+            var advertisedKnownHost = resolved.AdvertisedAddresses.Any(address =>
+                address.Contains(resolved.RequestedHost, StringComparison.OrdinalIgnoreCase));
+            connectionMessage = advertisedKnownHost
+                ? $"Connected to {resolved.AgentVersion} at {resolved.DialAddress}."
+                : $"Connected to {resolved.AgentVersion} using explicit LAN dial address {resolved.DialAddress} because the remote node advertises non-routable addresses.";
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Peer connected",
+                Detail = resolved.DialAddress
+            });
+
+            await LoadAsync();
+        });
+    }
+
+    private async Task AddBootstrapAsync()
+    {
+        if (string.IsNullOrWhiteSpace(bootstrapAddress))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.AddBootstrapAsync(bootstrapAddress.Trim(), CancellationToken.None);
+            await LoadAsync();
+        });
+    }
+
+    private async Task RemoveBootstrapAsync()
+    {
+        if (string.IsNullOrWhiteSpace(bootstrapAddress))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.RemoveBootstrapAsync(bootstrapAddress.Trim(), CancellationToken.None);
+            await LoadAsync();
+        });
+    }
+
+    private async Task RestoreDefaultBootstrapAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.RestoreDefaultBootstrapAsync(CancellationToken.None);
+            await LoadAsync();
+        });
+    }
+
+    private async Task ClearBootstrapAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.RemoveAllBootstrapAsync(CancellationToken.None);
+            await LoadAsync();
+        });
+    }
+
+    private async Task AddFilterAsync()
+    {
+        if (string.IsNullOrWhiteSpace(filterAddress))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.AddAddressFilterAsync(filterAddress.Trim(), CancellationToken.None);
+            await LoadAsync();
+        });
+    }
+
+    private async Task RemoveFilterAsync()
+    {
+        if (string.IsNullOrWhiteSpace(filterAddress))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.RemoveAddressFilterAsync(filterAddress.Trim(), CancellationToken.None);
+            await LoadAsync();
+        });
+    }
+
+    private async Task FindPeerAsync()
+    {
+        if (string.IsNullOrWhiteSpace(dhtPeerId))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            dhtPeerResult = await NodeOperatorService.FindPeerAsync(dhtPeerId.Trim(), CancellationToken.None);
+        });
+    }
+
+    private async Task FindProvidersAsync()
+    {
+        if (string.IsNullOrWhiteSpace(providerCid))
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            providerResults = await NodeOperatorService.FindProvidersAsync(providerCid.Trim(), 20, CancellationToken.None);
+        });
+    }
+
+    private async Task LoadPubSubPeersAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            pubSubPeers = await NodeOperatorService.ListPubSubPeersAsync(pubSubTopic, CancellationToken.None);
+        });
+    }
+
+    private async Task PublishPubSubAsync()
+    {
+        if (string.IsNullOrWhiteSpace(pubSubTopic) || string.IsNullOrWhiteSpace(pubSubMessage))
+        {
+            errorMessage = "Both topic and message are required.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await NodeOperatorService.PublishPubSubAsync(pubSubTopic.Trim(), pubSubMessage, CancellationToken.None);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "PubSub message published",
+                Detail = pubSubTopic.Trim()
+            });
+        });
+    }
+
+    private async Task StartSubscriptionAsync()
+    {
+        if (string.IsNullOrWhiteSpace(subscriptionTopic))
+        {
+            errorMessage = "A subscription topic is required.";
+            return;
+        }
+
+        await StopSubscriptionAsync();
+        subscriptionMessages.Clear();
+        subscriptionLease = IpfsClientFactory.CreateLease();
+        subscriptionCts = new CancellationTokenSource();
+        isSubscribed = true;
+
+        var topic = subscriptionTopic.Trim();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await subscriptionLease.Client.PubSub.SubscribeAsync(topic, message =>
+                {
+                    var payload = System.Text.Encoding.UTF8.GetString(message.DataBytes);
+                    _ = InvokeAsync(() =>
+                    {
+                        subscriptionMessages.Insert(0, new SubscriptionMessage(DateTimeOffset.UtcNow, topic, message.Sender.Id?.ToString() ?? "unknown", payload));
+                        while (subscriptionMessages.Count > 24)
+                        {
+                            subscriptionMessages.RemoveAt(subscriptionMessages.Count - 1);
+                        }
+
+                        StateHasChanged();
+                    });
+                }, subscriptionCts.Token);
+            }
+            catch (Exception) when (subscriptionCts?.IsCancellationRequested == true)
+            {
+            }
+            catch (Exception ex)
+            {
+                await InvokeAsync(() =>
+                {
+                    errorMessage = ex.Message;
+                    NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "PubSub subscription failed",
+                        Detail = ex.Message
+                    });
+                });
+            }
+        });
+    }
+
+    private Task StopSubscriptionAsync()
+    {
+        isSubscribed = false;
+        try
+        {
+            subscriptionCts?.Cancel();
+        }
+        catch
+        {
+        }
+
+        subscriptionLease?.Dispose();
+        subscriptionLease = null;
+        subscriptionCts?.Dispose();
+        subscriptionCts = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task RunBusyAsync(Func<Task> operation)
+    {
+        errorMessage = null;
+        isBusy = true;
+
+        try
+        {
+            await operation();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Network action failed",
+                Detail = ex.Message
+            });
+        }
+        finally
+        {
+            isBusy = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Task HandleWorkbenchSelectionChanged(CanvasWorkbenchSelectionChangedEventArgs args)
+        => Task.CompletedTask;
+
+    private Task HandleWorkbenchStateChanged(string stateJson)
+    {
+        networkCanvasState = stateJson;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleConnectAddressChanged(string? value)
+    {
+        connectAddress = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleBootstrapAddressChanged(string? value)
+    {
+        bootstrapAddress = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleFilterAddressChanged(string? value)
+    {
+        filterAddress = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleKnownNodeHostChanged(string? value)
+    {
+        knownNodeHost = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleKnownNodeApiPortChanged(int value)
+    {
+        knownNodeApiPort = value;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleKnownNodeSwarmPortChanged(int value)
+    {
+        knownNodeSwarmPort = value;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleDhtPeerIdChanged(string? value)
+    {
+        dhtPeerId = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleProviderCidChanged(string? value)
+    {
+        providerCid = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandlePubSubTopicChanged(string? value)
+    {
+        pubSubTopic = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandlePubSubMessageChanged(string? value)
+    {
+        pubSubMessage = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleSubscriptionTopicChanged(string? value)
+    {
+        subscriptionTopic = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        NodeSessionState.Changed -= HandleNodeSessionChanged;
+        await StopSubscriptionAsync();
+    }
+
+    public void Dispose()
+    {
+        NodeSessionState.Changed -= HandleNodeSessionChanged;
+    }
+
+    private void HandleNodeSessionChanged()
+    {
+        if (!NodeSessionState.IsHydrated)
+        {
+            return;
+        }
+
+        hasStartedInitialLoad = true;
+        _ = InvokeAsync(async () =>
+        {
+            await StopSubscriptionAsync();
+            pubSubPeers = [];
+            providerResults = [];
+            dhtPeerResult = null;
+            await LoadAsync();
+        });
+    }
+
+    private static string Shorten(string value, int limit)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length <= limit)
+        {
+            return value;
+        }
+
+        return $"{value[..(limit - 3)]}...";
+    }
+
+    private static string FormatBytes(ulong bytes)
+    {
+        const double scale = 1024d;
+        var value = (double)bytes;
+        var units = new[] { "B", "KB", "MB", "GB", "TB" };
+        var unit = 0;
+        while (value >= scale && unit < units.Length - 1)
+        {
+            value /= scale;
+            unit++;
+        }
+
+        return $"{value:n2} {units[unit]}";
+    }
+
+    private sealed record SubscriptionMessage(DateTimeOffset Timestamp, string Topic, string Sender, string Payload);
+}
