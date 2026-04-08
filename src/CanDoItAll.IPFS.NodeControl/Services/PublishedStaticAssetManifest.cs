@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Reflection;
 using Microsoft.AspNetCore.StaticFiles;
 
 namespace CanDoItAll.IPFS.NodeControl.Services;
@@ -17,9 +18,9 @@ public sealed class PublishedStaticAssetManifest
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(baseDirectory);
 
-        var manifestPath = Path.Combine(baseDirectory, "IpfsNodeControl.staticwebassets.endpoints.json");
+        var manifestPath = ResolveManifestPath(baseDirectory);
         var wwwrootPath = Path.Combine(baseDirectory, "wwwroot");
-        if (!File.Exists(manifestPath) || !Directory.Exists(wwwrootPath))
+        if (string.IsNullOrWhiteSpace(manifestPath) || !Directory.Exists(wwwrootPath))
         {
             return null;
         }
@@ -175,6 +176,32 @@ public sealed class PublishedStaticAssetManifest
         => string.IsNullOrWhiteSpace(route)
             ? string.Empty
             : route.Trim().TrimStart('/');
+
+    private static string? ResolveManifestPath(string baseDirectory)
+    {
+        var manifestPaths = Directory.EnumerateFiles(baseDirectory, "*.staticwebassets.endpoints.json", SearchOption.TopDirectoryOnly)
+            .ToList();
+        if (manifestPaths.Count == 0)
+        {
+            return null;
+        }
+
+        var entryAssemblyName = Assembly.GetEntryAssembly()?.GetName().Name;
+        if (!string.IsNullOrWhiteSpace(entryAssemblyName))
+        {
+            var preferredFileName = $"{entryAssemblyName}.staticwebassets.endpoints.json";
+            var preferredPath = manifestPaths.FirstOrDefault(path =>
+                string.Equals(Path.GetFileName(path), preferredFileName, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(preferredPath))
+            {
+                return preferredPath;
+            }
+        }
+
+        return manifestPaths
+            .OrderBy(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
+    }
 
     private static string? ResolveFilePath(string wwwrootPath, string assetFile)
     {

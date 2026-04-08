@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
+		<RuntimeIdentifiers>win-x64;linux-x64;linux-arm</RuntimeIdentifiers>
 		<OutputType>Exe</OutputType>
 		<AssemblyName>CanDoItAll.IPFS.Engine</AssemblyName>
 		<RootNamespace>CanDoItAll.IPFS.Engine</RootNamespace>

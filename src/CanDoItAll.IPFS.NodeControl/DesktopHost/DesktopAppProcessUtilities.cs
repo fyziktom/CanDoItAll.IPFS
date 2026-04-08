@@ -18,32 +18,35 @@ internal static class DesktopAppProcessUtilities
 {
     private static readonly string[] CandidateConfigurations = ["Debug", "Release"];
     private static readonly string[] CandidateTargetFrameworks = ["net10.0-windows", "net10.0"];
+    private static readonly string[] CandidatePublishedSubdirectories = ["", "node", "engine"];
 
     public static string? FindRepoRoot(string? startPath = null)
     {
-        var candidatePaths = new[]
+        foreach (var candidatePath in EnumerateCandidatePaths(startPath))
         {
-            startPath,
-            AppContext.BaseDirectory,
-            Directory.GetCurrentDirectory()
-        };
-
-        foreach (var candidatePath in candidatePaths)
-        {
-            if (string.IsNullOrWhiteSpace(candidatePath))
-            {
-                continue;
-            }
-
-            DirectoryInfo? current = new(Path.GetFullPath(candidatePath));
-            while (current is not null)
+            foreach (var current in EnumerateCandidateDirectories(candidatePath))
             {
                 if (File.Exists(Path.Combine(current.FullName, "CanDoItAll.IPFS.slnx")))
                 {
                     return current.FullName;
                 }
+            }
+        }
 
-                current = current.Parent;
+        return null;
+    }
+
+    public static string? FindAppRoot(RepoAppDescriptor descriptor, string? startPath = null)
+    {
+        foreach (var candidatePath in EnumerateCandidatePaths(startPath))
+        {
+            foreach (var current in EnumerateCandidateDirectories(candidatePath))
+            {
+                if (File.Exists(Path.Combine(current.FullName, "CanDoItAll.IPFS.slnx"))
+                    || ContainsPublishedApp(current.FullName, descriptor))
+                {
+                    return current.FullName;
+                }
             }
         }
 
@@ -61,6 +64,28 @@ internal static class DesktopAppProcessUtilities
         RepoAppDescriptor descriptor,
         IReadOnlyDictionary<string, string?>? environmentVariables = null)
     {
+        foreach (var executablePath in EnumeratePublishedExecutableCandidates(repoRoot, descriptor))
+        {
+            if (!File.Exists(executablePath))
+            {
+                continue;
+            }
+
+            var workingDirectory = Path.GetDirectoryName(executablePath) ?? repoRoot;
+            return StartProcess(executablePath, workingDirectory, environmentVariables, Array.Empty<string>());
+        }
+
+        foreach (var dllPath in EnumeratePublishedDllCandidates(repoRoot, descriptor))
+        {
+            if (!File.Exists(dllPath))
+            {
+                continue;
+            }
+
+            var workingDirectory = Path.GetDirectoryName(dllPath) ?? repoRoot;
+            return StartProcess("dotnet", workingDirectory, environmentVariables, [dllPath]);
+        }
+
         foreach (var executablePath in EnumerateExecutableCandidates(repoRoot, descriptor))
         {
             if (!File.Exists(executablePath))
@@ -68,7 +93,8 @@ internal static class DesktopAppProcessUtilities
                 continue;
             }
 
-            return StartProcess(executablePath, GetProjectDirectory(repoRoot, descriptor), environmentVariables, Array.Empty<string>());
+            var workingDirectory = Path.GetDirectoryName(executablePath) ?? GetProjectDirectory(repoRoot, descriptor);
+            return StartProcess(executablePath, workingDirectory, environmentVariables, Array.Empty<string>());
         }
 
         foreach (var dllPath in EnumerateDllCandidates(repoRoot, descriptor))
@@ -78,7 +104,8 @@ internal static class DesktopAppProcessUtilities
                 continue;
             }
 
-            return StartProcess("dotnet", GetProjectDirectory(repoRoot, descriptor), environmentVariables, [dllPath]);
+            var workingDirectory = Path.GetDirectoryName(dllPath) ?? GetProjectDirectory(repoRoot, descriptor);
+            return StartProcess("dotnet", workingDirectory, environmentVariables, [dllPath]);
         }
 
         var projectPath = GetProjectPath(repoRoot, descriptor);
@@ -102,9 +129,12 @@ internal static class DesktopAppProcessUtilities
             return null;
         }
 
+        var workingDirectory = Directory.Exists(AppContext.BaseDirectory)
+            ? AppContext.BaseDirectory
+            : Directory.GetCurrentDirectory();
         return StartProcess(
             processPath,
-            Directory.GetCurrentDirectory(),
+            workingDirectory,
             environmentVariables,
             Environment.GetCommandLineArgs().Skip(1));
     }
@@ -297,6 +327,23 @@ internal static class DesktopAppProcessUtilities
         }
     }
 
+    private static IEnumerable<string> EnumeratePublishedExecutableCandidates(string root, RepoAppDescriptor descriptor)
+    {
+        foreach (var subdirectory in CandidatePublishedSubdirectories)
+        {
+            var candidateDirectory = string.IsNullOrWhiteSpace(subdirectory)
+                ? root
+                : Path.Combine(root, subdirectory);
+            if (!Directory.Exists(candidateDirectory))
+            {
+                continue;
+            }
+
+            yield return Path.Combine(candidateDirectory, descriptor.AssemblyBaseName);
+            yield return Path.Combine(candidateDirectory, $"{descriptor.AssemblyBaseName}.exe");
+        }
+    }
+
     private static IEnumerable<string> EnumerateDllCandidates(string repoRoot, RepoAppDescriptor descriptor)
     {
         var projectDirectory = GetProjectDirectory(repoRoot, descriptor);
@@ -306,6 +353,22 @@ internal static class DesktopAppProcessUtilities
             {
                 yield return Path.Combine(projectDirectory, "bin", configuration, targetFramework, $"{descriptor.AssemblyBaseName}.dll");
             }
+        }
+    }
+
+    private static IEnumerable<string> EnumeratePublishedDllCandidates(string root, RepoAppDescriptor descriptor)
+    {
+        foreach (var subdirectory in CandidatePublishedSubdirectories)
+        {
+            var candidateDirectory = string.IsNullOrWhiteSpace(subdirectory)
+                ? root
+                : Path.Combine(root, subdirectory);
+            if (!Directory.Exists(candidateDirectory))
+            {
+                continue;
+            }
+
+            yield return Path.Combine(candidateDirectory, $"{descriptor.AssemblyBaseName}.dll");
         }
     }
 
@@ -346,7 +409,8 @@ internal static class DesktopAppProcessUtilities
 
     private static Process? FindRepoAppProcess(string repoRoot, RepoAppDescriptor descriptor)
     {
-        var executableCandidates = EnumerateExecutableCandidates(repoRoot, descriptor)
+        var executableCandidates = EnumeratePublishedExecutableCandidates(repoRoot, descriptor)
+            .Concat(EnumerateExecutableCandidates(repoRoot, descriptor))
             .Select(Path.GetFullPath)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
@@ -373,6 +437,32 @@ internal static class DesktopAppProcessUtilities
         }
 
         return null;
+    }
+
+    private static bool ContainsPublishedApp(string root, RepoAppDescriptor descriptor)
+        => EnumeratePublishedExecutableCandidates(root, descriptor).Any(File.Exists)
+            || EnumeratePublishedDllCandidates(root, descriptor).Any(File.Exists);
+
+    private static IEnumerable<string> EnumerateCandidatePaths(string? startPath)
+    {
+        yield return startPath ?? string.Empty;
+        yield return AppContext.BaseDirectory;
+        yield return Directory.GetCurrentDirectory();
+    }
+
+    private static IEnumerable<DirectoryInfo> EnumerateCandidateDirectories(string candidatePath)
+    {
+        if (string.IsNullOrWhiteSpace(candidatePath))
+        {
+            yield break;
+        }
+
+        DirectoryInfo? current = new(Path.GetFullPath(candidatePath));
+        while (current is not null)
+        {
+            yield return current;
+            current = current.Parent;
+        }
     }
 
     private static bool IsProcessListeningOnEndpoint(int processId, Uri endpoint)

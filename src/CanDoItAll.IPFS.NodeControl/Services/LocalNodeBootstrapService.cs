@@ -272,17 +272,17 @@ public sealed class LocalNodeBootstrapService
                 return;
             }
 
-            var repoRoot = nodeHostController.FindRepoRoot();
-            if (string.IsNullOrWhiteSpace(repoRoot))
+            var applicationRoot = nodeHostController.FindRepoRoot();
+            if (string.IsNullOrWhiteSpace(applicationRoot))
             {
-                throw new InvalidOperationException("Could not locate the repository root to start the local IPFS host.");
+                throw new InvalidOperationException("Could not locate a repository or published deployment root to start the local IPFS host.");
             }
 
-            logger.LogInformation("Starting local node host from repository root {RepoRoot} for endpoint {Endpoint}.", repoRoot, endpoint);
+            logger.LogInformation("Starting local node host from application root {ApplicationRoot} for endpoint {Endpoint}.", applicationRoot, endpoint);
 
-            if (!nodeHostController.TryStartLocalNodeHost(repoRoot, endpoint, out var processId))
+            if (!nodeHostController.TryStartLocalNodeHost(applicationRoot, endpoint, out var processId))
             {
-                throw new InvalidOperationException("Could not start the local IPFS host from the current repository layout.");
+                throw new InvalidOperationException("Could not start the local IPFS host from the current repository or published deployment layout.");
             }
 
             logger.LogInformation(
@@ -322,13 +322,13 @@ public sealed class LocalNodeBootstrapService
 
     private async Task StopUnhealthyLocalNodeAsync(Uri endpoint, CancellationToken cancellationToken)
     {
-        var repoRoot = nodeHostController.FindRepoRoot();
-        if (string.IsNullOrWhiteSpace(repoRoot))
+        var applicationRoot = nodeHostController.FindRepoRoot();
+        if (string.IsNullOrWhiteSpace(applicationRoot))
         {
-            throw new InvalidOperationException($"Endpoint {endpoint} is listening but the managed local-node health probe failed, and the repository root could not be located for recovery.");
+            throw new InvalidOperationException($"Endpoint {endpoint} is listening but the managed local-node health probe failed, and no repository or published deployment root could be located for recovery.");
         }
 
-        if (!nodeHostController.TryStopLocalNodeHost(repoRoot, endpoint, StopTimeout, out var processId))
+        if (!nodeHostController.TryStopLocalNodeHost(applicationRoot, endpoint, StopTimeout, out var processId))
         {
             throw new InvalidOperationException($"Endpoint {endpoint} is listening but the managed local-node health probe failed, and no repo-owned local node process could be stopped automatically.");
         }

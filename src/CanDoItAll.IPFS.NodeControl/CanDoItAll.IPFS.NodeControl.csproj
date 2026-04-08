@@ -8,7 +8,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <RuntimeIdentifiers>linux-x64;linux-arm</RuntimeIdentifiers>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <OutputType>WinExe</OutputType>
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
@@ -35,6 +40,7 @@
   <ItemGroup Condition="'$(TargetFramework)' != 'net10.0-windows'">
     <Compile Remove="Services\ControlAppTrayHostedService.cs" />
     <Compile Remove="DesktopHost\WindowsTrayHostedService.cs" />
+    <Compile Remove="DesktopHost\WindowsStartupRegistrationService.cs" />
   </ItemGroup>
 
   <Target Name="RemoveNodeHostExecutablePublishArtifacts" BeforeTargets="_HandleFileConflictsForPublish">

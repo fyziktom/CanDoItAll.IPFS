@@ -27,7 +27,8 @@ public sealed class DesktopNodeHostController : INodeHostController
     }
 
     public string? FindRepoRoot(string? startPath = null)
-        => DesktopAppProcessUtilities.FindRepoRoot(startPath);
+        => DesktopAppProcessUtilities.FindAppRoot(NodeHostDescriptor, startPath)
+            ?? DesktopAppProcessUtilities.FindRepoRoot(startPath);
 
     public bool IsLocalEndpoint(Uri endpoint)
         => DesktopAppProcessUtilities.IsLocalEndpoint(endpoint);

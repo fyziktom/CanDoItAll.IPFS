@@ -103,6 +103,7 @@ public static class NodeControlServiceCollectionExtensions
         services.AddSingleton<SelfHostControlService>();
         services.AddSingleton<ILoggerProvider, ApplicationLogLoggerProvider>();
 #if WINDOWS
+        services.AddSingleton<WindowsStartupRegistrationService>();
         services.AddHostedService<ControlAppTrayHostedService>();
 #endif
         services.AddScoped<NodeSessionState>();

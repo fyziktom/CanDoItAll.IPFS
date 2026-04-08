@@ -58,6 +58,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseForwardedHeaders();
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 if (publishedStaticAssets is not null)
 {
@@ -91,10 +92,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 app.UseAntiforgery();
-if (publishedStaticAssets is null)
-{
-    app.MapStaticAssets();
-}
+app.MapStaticAssets();
 var liveHealth = app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = _ => false,
