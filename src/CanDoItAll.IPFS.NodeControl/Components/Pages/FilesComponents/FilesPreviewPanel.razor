@@ -53,32 +53,27 @@
                     </Stack>
                 </PanelCard>
 
-                <Row Gap="0.75rem">
-                    <Column Size="12">
-                        <SummaryTile Label="Name"
-                                     Value="@FilesUiText.Shorten(PreviewSnapshot.DisplayName, 24)"
-                                     HelperText="@PreviewSnapshot.DisplayName"
-                                     Tone="info" />
-                    </Column>
-                    <Column Size="12">
-                        <SummaryTile Label="Type"
-                                     Value="@PreviewSnapshot.TypeLabel"
-                                     HelperText="Resolved from the active explorer snapshot."
-                                     Tone="neutral" />
-                    </Column>
-                    <Column Size="12">
-                        <SummaryTile Label="Path"
-                                     Value="@FilesUiText.Shorten(PreviewSnapshot.Path, 20)"
-                                     HelperText="@PreviewSnapshot.Path"
-                                     Tone="warning" />
-                    </Column>
-                    <Column Size="12">
-                        <SummaryTile Label="Footprint"
-                                     Value="@FilesUiText.PreviewSizeOrCount(PreviewSnapshot)"
-                                     HelperText="Directory item count or file size."
-                                     Tone="success" />
-                    </Column>
-                </Row>
+                <Stack Orientation="Orientation.Horizontal" Gap="1rem">
+                    <SummaryTile Label="Name"
+                                    Value="@FilesUiText.Shorten(PreviewSnapshot.DisplayName, 24)"
+                                    HelperText="@PreviewSnapshot.DisplayName"
+                                    Tone="info" />
+                      
+                    <SummaryTile Label="Type"
+                                    Value="@PreviewSnapshot.TypeLabel"
+                                    HelperText="Resolved from the active explorer snapshot."
+                                    Tone="neutral" />
+                    
+                    <SummaryTile Label="Path"
+                                    Value="@FilesUiText.Shorten(PreviewSnapshot.Path, 20)"
+                                    HelperText="@PreviewSnapshot.Path"
+                                    Tone="warning" />
+                     
+                    <SummaryTile Label="Footprint"
+                                    Value="@FilesUiText.PreviewSizeOrCount(PreviewSnapshot)"
+                                    HelperText="Directory item count or file size."
+                                    Tone="success" />
+                </Stack>
 
                 @if (IsVirtualPreview)
                 {
