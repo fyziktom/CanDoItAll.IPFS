@@ -56,10 +56,16 @@
 
         <Tabs SelectedIndex="@settingsTabIndex"
               SelectedIndexChanged="HandleSettingsTabChanged"
-              Variant="@(TabsVariant.ModalCompact)"
+              Variant="@(TabsVariant.WorkspacePrimary)"
+              BorderMode="@(TabsBorderMode.Soft)"
+              Tone="@(TabsTone.Secondary)"
+              OverflowMode="@(TabsOverflowMode.Scroll)"
+              PanelOverflowMode="@(TabsPanelOverflowMode.Auto)"
+              Class="w-full min-w-0"
               AriaLabel="Settings tabs">
             <TabItems>
-                <TabsItem Text="Endpoint">
+                <TabsItem Text="Endpoint"
+                          Icon="lan">
                     <FormSection Title="Node endpoint" Description="Change the target node and save the values for future sessions.">
                         <div class="node-page-grid">
                             <FormField Text="Label">
@@ -104,7 +110,8 @@
                     </FormSection>
                 </TabsItem>
 
-                <TabsItem Text="Config">
+                <TabsItem Text="Config"
+                          Icon="tune">
                     <SectionCard Title="Config read and write" Description="Inspect the full config, query individual keys, or set values directly through config routes.">
                         <div class="space-y-4">
                             <div class="node-inline-fields">
@@ -153,7 +160,8 @@
                     </SectionCard>
                 </TabsItem>
 
-                <TabsItem Text="Maintenance">
+                <TabsItem Text="Maintenance"
+                          Icon="build_circle">
                     <SectionCard Title="Repo and node maintenance" Description="Operational actions that change node state.">
                         <div class="space-y-4">
                             <Cluster Gap="LayoutGap.Small">

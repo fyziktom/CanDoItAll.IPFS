@@ -52,10 +52,16 @@
 
         <Tabs SelectedIndex="@contentTabIndex"
               SelectedIndexChanged="HandleContentTabChanged"
-              Variant="@(TabsVariant.ModalCompact)"
+              Variant="@(TabsVariant.WorkspacePrimary)"
+              BorderMode="@(TabsBorderMode.Soft)"
+              Tone="@(TabsTone.Warning)"
+              OverflowMode="@(TabsOverflowMode.Scroll)"
+              PanelOverflowMode="@(TabsPanelOverflowMode.Auto)"
+              Class="w-full min-w-0"
               AriaLabel="Content tool tabs">
             <TabItems>
-                <TabsItem Text="Blocks + objects">
+                <TabsItem Text="Blocks + objects"
+                          Icon="inventory_2">
                     <div class="node-page-grid">
             <SectionCard Title="Block store" Description="Write UTF-8 text as a raw block, inspect a block by CID, or remove it.">
                 <div class="space-y-4">
@@ -168,7 +174,8 @@
                     </div>
                 </TabsItem>
 
-                <TabsItem Text="DAG JSON">
+                <TabsItem Text="DAG JSON"
+                          Icon="data_object">
                     <SectionCard Title="DAG JSON" Description="Inspect any dag/get target and push JSON payloads through dag/put.">
             <div class="space-y-4">
                 <div class="node-inline-fields">
@@ -212,7 +219,9 @@
                     </SectionCard>
                 </TabsItem>
 
-                <TabsItem Text="Naming + keys">
+                <TabsItem Text="Naming + keys"
+                          Icon="key"
+                          BadgeText="@keys.Count.ToString()">
                     <SectionCard Title="Key inventory" Description="Existing key names available for IPNS publish operations.">
                         @if (keys.Count == 0)
                         {

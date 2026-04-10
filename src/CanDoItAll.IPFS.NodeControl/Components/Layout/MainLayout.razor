@@ -10,58 +10,84 @@
 @inject Microsoft.Extensions.Options.IOptions<NodeConnectionSettings> DefaultNodeSettingsOptions
 @inject ILogger<MainLayout> Logger
 
-<Layout class="app-shell">
-    <Header class="app-shell__header">
-        <div class="app-shell__brand">
-            <div class="app-shell__brand-row">
-                <TextBlock TextStyle="TextStyle.Subtitle1" Value="IPFS Node Control" />
-                <HelpPopover AriaLabel="Show workspace help"
-                             PanelClass="pf-help-popover__panel pf-help-popover__panel--below-start"
-                             Heading="Workspace"
-                             Body="Dashboard, files, content, network, and settings all stay bound to the current node target."
-                             Tip="Use the left rail to change task surfaces without losing the active connection context." />
-            </div>
-        </div>
-
-        <Stack Orientation="Orientation.Horizontal"
-               Wrap="FlexWrap.Wrap"
-               AlignItems="AlignItems.Center"
-               JustifyContent="JustifyContent.End"
-               Gap="0.75rem"
-               class="app-shell__target">
-            <div class="app-shell__target-pill">
-                <span class="app-shell__target-label">Target</span>
-                <strong>@NodeSessionState.CurrentSettings.Label</strong>
-            </div>
-            <div class="app-shell__target-pill app-shell__target-pill--muted">
-                @NodeSessionState.CurrentSettings.BaseUrl
-            </div>
-        </Stack>
-    </Header>
-
-    <div class="app-shell__frame">
-        <Sidebar Expanded="true" class="app-shell__sidebar">
-            <Stack Gap="0.75rem" class="app-shell__nav-stack">
-                <div class="app-shell__sidebar-copy">
-                    <TextBlock TextStyle="TextStyle.Subtitle1" Value="Workspace" />
+<Layout FitViewport="true"
+        LockOverflow="true"
+        class="node-shell">
+    <Grid Gap="LayoutGap.Medium"
+          FillHeight="true"
+          RowTemplate="auto minmax(0,1fr)"
+          Class="node-shell__viewport">
+        <header class="node-shell__topbar">
+            <div class="node-shell__brand">
+                <div class="node-shell__brand-row">
+                    <TextBlock TextStyle="TextStyle.Subtitle1" Value="IPFS Node Control" />
+                    <HelpPopover AriaLabel="Show workspace help"
+                                 PanelClass="pf-help-popover__panel pf-help-popover__panel--below-start"
+                                 Heading="Workspace"
+                                 Body="Dashboard, files, content, network, and settings all stay bound to the current node target."
+                                 Tip="Use the left rail to change task surfaces without losing the active connection context." />
                 </div>
 
-                @foreach (var item in GetNavigationItems())
-                {
-                    <Button Text="@item.Label"
-                            ButtonStyle="@(IsActive(item.Route) ? ButtonStyle.Primary : ButtonStyle.Light)"
-                            Variant="@(IsActive(item.Route) ? Variant.Filled : Variant.Text)"
-                            Click="@(() => Navigate(item.Route))"
-                            class="app-shell__nav-button" />
-                }
-            </Stack>
-        </Sidebar>
+                <TextBlock TextStyle="TextStyle.Caption"
+                           Value="A focused shell for node health, files, content workflows, and network operations." />
+            </div>
 
-        <Body class="app-shell__body">
-            <Notification />
-@Body
-        </Body>
-    </div>
+            <Stack Orientation="Orientation.Horizontal"
+                   Wrap="FlexWrap.Wrap"
+                   AlignItems="AlignItems.Center"
+                   JustifyContent="JustifyContent.End"
+                   Gap="0.75rem"
+                   class="node-shell__target">
+                <div class="node-shell__target-pill">
+                    <span class="node-shell__target-label">Target</span>
+                    <strong>@NodeSessionState.CurrentSettings.Label</strong>
+                </div>
+                <div class="node-shell__target-pill node-shell__target-pill--muted">
+                    @NodeSessionState.CurrentSettings.BaseUrl
+                </div>
+            </Stack>
+        </header>
+
+        <Grid Gap="LayoutGap.Medium"
+              FillHeight="true"
+              RowTemplate="minmax(0,1fr)"
+              ColumnTemplateXl="16rem minmax(0,1fr)"
+              Class="node-shell__workspace">
+            <Sidebar Expanded="true"
+                     FillHeight="true"
+                     Scrollable="true"
+                     class="node-shell__sidebar">
+                <Stack Gap="1rem"
+                       class="node-shell__nav-stack">
+                    <div class="node-shell__sidebar-copy">
+                        <p class="node-shell__eyebrow">Workspace</p>
+                        <TextBlock TextStyle="TextStyle.Subtitle1" Value="Node surfaces" />
+                        <TextBlock TextStyle="TextStyle.Body2"
+                                   Value="Keep the active node context while switching between dashboards, explorer tools, diagnostics, and maintenance." />
+                    </div>
+
+                    @foreach (var item in GetNavigationItems())
+                    {
+                        <Button Text="@item.Label"
+                                Icon="@item.Icon"
+                                ButtonStyle="@(IsActive(item.Route) ? ButtonStyle.Primary : ButtonStyle.Light)"
+                                Variant="@(IsActive(item.Route) ? Variant.Filled : Variant.Text)"
+                                Click="@(() => Navigate(item.Route))"
+                                class="node-shell__nav-button" />
+                    }
+                </Stack>
+            </Sidebar>
+
+            <Body FillHeight="true"
+                  Scrollable="true"
+                  class="node-shell__body">
+                <div class="node-shell__body-inner">
+                    <Notification />
+                    @Body
+                </div>
+            </Body>
+        </Grid>
+    </Grid>
 </Layout>
 
 @code {
@@ -165,23 +191,23 @@
             StateHasChanged();
         });
 
-    private IReadOnlyList<(string Label, string Route)> GetNavigationItems()
+    private IReadOnlyList<NavigationItem> GetNavigationItems()
     {
         var pinRequestsLabel = pendingRequestCount > 0
             ? $"Pin requests ({pendingRequestCount})"
             : "Pin requests";
 
-        return new List<(string Label, string Route)>
+        return new List<NavigationItem>
         {
-            ("Dashboard", "/dashboard"),
-            ("Files", "/files/explorer"),
-            ("Pin requests", "/pin-requests"),
-            ("Logs", "/logs"),
-            ("Content", "/content"),
-            ("Network", "/network"),
-            ("Settings", "/settings")
+            new("Dashboard", "/dashboard", "dashboard"),
+            new("Files", "/files/explorer", "folder_data"),
+            new("Pin requests", "/pin-requests", "move_to_inbox"),
+            new("Logs", "/logs", "notes"),
+            new("Content", "/content", "data_object"),
+            new("Network", "/network", "hub"),
+            new("Settings", "/settings", "tune")
         }.Select(item => item.Label == "Pin requests"
-                ? (pinRequestsLabel, item.Route)
+                ? item with { Label = pinRequestsLabel }
                 : item)
             .ToList();
     }
@@ -245,4 +271,6 @@
         NodeSessionState.Changed -= HandleNodeStateChanged;
         RemotePinRequestStore.RequestChanged -= HandleRemotePinRequestChanged;
     }
+
+    private sealed record NavigationItem(string Label, string Route, string Icon);
 }

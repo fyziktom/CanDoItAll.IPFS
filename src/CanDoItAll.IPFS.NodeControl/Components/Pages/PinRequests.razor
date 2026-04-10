@@ -9,37 +9,51 @@
 
 <PageTitle>Pin Requests</PageTitle>
 
-<div class="mx-auto flex w-full min-w-0 flex-col gap-3 max-w-[1600px]">
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
-    {
-        <Alert AlertStyle="@(AlertStyle.Warning)">@errorMessage</Alert>
-    }
-
-    <section class="rp-shell">
-        <div class="rp-header">
-            <div class="rp-header__copy">
-                <span class="fx-location__eyebrow">Inbox</span>
-                <div class="flex items-center gap-2">
-                    <h1>Pin requests</h1>
-                    <HelpPopover AriaLabel="Show pin request help"
-                                 Heading="Pin requests"
-                                 Body="Review incoming pin shares, confirm who sent them, then accept only the content you want on this receiver."
-                                 Tip="Details stay in the modal so the inbox grid can remain compact." />
-                </div>
-            </div>
-
-            <div class="rp-header__actions">
-                <div class="app-shell__target-pill">
-                    <span class="app-shell__target-label">Pending</span>
-                    <strong>@pendingCount</strong>
-                </div>
+<PageScaffold MaxWidthClass="max-w-[1600px]">
+    <Header>
+        <PageHeader Eyebrow="Inbox"
+                    Title="Pin requests"
+                    Description="Review incoming pin shares, confirm the sender, and accept only the content you want on this receiver.">
+            <Actions>
+                <StatusBadge Tone="warning" Text="@($"{pendingCount} pending")" />
 
                 <label class="fx-panel-button rp-import-button">
                     Import request
                     <InputFile OnChange="HandleImportAsync" accept=".json,application/json" class="rp-import-button__input" />
                 </label>
-            </div>
-        </div>
+
+                <HelpPopover AriaLabel="Show pin request help"
+                             Heading="Pin requests"
+                             Body="Review incoming pin shares, confirm who sent them, then accept only the content you want on this receiver."
+                             Tip="Details stay in the modal so the inbox grid can remain compact." />
+            </Actions>
+        </PageHeader>
+    </Header>
+
+    <Lead>
+        <SummaryTiles>
+            <SummaryTile Label="All requests"
+                         Value="@requests.Count.ToString("n0")"
+                         Tone="info" />
+            <SummaryTile Label="Pending"
+                         Value="@pendingCount.ToString("n0")"
+                         Tone="warning" />
+            <SummaryTile Label="Accepted"
+                         Value="@requests.Count(item => item.State == RemotePinRequestState.Accepted).ToString("n0")"
+                         Tone="success" />
+            <SummaryTile Label="Failed"
+                         Value="@requests.Count(item => item.State == RemotePinRequestState.Failed).ToString("n0")"
+                         Tone="danger" />
+        </SummaryTiles>
+    </Lead>
+
+    <ChildContent>
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <Alert AlertStyle="@(AlertStyle.Warning)">@errorMessage</Alert>
+        }
+
+        <section class="rp-shell">
 
         @if (requests.Count == 0)
         {
@@ -78,8 +92,9 @@
                 </div>
             }
         }
-    </section>
-</div>
+        </section>
+    </ChildContent>
+</PageScaffold>
 
 @if (SelectedRequest is { } selectedRequest)
 {

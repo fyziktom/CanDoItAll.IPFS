@@ -57,10 +57,16 @@
 
         <Tabs SelectedIndex="@networkTabIndex"
               SelectedIndexChanged="HandleNetworkTabChanged"
-              Variant="@(TabsVariant.ModalCompact)"
+              Variant="@(TabsVariant.WorkspacePrimary)"
+              BorderMode="@(TabsBorderMode.Soft)"
+              Tone="@(TabsTone.Secondary)"
+              OverflowMode="@(TabsOverflowMode.Scroll)"
+              PanelOverflowMode="@(TabsPanelOverflowMode.Auto)"
+              Class="w-full min-w-0"
               AriaLabel="Network tool tabs">
             <TabItems>
-                <TabsItem Text="Swarm">
+                <TabsItem Text="Swarm"
+                          Icon="hub">
                     <SectionCard Title="Swarm and bootstrap" Description="Peer connections, bootstrap management, and address filters.">
                         <div class="space-y-4">
                             <div class="node-inline-fields">
@@ -165,7 +171,8 @@
                     </SectionCard>
                 </TabsItem>
 
-                <TabsItem Text="Topology">
+                <TabsItem Text="Topology"
+                          Icon="account_tree">
                     <SectionCard Title="Network workbench" Description="Canvas topology for peers, bootstrap entries, filters, and local PubSub topics.">
                         <div class="node-workbench-shell">
                             <CanvasWorkbench Surface="@networkSurface"
@@ -185,7 +192,8 @@
                     </SectionCard>
                 </TabsItem>
 
-                <TabsItem Text="DHT">
+                <TabsItem Text="DHT"
+                          Icon="travel_explore">
                     <SectionCard Title="DHT lookups" Description="Find a peer or resolve providers for a CID.">
                         <div class="space-y-4">
                             <div class="node-inline-fields">
@@ -247,7 +255,9 @@
                         </div>
                     </SectionCard>
                 </TabsItem>
-                <TabsItem Text="PubSub">
+                <TabsItem Text="PubSub"
+                          Icon="forum"
+                          BadgeText="@((snapshot?.PubSubTopics.Count ?? 0).ToString("n0"))">
                     <div class="space-y-4">
                         <SectionCard Title="PubSub publish and peers" Description="Inspect peers for a topic, publish a text message, and manage the live subscription.">
                             <div class="space-y-4">

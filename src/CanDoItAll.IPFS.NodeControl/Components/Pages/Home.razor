@@ -12,43 +12,47 @@
 
 <PageScaffold MaxWidthClass="max-w-[1440px]">
     <Header>
-        <Stack Orientation="Orientation.Horizontal" Gap="0.75rem" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
-            <HelpPopover AriaLabel="Show dashboard help"
-                         Heading="Dashboard"
-                         Body="Use the dashboard for a quick node-health scan, then jump into task-specific routes from the left rail."
-                         Tip="Route notes and capability guidance moved out of the default viewport to keep the landing state tighter.">
-                <PanelContent>
-                    <div class="space-y-3">
-                        <div class="space-y-2">
-                            <strong>Route map</strong>
-                            <p>Files and Content cover upload, preview, DAG, IPNS, and key work. Network and Settings cover connectivity, maintenance, and diagnostics.</p>
-                        </div>
+        <PageHeader Eyebrow="Dashboard"
+                    Title="Node overview"
+                    Description="Scan identity, storage, and route guidance for the current node before opening a deeper task surface.">
+            <Actions>
+                <HelpPopover AriaLabel="Show dashboard help"
+                             Heading="Dashboard"
+                             Body="Use the dashboard for a quick node-health scan, then jump into task-specific routes from the left rail."
+                             Tip="Route notes and capability guidance moved out of the default viewport to keep the landing state tighter.">
+                    <PanelContent>
+                        <div class="space-y-3">
+                            <div class="space-y-2">
+                                <strong>Route map</strong>
+                                <p>Files and Content cover upload, preview, DAG, IPNS, and key work. Network and Settings cover connectivity, maintenance, and diagnostics.</p>
+                            </div>
 
-                        <div class="space-y-2">
-                            <strong>Capabilities</strong>
-                            <div class="node-list">
-                                @foreach (var item in capabilityNotes)
-                                {
-                                    <SelectionListItem Title="@item.Feature"
-                                                       Eyebrow="Capability"
-                                                       Meta="@item.Status"
-                                                       Summary="@item.Detail">
-                                        <Status>
-                                            <StatusBadge Text="@item.Status" Tone="@item.Tone" />
-                                        </Status>
-                                    </SelectionListItem>
-                                }
+                            <div class="space-y-2">
+                                <strong>Capabilities</strong>
+                                <div class="node-list">
+                                    @foreach (var item in capabilityNotes)
+                                    {
+                                        <SelectionListItem Title="@item.Feature"
+                                                           Eyebrow="Capability"
+                                                           Meta="@item.Status"
+                                                           Summary="@item.Detail">
+                                            <Status>
+                                                <StatusBadge Text="@item.Status" Tone="@item.Tone" />
+                                            </Status>
+                                        </SelectionListItem>
+                                    }
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </PanelContent>
-            </HelpPopover>
-            <Button Text="Refresh" Click="LoadAsync" />
-            <Button Text="Settings"
-                    ButtonStyle="@(ButtonStyle.Light)"
-                    Variant="@(Variant.Outlined)"
-                    Click="OpenSettings" />
-        </Stack>
+                    </PanelContent>
+                </HelpPopover>
+                <Button Text="Refresh" Click="LoadAsync" />
+                <Button Text="Settings"
+                        ButtonStyle="@(ButtonStyle.Light)"
+                        Variant="@(Variant.Outlined)"
+                        Click="OpenSettings" />
+            </Actions>
+        </PageHeader>
     </Header>
     <Lead>
         @if (isLoading && summary is null)
@@ -76,10 +80,16 @@
         {
             <Tabs SelectedIndex="@dashboardTabIndex"
                   SelectedIndexChanged="HandleDashboardTabChanged"
-                  Variant="@(TabsVariant.ModalCompact)"
+                  Variant="@(TabsVariant.WorkspacePrimary)"
+                  BorderMode="@(TabsBorderMode.Soft)"
+                  Tone="@(TabsTone.Info)"
+                  OverflowMode="@(TabsOverflowMode.Scroll)"
+                  PanelOverflowMode="@(TabsPanelOverflowMode.Auto)"
+                  Class="w-full min-w-0"
                   AriaLabel="Dashboard workspace tabs">
                 <TabItems>
-                    <TabsItem Text="Overview">
+                    <TabsItem Text="Overview"
+                              Icon="dashboard">
                         <div class="node-page-grid">
                             <SectionCard Title="Node identity" Description="Peer, protocol, and addressability snapshot.">
                                 <HeaderActions>
@@ -153,7 +163,9 @@
                         </div>
                     </TabsItem>
 
-                    <TabsItem Text="Route notes">
+                    <TabsItem Text="Route notes"
+                              Icon="map"
+                              BadgeText="@capabilityNotes.Count.ToString()">
                         <div class="node-page-grid">
                             <SectionCard Title="Capability map" Description="Routes currently surfaced by this app build.">
                                 <div class="node-list">
