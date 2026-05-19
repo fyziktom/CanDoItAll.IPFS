@@ -9,11 +9,27 @@
 
 <PageTitle>Pin Requests</PageTitle>
 
-<PageScaffold>
+<PageScaffold MaxWidthClass="max-w-full">
     <Header>
         <PageHeader Eyebrow="Inbox"
                     Title="Pin requests"
-                    Description="Review incoming pin shares, confirm the sender, and accept only the content you want on this receiver.">
+                    Description="Review incoming pin shares, confirm the sender, and accept only the content you want on this receiver."
+                    Compact="true">
+            <Stats>
+                <CompactStat Label="all"
+                             Value="@requests.Count.ToString("n0")"
+                             TooltipText="All requests"
+                             Tone="info" />
+                <CompactStat Label="pending"
+                             Value="@pendingCount.ToString("n0")"
+                             Tone="warning" />
+                <CompactStat Label="accepted"
+                             Value="@requests.Count(item => item.State == RemotePinRequestState.Accepted).ToString("n0")"
+                             Tone="success" />
+                <CompactStat Label="failed"
+                             Value="@requests.Count(item => item.State == RemotePinRequestState.Failed).ToString("n0")"
+                             Tone="danger" />
+            </Stats>
             <Actions>
                 <StatusBadge Tone="warning" Text="@($"{pendingCount} pending")" />
 
@@ -29,70 +45,124 @@
             </Actions>
         </PageHeader>
     </Header>
-
-    <Lead>
-        <SummaryTiles>
-            <SummaryTile Label="All requests"
-                         Value="@requests.Count.ToString("n0")"
-                         Tone="info" />
-            <SummaryTile Label="Pending"
-                         Value="@pendingCount.ToString("n0")"
-                         Tone="warning" />
-            <SummaryTile Label="Accepted"
-                         Value="@requests.Count(item => item.State == RemotePinRequestState.Accepted).ToString("n0")"
-                         Tone="success" />
-            <SummaryTile Label="Failed"
-                         Value="@requests.Count(item => item.State == RemotePinRequestState.Failed).ToString("n0")"
-                         Tone="danger" />
-        </SummaryTiles>
-    </Lead>
-
     <ChildContent>
         @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
             <Alert AlertStyle="@(AlertStyle.Warning)">@errorMessage</Alert>
         }
 
-        <section class="rp-shell">
-
         @if (requests.Count == 0)
         {
-            <div class="rp-empty">
-                <span class="fx-location__eyebrow">Requests</span>
-                <h2>No pin requests yet</h2>
-                <p>Live deliveries and offline imports land in the same inbox. Pending requests will also light up the app-shell navigation.</p>
-            </div>
+            <Grid Gap="LayoutGap.Medium"
+                  AlignItems="AlignItems.Start"
+                  ColumnTemplateXl="minmax(0,1.1fr) minmax(0,1fr) minmax(22rem,0.75fr)">
+                    <SectionCard Title="Requests inbox" Description="Live deliveries and offline imports land in the same review queue.">
+                        <Stack Gap="0.75rem">
+                            <CompactStatStrip>
+                                <CompactStat Label="all" Value="@requests.Count.ToString("n0")" Tone="info" />
+                                <CompactStat Label="pending" Value="@pendingCount.ToString("n0")" Tone="warning" />
+                                <CompactStat Label="accepted" Value="@requests.Count(item => item.State == RemotePinRequestState.Accepted).ToString("n0")" Tone="success" />
+                                <CompactStat Label="failed" Value="@requests.Count(item => item.State == RemotePinRequestState.Failed).ToString("n0")" Tone="danger" />
+                            </CompactStatStrip>
+
+                            <EmptyState Eyebrow="Requests"
+                                        Title="No pin requests yet"
+                                        Description="Pending requests will also light up the app-shell navigation." />
+                        </Stack>
+                    </SectionCard>
+
+                    <SectionCard Title="Review flow" Description="Request detail stays in a dialog so the inbox can remain dense.">
+                        <div class="node-list">
+                            <SelectionListItem Title="Inspect sender and content"
+                                               Eyebrow="Step 1"
+                                               Meta="Dialog"
+                                               Summary="Open details to review sender, CID, note, size, and request history before accepting.">
+                                <Status>
+                                    <StatusBadge Text="Review" Tone="info" />
+                                </Status>
+                            </SelectionListItem>
+                            <SelectionListItem Title="Accept or reject"
+                                               Eyebrow="Step 2"
+                                               Meta="Action"
+                                               Summary="Accepted requests are pinned through the connected node; rejected requests remain auditable.">
+                                <Status>
+                                    <StatusBadge Text="Controlled" Tone="warning" />
+                                </Status>
+                            </SelectionListItem>
+                        </div>
+                    </SectionCard>
+
+                    <SectionCard Title="Import surface" Description="Use the header import action when a request arrives as JSON.">
+                        <Stack Gap="0.75rem">
+                            <StatusBadge Text="Offline JSON supported" Tone="success" />
+                            <TextBlock TextStyle="@(TextStyle.Body2)" Value="Imported requests use the same review workflow as live deliveries." />
+                            <StatusBadge Text="@($"{pendingCount} pending")" Tone="warning" />
+                        </Stack>
+                    </SectionCard>
+            </Grid>
         }
         else
         {
-            <PinRequestsFilterToolbar Filters="@filterSummaries"
-                                      VisibleCount="@visibleRequests.Count"
-                                      OnFilterSelected="SetFilter" />
+            <Grid Gap="LayoutGap.Medium"
+                  AlignItems="AlignItems.Start"
+                  ColumnTemplateXl="minmax(0,1.35fr) minmax(24rem,0.65fr)">
+                <section class="rp-shell">
+                    <PinRequestsFilterToolbar Filters="@filterSummaries"
+                                              VisibleCount="@visibleRequests.Count"
+                                              OnFilterSelected="SetFilter" />
 
-            @if (visibleRequests.Count == 0)
-            {
-                <div class="rp-empty">
-                    <span class="fx-location__eyebrow">Filtered</span>
-                    <h2>No matching requests</h2>
-                    <p>Change the filter to inspect accepted, rejected, failed, or pending requests.</p>
-                </div>
-            }
-            else
-            {
-                <div class="rp-card-grid">
-                    @foreach (var request in visibleRequests)
+                    @if (visibleRequests.Count == 0)
                     {
-                        <PinRequestCard Request="request"
-                                        IsBusy="@IsBusy(request.Request.RequestId)"
-                                        OnOpenDetails="OpenDetails"
-                                        OnAccept="AcceptAsync"
-                                        OnReject="RejectAsync"
-                                        OnCopy="CopyTextAsync" />
+                        <div class="rp-empty">
+                            <span class="fx-location__eyebrow">Filtered</span>
+                            <h2>No matching requests</h2>
+                            <p>Change the filter to inspect accepted, rejected, failed, or pending requests.</p>
+                        </div>
                     }
-                </div>
-            }
+                    else
+                    {
+                        <div class="rp-card-grid">
+                            @foreach (var request in visibleRequests)
+                            {
+                                <PinRequestCard Request="request"
+                                                IsBusy="@IsBusy(request.Request.RequestId)"
+                                                OnOpenDetails="OpenDetails"
+                                                OnAccept="AcceptAsync"
+                                                OnReject="RejectAsync"
+                                                OnCopy="CopyTextAsync" />
+                            }
+                        </div>
+                    }
+                </section>
+
+                <Stack Gap="1rem">
+                    <SectionCard Title="Queue posture" Description="Compact inbox state for the active review filter.">
+                        <CompactStatStrip>
+                            <CompactStat Label="visible" Value="@visibleRequests.Count.ToString("n0")" Tone="info" />
+                            <CompactStat Label="pending" Value="@pendingCount.ToString("n0")" Tone="warning" />
+                            <CompactStat Label="accepted" Value="@requests.Count(item => item.State == RemotePinRequestState.Accepted).ToString("n0")" Tone="success" />
+                            <CompactStat Label="failed" Value="@requests.Count(item => item.State == RemotePinRequestState.Failed).ToString("n0")" Tone="danger" />
+                        </CompactStatStrip>
+                    </SectionCard>
+
+                    <SectionCard Title="Review actions" Description="Details, accept, and reject stay on each request card and in the details dialog.">
+                        <div class="node-list">
+                            @foreach (var filter in filterSummaries.Take(4))
+                        {
+                                <SelectionListItem Title="@filter.Label"
+                                                   Eyebrow="Filter"
+                                                   Meta="@filter.Count.ToString("n0")"
+                                                   Summary="Use the filter toolbar to narrow the active review queue.">
+                                    <Status>
+                                        <StatusBadge Text="@(filter.IsActive ? "Active" : "Available")" Tone="@(filter.IsActive ? "info" : "neutral")" />
+                                    </Status>
+                                </SelectionListItem>
+                            }
+                        </div>
+                    </SectionCard>
+                </Stack>
+            </Grid>
         }
-        </section>
     </ChildContent>
 </PageScaffold>
 

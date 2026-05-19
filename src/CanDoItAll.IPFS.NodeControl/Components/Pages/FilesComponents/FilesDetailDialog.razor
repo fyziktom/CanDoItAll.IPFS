@@ -11,24 +11,24 @@
             OnClose="OnClose">
         <ChildContent>
             <Stack Gap="1rem">
-                <SummaryTiles>
-                    <SummaryTile Label="Name"
+                <CompactStatStrip>
+                    <CompactStat Label="name"
                                  Value="@FilesUiText.Shorten(Snapshot.DisplayName, 24)"
-                                 HelperText="@Snapshot.DisplayName"
+                                 TooltipText="@Snapshot.DisplayName"
                                  Tone="info" />
-                    <SummaryTile Label="Type"
+                    <CompactStat Label="type"
                                  Value="@Snapshot.TypeLabel"
-                                 HelperText="Resolved from the preview snapshot."
+                                 TooltipText="Resolved from the preview snapshot."
                                  Tone="neutral" />
-                    <SummaryTile Label="Size"
+                    <CompactStat Label="size"
                                  Value="@FilesUiText.FormatSize(Snapshot.Size)"
-                                 HelperText="Reported by the explorer preview API."
+                                 TooltipText="Reported by the explorer preview API."
                                  Tone="warning" />
-                    <SummaryTile Label="Path"
+                    <CompactStat Label="path"
                                  Value="@FilesUiText.Shorten(Snapshot.Path, 24)"
-                                 HelperText="@Snapshot.Path"
+                                 TooltipText="@Snapshot.Path"
                                  Tone="success" />
-                </SummaryTiles>
+                </CompactStatStrip>
 
                 <FormField Text="CID">
                     <End>

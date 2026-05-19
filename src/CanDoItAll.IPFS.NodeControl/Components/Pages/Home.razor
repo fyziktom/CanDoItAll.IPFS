@@ -10,11 +10,38 @@
 
 <PageTitle>Dashboard</PageTitle>
 
-<PageScaffold>
+<PageScaffold MaxWidthClass="max-w-full">
     <Header>
         <PageHeader Eyebrow="Dashboard"
                     Title="Node overview"
-                    Description="Scan identity, storage, and route guidance for the current node before opening a deeper task surface.">
+                    Description="Scan identity, storage, and route guidance for the current node before opening a deeper task surface."
+                    Compact="true">
+            <Stats>
+                @if (summary is not null)
+                {
+                    <CompactStat Label="peer"
+                                 Value="@Shorten(summary.PeerId, 18)"
+                                 TooltipText="@summary.PeerId"
+                                 Tone="info" />
+                    <CompactStat Label="peers"
+                                 Value="@summary.ConnectedPeerCount.ToString("n0")"
+                                 TooltipText="Connected peers"
+                                 Tone="success" />
+                    <CompactStat Label="repo"
+                                 Value="@FormatBytes(summary.RepoSizeBytes)"
+                                 TooltipText="Repository size"
+                                 Tone="warning" />
+                    <CompactStat Label="traffic"
+                                 Value="@($"{FormatBytes(summary.TotalInBytes)} in / {FormatBytes(summary.TotalOutBytes)} out")"
+                                 TooltipText="Total inbound and outbound traffic"
+                                 Tone="neutral" />
+                }
+                else
+                {
+                    <CompactStat Text="summary loading" Tone="info" />
+                    <CompactStat Text="@NodeSessionState.CurrentSettings.Label" Tone="neutral" />
+                }
+            </Stats>
             <Actions>
                 <HelpPopover AriaLabel="Show dashboard help"
                              Heading="Dashboard"
@@ -54,23 +81,12 @@
             </Actions>
         </PageHeader>
     </Header>
-    <Lead>
+    <ChildContent>
         @if (isLoading && summary is null)
         {
             <LoadingState Eyebrow="Dashboard" Title="Loading node summary" Description="The app is connecting to the selected endpoint and collecting the first health snapshot." />
         }
-        else if (summary is not null)
-        {
-            <SummaryTiles>
-                <SummaryTile Label="Peer ID" Value="@Shorten(summary.PeerId, 18)" Tone="info" />
-                <SummaryTile Label="Connected peers" Value="@summary.ConnectedPeerCount.ToString("n0")" Tone="success" />
-                <SummaryTile Label="Repo size" Value="@FormatBytes(summary.RepoSizeBytes)" Tone="warning" />
-                <SummaryTile Label="Traffic" Value="@($"{FormatBytes(summary.TotalInBytes)} in / {FormatBytes(summary.TotalOutBytes)} out")" Tone="neutral" />
-            </SummaryTiles>
-        }
-    </Lead>
 
-    <ChildContent>
         @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
             <Alert AlertStyle="@(AlertStyle.Warning)">@errorMessage</Alert>
@@ -90,77 +106,134 @@
                 <TabItems>
                     <TabsItem Text="Overview"
                               Icon="dashboard">
-                        <div class="node-page-grid">
-                            <SectionCard Title="Node identity" Description="Peer, protocol, and addressability snapshot.">
-                                <HeaderActions>
-                                    <HelpPopover AriaLabel="Show advertised addresses"
-                                                 Heading="Advertised addresses"
-                                                 Body="The node reports these addresses for inbound or peer-discovery workflows."
-                                                 Tip="Long address lists stay tucked away so the dashboard can remain compact.">
-                                        <PanelContent>
-                                            @if (summary.Addresses.Count == 0)
-                                            {
-                                                <p>No advertised addresses were returned for the current session.</p>
-                                            }
-                                            else
-                                            {
-                                                <div class="node-chip-flow">
-                                                    @foreach (var address in summary.Addresses)
-                                                    {
-                                                        <StatusBadge Text="@address" Tone="neutral" />
-                                                    }
-                                                </div>
-                                            }
-                                        </PanelContent>
-                                    </HelpPopover>
-                                </HeaderActions>
-                                <ChildContent>
-                                    <div class="space-y-4">
-                                        <SummaryTiles>
-                                            <SummaryTile Label="Peer ID"
-                                                         Value="@Shorten(summary.PeerId, 24)"
-                                                         Tone="info" />
-                                            <SummaryTile Label="Agent"
-                                                         Value="@summary.AgentVersion"
-                                                         Tone="success" />
-                                            <SummaryTile Label="Protocol"
-                                                         Value="@summary.ProtocolVersion"
-                                                         Tone="warning" />
-                                            <SummaryTile Label="API version"
-                                                         Value="@summary.ApiVersion"
-                                                         Tone="neutral" />
-                                        </SummaryTiles>
+                        <Stack Gap="1rem">
+                            <Grid Gap="LayoutGap.Medium"
+                                  ColumnTemplateXl="minmax(0,1.15fr) minmax(0,1fr) minmax(18rem,0.75fr)">
+                                <SectionCard Title="Node identity" Description="Peer, protocol, and addressability snapshot.">
+                                    <HeaderActions>
+                                        <HelpPopover AriaLabel="Show advertised addresses"
+                                                     Heading="Advertised addresses"
+                                                     Body="The node reports these addresses for inbound or peer-discovery workflows."
+                                                     Tip="Long address lists stay tucked away so the dashboard can remain compact.">
+                                            <PanelContent>
+                                                @if (summary.Addresses.Count == 0)
+                                                {
+                                                    <p>No advertised addresses were returned for the current session.</p>
+                                                }
+                                                else
+                                                {
+                                                    <div class="node-chip-flow">
+                                                        @foreach (var address in summary.Addresses)
+                                                        {
+                                                            <StatusBadge Text="@address" Tone="neutral" />
+                                                        }
+                                                    </div>
+                                                }
+                                            </PanelContent>
+                                        </HelpPopover>
+                                    </HeaderActions>
+                                    <ChildContent>
+                                        <Stack GapScale="LayoutGap.Medium">
+                                            <CompactStatStrip>
+                                                <CompactStat Label="peer"
+                                                             Value="@Shorten(summary.PeerId, 24)"
+                                                             TooltipText="@summary.PeerId"
+                                                             Tone="info" />
+                                                <CompactStat Label="agent"
+                                                             Value="@summary.AgentVersion"
+                                                             Tone="success" />
+                                                <CompactStat Label="protocol"
+                                                             Value="@summary.ProtocolVersion"
+                                                             Tone="warning" />
+                                                <CompactStat Label="api"
+                                                             Value="@summary.ApiVersion"
+                                                             Tone="neutral" />
+                                            </CompactStatStrip>
 
-                                        <Cluster Gap="LayoutGap.Small">
-                                            <StatusBadge Text="@($"{summary.Addresses.Count} advertised address{(summary.Addresses.Count == 1 ? string.Empty : "es")}")" Tone="neutral" />
-                                        </Cluster>
+                                            <Cluster Gap="LayoutGap.Small">
+                                                <StatusBadge Text="@($"{summary.Addresses.Count} advertised address{(summary.Addresses.Count == 1 ? string.Empty : "es")}")" Tone="neutral" />
+                                            </Cluster>
+                                        </Stack>
+                                    </ChildContent>
+                                </SectionCard>
+
+                                <SectionCard Title="Repository health" Description="Storage and transfer posture for the current node.">
+                                    <CompactStatStrip>
+                                        <CompactStat Label="path"
+                                                     Value="@Shorten(summary.RepoPath, 24)"
+                                                     TooltipText="@summary.RepoPath"
+                                                     Tone="neutral" />
+                                        <CompactStat Label="version"
+                                                     Value="@summary.RepoVersion"
+                                                     Tone="info" />
+                                        <CompactStat Label="objects"
+                                                     Value="@summary.RepoObjectCount.ToString("n0")"
+                                                     Tone="success" />
+                                        <CompactStat Label="limit"
+                                                     Value="@FormatBytes(summary.RepoStorageMaxBytes)"
+                                                     Tone="warning" />
+                                        <CompactStat Label="in"
+                                                     Value="@($"{summary.RateIn:n2} B/s")"
+                                                     Tone="info" />
+                                        <CompactStat Label="out"
+                                                     Value="@($"{summary.RateOut:n2} B/s")"
+                                                     Tone="neutral" />
+                                    </CompactStatStrip>
+                                </SectionCard>
+
+                                <SectionCard Title="Open surface" Description="Jump straight into the most common node work.">
+                                    <Stack Gap="0.75rem">
+                                        <InlineActions>
+                                            <Button Text="Files" Href="/files" ButtonStyle="@(ButtonStyle.Light)" Variant="@(Variant.Outlined)" />
+                                            <Button Text="Content" Href="/content" ButtonStyle="@(ButtonStyle.Light)" Variant="@(Variant.Outlined)" />
+                                            <Button Text="Network" Href="/network" ButtonStyle="@(ButtonStyle.Light)" Variant="@(Variant.Outlined)" />
+                                            <Button Text="Settings" Href="/settings" ButtonStyle="@(ButtonStyle.Light)" Variant="@(Variant.Outlined)" />
+                                        </InlineActions>
+                                        <StatusBadge Text="Large-screen workspace" Tone="info" />
+                                    </Stack>
+                                </SectionCard>
+                            </Grid>
+
+                            <Grid Gap="LayoutGap.Medium"
+                                  ColumnTemplateXl="minmax(0,1fr) minmax(0,1fr)">
+                                <SectionCard Title="Primary workflow" Description="Default route split for day-to-day node operation.">
+                                    <Stack Gap="0.75rem">
+                                        <SelectionListItem Title="Files + Content"
+                                                           Eyebrow="Workflow"
+                                                           Meta="Data plane"
+                                                           Summary="Use Files for upload and browsing; use Content for lower-level block, DAG, IPNS, and key work.">
+                                            <Status>
+                                                <StatusBadge Text="Content" Tone="success" />
+                                            </Status>
+                                        </SelectionListItem>
+                                        <SelectionListItem Title="Network + Settings"
+                                                           Eyebrow="Workflow"
+                                                           Meta="Control plane"
+                                                           Summary="Use Network for peers and PubSub; use Settings for endpoint, config, and maintenance actions.">
+                                            <Status>
+                                                <StatusBadge Text="Operations" Tone="info" />
+                                            </Status>
+                                        </SelectionListItem>
+                                    </Stack>
+                                </SectionCard>
+
+                                <SectionCard Title="Capability posture" Description="A compact sample of the active API surface.">
+                                    <div class="node-list">
+                                        @foreach (var item in capabilityNotes.Take(4))
+                                        {
+                                            <SelectionListItem Title="@item.Feature"
+                                                               Eyebrow="Capability"
+                                                               Meta="@item.Status"
+                                                               Summary="@item.Detail">
+                                                <Status>
+                                                    <StatusBadge Text="@item.Status" Tone="@item.Tone" />
+                                                </Status>
+                                            </SelectionListItem>
+                                        }
                                     </div>
-                                </ChildContent>
-                            </SectionCard>
-
-                            <SectionCard Title="Repository health" Description="Storage and transfer posture for the current node.">
-                                <SummaryTiles>
-                                    <SummaryTile Label="Repo path"
-                                                 Value="@Shorten(summary.RepoPath, 24)"
-                                                 Tone="neutral" />
-                                    <SummaryTile Label="Repo version"
-                                                 Value="@summary.RepoVersion"
-                                                 Tone="info" />
-                                    <SummaryTile Label="Objects"
-                                                 Value="@summary.RepoObjectCount.ToString("n0")"
-                                                 Tone="success" />
-                                    <SummaryTile Label="Storage limit"
-                                                 Value="@FormatBytes(summary.RepoStorageMaxBytes)"
-                                                 Tone="warning" />
-                                    <SummaryTile Label="Inbound rate"
-                                                 Value="@($"{summary.RateIn:n2} B/s")"
-                                                 Tone="info" />
-                                    <SummaryTile Label="Outbound rate"
-                                                 Value="@($"{summary.RateOut:n2} B/s")"
-                                                 Tone="neutral" />
-                                </SummaryTiles>
-                            </SectionCard>
-                        </div>
+                                </SectionCard>
+                            </Grid>
+                        </Stack>
                     </TabsItem>
 
                     <TabsItem Text="Route notes"

@@ -21,10 +21,7 @@ body {
 
 body {
     overflow: hidden;
-    background:
-        radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 28rem),
-        radial-gradient(circle at bottom left, rgba(14, 116, 144, 0.14), transparent 26rem),
-        #edf3fb;
+    background: #edf3fb;
 }
 
 .rz-layout.node-shell {
@@ -36,9 +33,9 @@ body {
     height: 100%;
     min-height: 0;
     width: 100%;
-    max-width: 2048px;
+    max-width: none;
     margin: 0 auto;
-    padding: 1rem;
+    padding: 0.75rem;
 }
 
 .node-shell__workspace {
@@ -48,11 +45,11 @@ body {
 .node-shell__sidebar {
     min-width: 0;
     border: 1px solid rgba(255, 255, 255, 0.82);
-    border-radius: 1.8rem;
+    border-radius: 1rem;
     background: rgba(255, 255, 255, 0.88);
     box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
     backdrop-filter: blur(18px);
-    padding: 1rem;
+    padding: 0.75rem;
     scrollbar-gutter: stable both-edges;
 }
 
@@ -68,7 +65,7 @@ body {
 .node-shell__body {
     min-width: 0;
     border: 1px solid rgba(255, 255, 255, 0.84);
-    border-radius: 2rem;
+    border-radius: 1.1rem;
     background: rgba(255, 255, 255, 0.94);
     box-shadow: 0 28px 72px -42px rgba(15, 23, 42, 0.42);
     backdrop-filter: blur(18px);

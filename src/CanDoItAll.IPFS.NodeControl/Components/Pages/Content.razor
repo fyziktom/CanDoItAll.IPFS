@@ -6,11 +6,29 @@
 
 <PageTitle>Content</PageTitle>
 
-<PageScaffold>
+<PageScaffold MaxWidthClass="max-w-full">
     <Header>
         <PageHeader Eyebrow="Content APIs"
                     Title="Blocks, DAG, IPNS, and keys"
-                    Description="Lower-level content tools for the current node.">
+                    Description="Lower-level content tools for the current node."
+                    Compact="true">
+            <Stats>
+                <CompactStat Label="keys"
+                             Value="@keys.Count.ToString("n0")"
+                             TooltipText="Loaded key inventory count"
+                             Tone="info" />
+                <CompactStat Label="block"
+                             Value="@Shorten(blockSnapshot?.Cid ?? "none", 18)"
+                             TooltipText="@(blockSnapshot?.Cid ?? "No block loaded")"
+                             Tone="success" />
+                <CompactStat Label="object links"
+                             Value="@((objectSnapshot?.Links.Count ?? 0).ToString("n0"))"
+                             Tone="warning" />
+                <CompactStat Label="dag"
+                             Value="@Shorten(dagSnapshot?.Request ?? "none", 22)"
+                             TooltipText="@(dagSnapshot?.Request ?? "No DAG request loaded")"
+                             Tone="neutral" />
+            </Stats>
             <Actions>
                 <Button Text="Refresh keys" Click="LoadKeysAsync" />
                 <HelpPopover AriaLabel="Show content help"
@@ -34,16 +52,6 @@
             </Actions>
         </PageHeader>
     </Header>
-
-    <Lead>
-        <SummaryTiles>
-            <SummaryTile Label="Keys" Value="@keys.Count.ToString("n0")" Tone="info" />
-            <SummaryTile Label="Block CID" Value="@Shorten(blockSnapshot?.Cid ?? "none", 18)" Tone="success" />
-            <SummaryTile Label="Object links" Value="@((objectSnapshot?.Links.Count ?? 0).ToString("n0"))" Tone="warning" />
-            <SummaryTile Label="DAG request" Value="@Shorten(dagSnapshot?.Request ?? "none", 22)" Tone="neutral" />
-        </SummaryTiles>
-    </Lead>
-
     <ChildContent>
         @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
@@ -144,24 +152,24 @@
                     @if (objectSnapshot is not null)
                     {
                         <div class="node-page-grid">
-                            <SummaryTiles>
-                                <SummaryTile Label="Links"
+                            <CompactStatStrip>
+                                <CompactStat Label="links"
                                              Value="@objectSnapshot.LinkCount.ToString("n0")"
-                                             HelperText="Direct links in the loaded DAG-PB object."
+                                             TooltipText="Direct links in the loaded DAG-PB object."
                                              Tone="info" />
-                                <SummaryTile Label="Link size"
+                                <CompactStat Label="link size"
                                              Value="@objectSnapshot.LinkSize.ToString("n0")"
-                                             HelperText="Combined link size returned by object/stat."
+                                             TooltipText="Combined link size returned by object/stat."
                                              Tone="warning" />
-                                <SummaryTile Label="Block size"
+                                <CompactStat Label="block size"
                                              Value="@objectSnapshot.BlockSize.ToString("n0")"
-                                             HelperText="Serialized block size for the object."
+                                             TooltipText="Serialized block size for the object."
                                              Tone="success" />
-                                <SummaryTile Label="Cumulative"
+                                <CompactStat Label="cumulative"
                                              Value="@objectSnapshot.CumulativeSize.ToString("n0")"
-                                             HelperText="Total cumulative size including descendants."
+                                             TooltipText="Total cumulative size including descendants."
                                              Tone="neutral" />
-                            </SummaryTiles>
+                            </CompactStatStrip>
 
                             <div class="space-y-3">
                                 <TextBlock TextStyle="@(TextStyle.Subtitle2)" Value="Data preview" />
@@ -170,6 +178,43 @@
                         </div>
                     }
                 </div>
+            </SectionCard>
+
+            <SectionCard Title="Working set" Description="Current content-tool state and the next likely action.">
+                <Stack Gap="0.75rem">
+                    <CompactStatStrip>
+                        <CompactStat Label="block"
+                                     Value="@Shorten(blockSnapshot?.Cid ?? "none", 18)"
+                                     TooltipText="@(blockSnapshot?.Cid ?? "No block loaded")"
+                                     Tone="success" />
+                        <CompactStat Label="object"
+                                     Value="@Shorten(objectSnapshot?.Cid ?? "none", 18)"
+                                     TooltipText="@(objectSnapshot?.Cid ?? "No object loaded")"
+                                     Tone="info" />
+                        <CompactStat Label="keys"
+                                     Value="@keys.Count.ToString("n0")"
+                                     Tone="warning" />
+                    </CompactStatStrip>
+
+                    <div class="node-list">
+                        <SelectionListItem Title="Block lifecycle"
+                                           Eyebrow="Content"
+                                           Meta="Put, get, remove"
+                                           Summary="Write a small raw block, inspect it by CID, then optionally remove it from the block store.">
+                            <Status>
+                                <StatusBadge Text="Block" Tone="success" />
+                            </Status>
+                        </SelectionListItem>
+                        <SelectionListItem Title="Object inspection"
+                                           Eyebrow="DAG-PB"
+                                           Meta="Stats"
+                                           Summary="Inspect object stats here, then switch tabs for JSON DAG and IPNS naming work.">
+                            <Status>
+                                <StatusBadge Text="Object" Tone="info" />
+                            </Status>
+                        </SelectionListItem>
+                    </div>
+                </Stack>
             </SectionCard>
                     </div>
                 </TabsItem>
@@ -299,16 +344,16 @@
 
                     @if (publishedName is not null)
                     {
-                        <SummaryTiles>
-                            <SummaryTile Label="Name path"
+                        <CompactStatStrip>
+                            <CompactStat Label="name"
                                          Value="@Shorten(publishedName.NamePath, 24)"
-                                         HelperText="@publishedName.NamePath"
+                                         TooltipText="@publishedName.NamePath"
                                          Tone="info" />
-                            <SummaryTile Label="Content path"
+                            <CompactStat Label="content"
                                          Value="@Shorten(publishedName.ContentPath, 24)"
-                                         HelperText="@publishedName.ContentPath"
+                                         TooltipText="@publishedName.ContentPath"
                                          Tone="success" />
-                        </SummaryTiles>
+                        </CompactStatStrip>
                     }
                 </div>
             </SectionCard>

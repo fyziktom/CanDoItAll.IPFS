@@ -9,24 +9,24 @@
             OnClose="OnClose">
         <ChildContent>
             <Stack Gap="1rem">
-                <SummaryTiles>
-                    <SummaryTile Label="Name"
-                                 Value="@TargetItem.DisplayName"
-                                 HelperText="Current explorer selection queued for unpin."
+                <CompactStatStrip>
+                    <CompactStat Label="name"
+                                 Value="@FilesUiText.Shorten(TargetItem.DisplayName, 24)"
+                                 TooltipText="@TargetItem.DisplayName"
                                  Tone="info" />
-                    <SummaryTile Label="Type"
+                    <CompactStat Label="type"
                                  Value="@TargetItem.TypeLabel"
-                                 HelperText="Resolved from the explorer inventory."
+                                 TooltipText="Resolved from the explorer inventory."
                                  Tone="neutral" />
-                    <SummaryTile Label="Scope"
+                    <CompactStat Label="scope"
                                  Value="@(TargetItem.IsDirectory ? FilesUiText.CountLabel(TargetItem.ChildCount) : FilesUiText.FormatSize(TargetItem.Size))"
-                                 HelperText="Directory item count or file size."
+                                 TooltipText="Directory item count or file size."
                                  Tone="warning" />
-                    <SummaryTile Label="Path"
+                    <CompactStat Label="path"
                                  Value="@FilesUiText.Shorten(TargetItem.Path, 22)"
-                                 HelperText="@TargetItem.Path"
+                                 TooltipText="@TargetItem.Path"
                                  Tone="success" />
-                </SummaryTiles>
+                </CompactStatStrip>
 
                 <FormField Text="CID">
                     <End>

@@ -53,27 +53,24 @@
                     </Stack>
                 </PanelCard>
 
-                <Stack Orientation="Orientation.Horizontal" Gap="1rem">
-                    <SummaryTile Label="Name"
-                                    Value="@FilesUiText.Shorten(PreviewSnapshot.DisplayName, 24)"
-                                    HelperText="@PreviewSnapshot.DisplayName"
-                                    Tone="info" />
-                      
-                    <SummaryTile Label="Type"
-                                    Value="@PreviewSnapshot.TypeLabel"
-                                    HelperText="Resolved from the active explorer snapshot."
-                                    Tone="neutral" />
-                    
-                    <SummaryTile Label="Path"
-                                    Value="@FilesUiText.Shorten(PreviewSnapshot.Path, 20)"
-                                    HelperText="@PreviewSnapshot.Path"
-                                    Tone="warning" />
-                     
-                    <SummaryTile Label="Footprint"
-                                    Value="@FilesUiText.PreviewSizeOrCount(PreviewSnapshot)"
-                                    HelperText="Directory item count or file size."
-                                    Tone="success" />
-                </Stack>
+                <CompactStatStrip>
+                    <CompactStat Label="name"
+                                 Value="@FilesUiText.Shorten(PreviewSnapshot.DisplayName, 24)"
+                                 TooltipText="@PreviewSnapshot.DisplayName"
+                                 Tone="info" />
+                    <CompactStat Label="type"
+                                 Value="@PreviewSnapshot.TypeLabel"
+                                 TooltipText="Resolved from the active explorer snapshot."
+                                 Tone="neutral" />
+                    <CompactStat Label="path"
+                                 Value="@FilesUiText.Shorten(PreviewSnapshot.Path, 20)"
+                                 TooltipText="@PreviewSnapshot.Path"
+                                 Tone="warning" />
+                    <CompactStat Label="footprint"
+                                 Value="@FilesUiText.PreviewSizeOrCount(PreviewSnapshot)"
+                                 TooltipText="Directory item count or file size."
+                                 Tone="success" />
+                </CompactStatStrip>
 
                 @if (IsVirtualPreview)
                 {

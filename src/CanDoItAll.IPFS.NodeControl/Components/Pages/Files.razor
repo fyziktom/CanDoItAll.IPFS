@@ -11,11 +11,26 @@
 
 <PageTitle>File Explorer</PageTitle>
 
-<PageScaffold MaxWidthClass="max-w-[1850px]">
+<PageScaffold MaxWidthClass="max-w-full">
     <Header>
         <PageHeader Eyebrow="Files"
                     Title="File explorer"
-                    Description="Browse pinned roots from the current node.">
+                    Description="Browse pinned roots from the current node."
+                    Compact="true">
+            <Stats>
+                <CompactStat Label="pinned"
+                             Value="@pinnedItems.Count.ToString("n0")"
+                             TooltipText="Pinned content roots"
+                             Tone="info" />
+                <CompactStat Label="visible"
+                             Value="@VisibleItems.Count.ToString("n0")"
+                             TooltipText="Items visible in the current explorer view"
+                             Tone="success" />
+                <CompactStat Label="path"
+                             Value="@Shorten(currentFolderSnapshot?.NormalizedPath ?? "Pinned roots", 24)"
+                             TooltipText="@(currentFolderSnapshot?.NormalizedPath ?? "Pinned roots")"
+                             Tone="neutral" />
+            </Stats>
             <Actions>
                 <Button Text="Back / Up"
                         ButtonStyle="@(ButtonStyle.Light)"
@@ -59,29 +74,16 @@
             </Actions>
         </PageHeader>
     </Header>
-
-    <Lead>
+    <ChildContent>
         @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
             <Alert AlertStyle="@(AlertStyle.Warning)">@errorMessage</Alert>
         }
 
-        <SummaryTiles>
-            <SummaryTile Label="Pinned content"
-                         Value="@pinnedItems.Count.ToString("n0")"
-                         Tone="info" />
-            <SummaryTile Label="Visible items"
-                         Value="@VisibleItems.Count.ToString("n0")"
-                         Tone="success" />
-            <SummaryTile Label="Current path"
-                         Value="@Shorten(currentFolderSnapshot?.NormalizedPath ?? "Pinned roots", 24)"
-                         Tone="neutral" />
-        </SummaryTiles>
-    </Lead>
-
-    <ChildContent>
-        <Row Gap="1rem">
-            <Column Size="12" SizeXL="@(showPreviewPane ? 8 : 12)">
+        <Grid Gap="LayoutGap.Medium"
+              AlignItems="AlignItems.Start"
+              ColumnTemplateXl="@ExplorerGridColumnTemplateXl">
+            <Stack Gap="0">
                 <FilesExplorerPanel Title="@GetLocationTitle()"
                                     Description="@GetLocationDescription()"
                                     CurrentFolderSnapshot="@currentFolderSnapshot"
@@ -97,32 +99,74 @@
                                     OnOpenItem="HandleItemDoubleClickAsync"
                                     OnOpenContextMenu="HandleContextMenuRequestedAsync"
                                     OnCopyTarget="CopyTextAsync" />
-            </Column>
+            </Stack>
 
             @if (showPreviewPane)
             {
-                <Column Size="12" SizeXL="4">
-                    <FilesPreviewPanel PreviewSnapshot="@previewSnapshot"
-                                       IsBusy="@isBusy"
-                                       IsLoading="@IsInitialExplorerLoad"
-                                       IsVirtualPreview="@IsVirtualPreview"
-                                       IsPreviewPinned="@IsPreviewPinned"
-                                       CanOpenFolder="@(previewSnapshot?.IsDirectory == true && !IsCurrentPath(previewSnapshot.Path))"
-                                       InspectPath="@inspectPath"
-                                       InspectPathChanged="HandleInspectPathChanged"
-                                       OpenUrl="@(previewSnapshot is not null && !previewSnapshot.IsDirectory ? BuildFileContentUrl(previewSnapshot.Target, previewSnapshot.DisplayName, download: false) : null)"
-                                       DownloadUrl="@(CanDownloadSelection ? BuildFileContentUrl(previewSnapshot!.Target, previewSnapshot.DisplayName, download: true) : null)"
-                                       OnCopyTarget="CopyTextAsync"
-                                       OnShare="OpenShareFromPreview"
-                                       OnOpenFolder="OpenPreviewFolderAsync"
-                                       OnOpenDetails="OpenSelectedFileDetailsAsync"
-                                       OnTogglePin="TogglePreviewPinAsync"
-                                       OnOpenTopology="OpenTopologyAsync"
-                                       OnInspect="InspectAsync"
-                                       OnCollapse="CollapsePreviewPane" />
-                </Column>
+                <FilesPreviewPanel PreviewSnapshot="@previewSnapshot"
+                                   IsBusy="@isBusy"
+                                   IsLoading="@IsInitialExplorerLoad"
+                                   IsVirtualPreview="@IsVirtualPreview"
+                                   IsPreviewPinned="@IsPreviewPinned"
+                                   CanOpenFolder="@(previewSnapshot?.IsDirectory == true && !IsCurrentPath(previewSnapshot.Path))"
+                                   InspectPath="@inspectPath"
+                                   InspectPathChanged="HandleInspectPathChanged"
+                                   OpenUrl="@(previewSnapshot is not null && !previewSnapshot.IsDirectory ? BuildFileContentUrl(previewSnapshot.Target, previewSnapshot.DisplayName, download: false) : null)"
+                                   DownloadUrl="@(CanDownloadSelection ? BuildFileContentUrl(previewSnapshot!.Target, previewSnapshot.DisplayName, download: true) : null)"
+                                   OnCopyTarget="CopyTextAsync"
+                                   OnShare="OpenShareFromPreview"
+                                   OnOpenFolder="OpenPreviewFolderAsync"
+                                   OnOpenDetails="OpenSelectedFileDetailsAsync"
+                                   OnTogglePin="TogglePreviewPinAsync"
+                                   OnOpenTopology="OpenTopologyAsync"
+                                   OnInspect="InspectAsync"
+                                   OnCollapse="CollapsePreviewPane" />
             }
-        </Row>
+            else if (ShowExplorerGuidanceRail)
+            {
+                <Stack Gap="1rem">
+                    <SectionCard Title="Seed the explorer" Description="Use the upload dialog for files, folders, or wrapped text notes.">
+                        <Stack Gap="0.75rem">
+                            <CompactStatStrip>
+                                <CompactStat Label="roots" Value="@pinnedItems.Count.ToString("n0")" Tone="info" />
+                                <CompactStat Label="visible" Value="@VisibleItems.Count.ToString("n0")" Tone="success" />
+                                <CompactStat Text="Preview hidden" Tone="neutral" />
+                            </CompactStatStrip>
+
+                            <InlineActions>
+                                <Button Text="Upload files" Click="OpenUploadModal" Disabled="@isBusy" />
+                                <Button Text="Create text note"
+                                        ButtonStyle="@(ButtonStyle.Light)"
+                                        Variant="@(Variant.Outlined)"
+                                        Click="OpenTextUploadModal"
+                                        Disabled="@isBusy" />
+                            </InlineActions>
+                        </Stack>
+                    </SectionCard>
+
+                    <SectionCard Title="Explorer flow" Description="Pinned roots stay in the browse surface; details stay behind preview and dialogs.">
+                        <div class="node-list">
+                            <SelectionListItem Title="Preview only when needed"
+                                               Eyebrow="Layout"
+                                               Meta="Right rail"
+                                               Summary="Open the preview rail after selecting content so empty sessions keep more horizontal browse space.">
+                                <Status>
+                                    <StatusBadge Text="Optional" Tone="info" />
+                                </Status>
+                            </SelectionListItem>
+                            <SelectionListItem Title="Share and unpin in dialogs"
+                                               Eyebrow="Dialogs"
+                                               Meta="Compact"
+                                               Summary="Remote share, detail, topology, and unpin actions stay out of the default explorer viewport.">
+                                <Status>
+                                    <StatusBadge Text="Available" Tone="success" />
+                                </Status>
+                            </SelectionListItem>
+                        </div>
+                    </SectionCard>
+                </Stack>
+            }
+        </Grid>
     </ChildContent>
 </PageScaffold>
 

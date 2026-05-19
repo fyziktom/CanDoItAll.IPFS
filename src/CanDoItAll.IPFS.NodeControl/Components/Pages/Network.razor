@@ -9,11 +9,28 @@
 
 <PageTitle>Network</PageTitle>
 
-<PageScaffold>
+<PageScaffold MaxWidthClass="max-w-full">
     <Header>
         <PageHeader Eyebrow="Network APIs"
                     Title="Swarm, bootstrap, DHT, and PubSub"
-                    Description="Peer connectivity and topic traffic for the current node.">
+                    Description="Peer connectivity and topic traffic for the current node."
+                    Compact="true">
+            <Stats>
+                <CompactStat Label="peers"
+                             Value="@((snapshot?.ConnectedPeers.Count ?? 0).ToString("n0"))"
+                             TooltipText="Connected swarm peers"
+                             Tone="success" />
+                <CompactStat Label="bootstrap"
+                             Value="@((snapshot?.BootstrapPeers.Count ?? 0).ToString("n0"))"
+                             Tone="warning" />
+                <CompactStat Label="filters"
+                             Value="@((snapshot?.AddressFilters.Count ?? 0).ToString("n0"))"
+                             Tone="info" />
+                <CompactStat Label="topics"
+                             Value="@((snapshot?.PubSubTopics.Count ?? 0).ToString("n0"))"
+                             TooltipText="PubSub topics"
+                             Tone="neutral" />
+            </Stats>
             <Actions>
                 <Button Text="Refresh" Click="LoadAsync" />
                 <Button Text="Stop PubSub"
@@ -34,16 +51,6 @@
             </Actions>
         </PageHeader>
     </Header>
-
-    <Lead>
-        <SummaryTiles>
-            <SummaryTile Label="Connected peers" Value="@((snapshot?.ConnectedPeers.Count ?? 0).ToString("n0"))" Tone="success" />
-            <SummaryTile Label="Bootstrap" Value="@((snapshot?.BootstrapPeers.Count ?? 0).ToString("n0"))" Tone="warning" />
-            <SummaryTile Label="Filters" Value="@((snapshot?.AddressFilters.Count ?? 0).ToString("n0"))" Tone="info" />
-            <SummaryTile Label="PubSub topics" Value="@((snapshot?.PubSubTopics.Count ?? 0).ToString("n0"))" Tone="neutral" />
-        </SummaryTiles>
-    </Lead>
-
     <ChildContent>
         @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
@@ -67,108 +74,152 @@
             <TabItems>
                 <TabsItem Text="Swarm"
                           Icon="hub">
-                    <SectionCard Title="Swarm and bootstrap" Description="Peer connections, bootstrap management, and address filters.">
-                        <div class="space-y-4">
-                            <div class="node-inline-fields">
-                                <FormField Text="Peer multiaddress">
-                                    <TextBox Value="@connectAddress"
-                                             ValueChanged="HandleConnectAddressChanged"
-                                             Placeholder="/ip4/.../tcp/.../p2p/..."
-                                             Disabled="@isBusy" />
-                                </FormField>
+                    <Grid Gap="LayoutGap.Medium"
+                          ColumnTemplateXl="minmax(0,1.25fr) minmax(24rem,0.75fr)">
+                            <SectionCard Title="Swarm and bootstrap" Description="Peer connections, bootstrap management, and address filters.">
+                                <Stack Gap="1rem">
+                                    <div class="node-inline-fields">
+                                        <FormField Text="Peer multiaddress">
+                                            <TextBox Value="@connectAddress"
+                                                     ValueChanged="HandleConnectAddressChanged"
+                                                     Placeholder="/ip4/.../tcp/.../p2p/..."
+                                                     Disabled="@isBusy" />
+                                        </FormField>
 
-                                <FormField Text="Bootstrap address">
-                                    <TextBox Value="@bootstrapAddress"
-                                             ValueChanged="HandleBootstrapAddressChanged"
-                                             Placeholder="/ip4/.../tcp/.../p2p/..."
-                                             Disabled="@isBusy" />
-                                </FormField>
+                                        <FormField Text="Bootstrap address">
+                                            <TextBox Value="@bootstrapAddress"
+                                                     ValueChanged="HandleBootstrapAddressChanged"
+                                                     Placeholder="/ip4/.../tcp/.../p2p/..."
+                                                     Disabled="@isBusy" />
+                                        </FormField>
 
-                                <FormField Text="Filter address">
-                                    <TextBox Value="@filterAddress"
-                                             ValueChanged="HandleFilterAddressChanged"
-                                             Placeholder="/ip4/.../ipcidr/..."
-                                             Disabled="@isBusy" />
-                                </FormField>
-                            </div>
+                                        <FormField Text="Filter address">
+                                            <TextBox Value="@filterAddress"
+                                                     ValueChanged="HandleFilterAddressChanged"
+                                                     Placeholder="/ip4/.../ipcidr/..."
+                                                     Disabled="@isBusy" />
+                                        </FormField>
+                                    </div>
 
-                            <div class="node-inline-fields">
-                                <FormField Text="Known node host or API URL">
-                                    <TextBox Value="@knownNodeHost"
-                                             ValueChanged="HandleKnownNodeHostChanged"
-                                             Placeholder="192.168.0.191 or http://rpi3:5001"
-                                             Disabled="@isBusy" />
-                                </FormField>
+                                    <div class="node-inline-fields">
+                                        <FormField Text="Known node host or API URL">
+                                            <TextBox Value="@knownNodeHost"
+                                                     ValueChanged="HandleKnownNodeHostChanged"
+                                                     Placeholder="192.168.0.191 or http://rpi3:5001"
+                                                     Disabled="@isBusy" />
+                                        </FormField>
 
-                                <FormField Text="Known node API port">
-                                    <Numeric TValue="int"
-                                             Value="@knownNodeApiPort"
-                                             ValueChanged="HandleKnownNodeApiPortChanged"
-                                             Min="1"
-                                             Max="65535"
-                                             Step="1"
-                                             Disabled="@isBusy" />
-                                </FormField>
+                                        <FormField Text="Known node API port">
+                                            <Numeric TValue="int"
+                                                     Value="@knownNodeApiPort"
+                                                     ValueChanged="HandleKnownNodeApiPortChanged"
+                                                     Min="1"
+                                                     Max="65535"
+                                                     Step="1"
+                                                     Disabled="@isBusy" />
+                                        </FormField>
 
-                                <FormField Text="Known node swarm port">
-                                    <Numeric TValue="int"
-                                             Value="@knownNodeSwarmPort"
-                                             ValueChanged="HandleKnownNodeSwarmPortChanged"
-                                             Min="1"
-                                             Max="65535"
-                                             Step="1"
-                                             Disabled="@isBusy" />
-                                </FormField>
-                            </div>
+                                        <FormField Text="Known node swarm port">
+                                            <Numeric TValue="int"
+                                                     Value="@knownNodeSwarmPort"
+                                                     ValueChanged="HandleKnownNodeSwarmPortChanged"
+                                                     Min="1"
+                                                     Max="65535"
+                                                     Step="1"
+                                                     Disabled="@isBusy" />
+                                        </FormField>
+                                    </div>
 
-                            <div class="node-action-row">
-                                <Button Text="Connect" Click="ConnectAsync" Disabled="@isBusy" />
-                                <Button Text="Disconnect"
-                                        ButtonStyle="@(ButtonStyle.Light)"
-                                        Variant="@(Variant.Outlined)"
-                                        Click="DisconnectAsync"
-                                        Disabled="@isBusy" />
-                                <Button Text="Add bootstrap"
-                                        ButtonStyle="@(ButtonStyle.Light)"
-                                        Variant="@(Variant.Outlined)"
-                                        Click="AddBootstrapAsync"
-                                        Disabled="@isBusy" />
-                                <Button Text="Remove bootstrap"
-                                        ButtonStyle="@(ButtonStyle.Warning)"
-                                        Variant="@(Variant.Text)"
-                                        Click="RemoveBootstrapAsync"
-                                        Disabled="@isBusy" />
-                                <Button Text="Resolve and connect"
-                                        ButtonStyle="@(ButtonStyle.Light)"
-                                        Variant="@(Variant.Outlined)"
-                                        Click="ConnectKnownNodeAsync"
-                                        Disabled="@isBusy" />
-                            </div>
+                                    <InlineActions>
+                                        <Button Text="Connect" Click="ConnectAsync" Disabled="@isBusy" />
+                                        <Button Text="Disconnect"
+                                                ButtonStyle="@(ButtonStyle.Light)"
+                                                Variant="@(Variant.Outlined)"
+                                                Click="DisconnectAsync"
+                                                Disabled="@isBusy" />
+                                        <Button Text="Resolve and connect"
+                                                ButtonStyle="@(ButtonStyle.Light)"
+                                                Variant="@(Variant.Outlined)"
+                                                Click="ConnectKnownNodeAsync"
+                                                Disabled="@isBusy" />
+                                    </InlineActions>
 
-                            <div class="node-action-row">
-                                <Button Text="Restore defaults"
-                                        ButtonStyle="@(ButtonStyle.Light)"
-                                        Variant="@(Variant.Outlined)"
-                                        Click="RestoreDefaultBootstrapAsync"
-                                        Disabled="@isBusy" />
-                                <Button Text="Clear bootstrap"
-                                        ButtonStyle="@(ButtonStyle.Warning)"
-                                        Variant="@(Variant.Text)"
-                                        Click="ClearBootstrapAsync"
-                                        Disabled="@isBusy" />
-                                <Button Text="Add filter"
-                                        ButtonStyle="@(ButtonStyle.Light)"
-                                        Variant="@(Variant.Outlined)"
-                                        Click="AddFilterAsync"
-                                        Disabled="@isBusy" />
-                                <Button Text="Remove filter"
-                                        ButtonStyle="@(ButtonStyle.Warning)"
-                                        Variant="@(Variant.Text)"
-                                        Click="RemoveFilterAsync"
-                                        Disabled="@isBusy" />
-                            </div>
-                        </div>
-                    </SectionCard>
+                                    <InlineActions>
+                                        <Button Text="Add bootstrap"
+                                                ButtonStyle="@(ButtonStyle.Light)"
+                                                Variant="@(Variant.Outlined)"
+                                                Click="AddBootstrapAsync"
+                                                Disabled="@isBusy" />
+                                        <Button Text="Remove bootstrap"
+                                                ButtonStyle="@(ButtonStyle.Warning)"
+                                                Variant="@(Variant.Text)"
+                                                Click="RemoveBootstrapAsync"
+                                                Disabled="@isBusy" />
+                                        <Button Text="Restore defaults"
+                                                ButtonStyle="@(ButtonStyle.Light)"
+                                                Variant="@(Variant.Outlined)"
+                                                Click="RestoreDefaultBootstrapAsync"
+                                                Disabled="@isBusy" />
+                                        <Button Text="Clear bootstrap"
+                                                ButtonStyle="@(ButtonStyle.Warning)"
+                                                Variant="@(Variant.Text)"
+                                                Click="ClearBootstrapAsync"
+                                                Disabled="@isBusy" />
+                                        <Button Text="Add filter"
+                                                ButtonStyle="@(ButtonStyle.Light)"
+                                                Variant="@(Variant.Outlined)"
+                                                Click="AddFilterAsync"
+                                                Disabled="@isBusy" />
+                                        <Button Text="Remove filter"
+                                                ButtonStyle="@(ButtonStyle.Warning)"
+                                                Variant="@(Variant.Text)"
+                                                Click="RemoveFilterAsync"
+                                                Disabled="@isBusy" />
+                                    </InlineActions>
+                                </Stack>
+                            </SectionCard>
+
+                            <Stack Gap="1rem">
+                                <SectionCard Title="Current network" Description="Small badges replace the old route-level metric cards.">
+                                    <CompactStatStrip>
+                                        <CompactStat Label="peers" Value="@((snapshot?.ConnectedPeers.Count ?? 0).ToString("n0"))" Tone="success" />
+                                        <CompactStat Label="known" Value="@((snapshot?.KnownPeers.Count ?? 0).ToString("n0"))" Tone="info" />
+                                        <CompactStat Label="wantlist" Value="@((snapshot?.BitswapWantlist.Count ?? 0).ToString("n0"))" Tone="warning" />
+                                        <CompactStat Label="topics" Value="@((snapshot?.PubSubTopics.Count ?? 0).ToString("n0"))" Tone="neutral" />
+                                    </CompactStatStrip>
+                                </SectionCard>
+
+                                <SectionCard Title="Bootstrap posture" Description="Active bootstrap entries and filters stay visible without taking the main work area.">
+                                    <Stack Gap="0.75rem">
+                                        <Cluster Gap="LayoutGap.Small">
+                                            <StatusBadge Text="@($"{snapshot?.BootstrapPeers.Count ?? 0} bootstrap")" Tone="warning" />
+                                            <StatusBadge Text="@($"{snapshot?.AddressFilters.Count ?? 0} filters")" Tone="info" />
+                                        </Cluster>
+
+                                        @if ((snapshot?.BootstrapPeers.Count ?? 0) == 0)
+                                        {
+                                            <EmptyState Eyebrow="Bootstrap" Title="No bootstrap entries" Description="Restore defaults or add a bootstrap address from the left panel." />
+                                        }
+                                        else
+                                        {
+                                            <div class="node-list">
+                                                @foreach (var peer in snapshot!.BootstrapPeers.Take(4))
+                                                {
+                                                    <SelectionListItem Title="@Shorten(peer, 34)"
+                                                                       Eyebrow="Bootstrap"
+                                                                       Meta="Peer"
+                                                                       Summary="@peer">
+                                                        <Status>
+                                                            <StatusBadge Text="Entry" Tone="warning" />
+                                                        </Status>
+                                                    </SelectionListItem>
+                                                }
+                                            </div>
+                                        }
+                                    </Stack>
+                                </SectionCard>
+                            </Stack>
+                    </Grid>
                 </TabsItem>
 
                 <TabsItem Text="Topology"
@@ -223,17 +274,18 @@
 
                             @if (dhtPeerResult is not null)
                             {
-                                <SummaryTiles>
-                                    <SummaryTile Label="Peer"
+                                <CompactStatStrip>
+                                    <CompactStat Label="peer"
                                                  Value="@Shorten(dhtPeerResult.Id, 24)"
+                                                 TooltipText="@dhtPeerResult.Id"
                                                  Tone="info" />
-                                    <SummaryTile Label="Agent"
+                                    <CompactStat Label="agent"
                                                  Value="@dhtPeerResult.AgentVersion"
                                                  Tone="success" />
-                                    <SummaryTile Label="Address count"
+                                    <CompactStat Label="addresses"
                                                  Value="@dhtPeerResult.Addresses.Count.ToString("n0")"
                                                  Tone="warning" />
-                                </SummaryTiles>
+                                </CompactStatStrip>
                             }
 
                             @if (providerResults.Count > 0)

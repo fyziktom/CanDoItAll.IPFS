@@ -61,6 +61,14 @@ public partial class Files : IDisposable
     private bool IsInitialExplorerLoad
         => isBusy && !pinnedItemsLoaded && currentFolderSnapshot is null && rootItems.Count == 0;
 
+    private bool ShowExplorerGuidanceRail
+        => !showPreviewPane && !IsInitialExplorerLoad && VisibleItems.Count <= 1;
+
+    private string ExplorerGridColumnTemplateXl
+        => showPreviewPane || ShowExplorerGuidanceRail
+            ? "minmax(0,2fr) minmax(24rem,0.8fr)"
+            : "minmax(0,1fr)";
+
     private CanvasWorkbenchSurface fileSurface
         => NodeCanvasSurfaceFactory.CreateFileSurface(topologySnapshot, fileCanvasState);
 
@@ -346,6 +354,12 @@ public partial class Files : IDisposable
     private void OpenUploadModal()
     {
         showCreateTextPanel = false;
+        showUploadModal = true;
+    }
+
+    private void OpenTextUploadModal()
+    {
+        showCreateTextPanel = true;
         showUploadModal = true;
     }
 

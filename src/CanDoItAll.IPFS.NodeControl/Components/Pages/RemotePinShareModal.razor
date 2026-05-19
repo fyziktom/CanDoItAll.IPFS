@@ -46,20 +46,20 @@
             @if (shareStep == 1)
             {
                 <Stack Gap="1rem">
-                    <SummaryTiles>
-                        <SummaryTile Label="Content"
-                                     Value="@TargetItem.DisplayName"
-                                     HelperText="Selected content to share with another node."
+                    <CompactStatStrip>
+                        <CompactStat Label="content"
+                                     Value="@Shorten(TargetItem.DisplayName, 24)"
+                                     TooltipText="@TargetItem.DisplayName"
                                      Tone="info" />
-                        <SummaryTile Label="Type"
+                        <CompactStat Label="type"
                                      Value="@(TargetItem.IsDirectory ? "Folder root" : "File")"
-                                     HelperText="Current share payload type."
+                                     TooltipText="Current share payload type."
                                      Tone="success" />
-                        <SummaryTile Label="CID"
+                        <CompactStat Label="cid"
                                      Value="@Shorten(TargetItem.Target, 24)"
-                                     HelperText="@TargetItem.Target"
+                                     TooltipText="@TargetItem.Target"
                                      Tone="warning" />
-                    </SummaryTiles>
+                    </CompactStatStrip>
 
                     @if (!hasLoadedKnownTargets)
                     {
@@ -148,24 +148,24 @@
                             <p>@(SelectedTarget?.Label ?? "Receiver") responded and reported a healthy node. You can continue to the note step now.</p>
                         </Alert>
 
-                        <SummaryTiles>
-                            <SummaryTile Label="Receiver"
+                        <CompactStatStrip>
+                            <CompactStat Label="receiver"
                                          Value="@probeSnapshot.NodeLabel"
-                                         HelperText="Healthy node label reported by the receiver."
+                                         TooltipText="Healthy node label reported by the receiver."
                                          Tone="success" />
-                            <SummaryTile Label="Peer ID"
+                            <CompactStat Label="peer"
                                          Value="@Shorten(probeSnapshot.PeerId, 24)"
-                                         HelperText="@probeSnapshot.PeerId"
+                                         TooltipText="@probeSnapshot.PeerId"
                                          Tone="info" />
-                            <SummaryTile Label="Node API"
+                            <CompactStat Label="node api"
                                          Value="@Shorten(probeSnapshot.NodeBaseUrl, 24)"
-                                         HelperText="@probeSnapshot.NodeBaseUrl"
+                                         TooltipText="@probeSnapshot.NodeBaseUrl"
                                          Tone="warning" />
-                            <SummaryTile Label="Control app"
+                            <CompactStat Label="control app"
                                          Value="@Shorten(probeSnapshot.ControlAppUrl, 24)"
-                                         HelperText="@probeSnapshot.ControlAppUrl"
+                                         TooltipText="@probeSnapshot.ControlAppUrl"
                                          Tone="neutral" />
-                        </SummaryTiles>
+                        </CompactStatStrip>
 
                         <Stack Orientation="Orientation.Horizontal"
                                Wrap="FlexWrap.Wrap"
@@ -200,24 +200,24 @@
             else
             {
                 <Stack Gap="1rem">
-                    <SummaryTiles>
-                        <SummaryTile Label="Receiver"
+                    <CompactStatStrip>
+                        <CompactStat Label="receiver"
                                      Value="@(probeSnapshot?.NodeLabel ?? SelectedTarget?.Label ?? "Receiver")"
-                                     HelperText="Selected remote node for this request."
+                                     TooltipText="Selected remote node for this request."
                                      Tone="success" />
-                        <SummaryTile Label="Control app"
+                        <CompactStat Label="control app"
                                      Value="@Shorten(SelectedTarget?.ControlAppUrl ?? string.Empty, 24)"
-                                     HelperText="@(SelectedTarget?.ControlAppUrl ?? string.Empty)"
+                                     TooltipText="@(SelectedTarget?.ControlAppUrl ?? string.Empty)"
                                      Tone="info" />
-                        <SummaryTile Label="Content"
-                                     Value="@TargetItem.DisplayName"
-                                     HelperText="Content that will be pinned on the receiver."
+                        <CompactStat Label="content"
+                                     Value="@Shorten(TargetItem.DisplayName, 24)"
+                                     TooltipText="@TargetItem.DisplayName"
                                      Tone="warning" />
-                        <SummaryTile Label="Payload"
+                        <CompactStat Label="payload"
                                      Value="@GetContentSummary(TargetItem)"
-                                     HelperText="Size or visible direct item count."
+                                     TooltipText="Size or visible direct item count."
                                      Tone="neutral" />
-                    </SummaryTiles>
+                    </CompactStatStrip>
 
                     <Alert AlertStyle="@(ResolveOutgoingSecurityAlertStyle())">
                         <strong>@outgoingSecurity.Summary</strong>

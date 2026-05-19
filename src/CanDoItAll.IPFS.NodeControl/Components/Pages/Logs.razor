@@ -3,16 +3,32 @@
 
 <PageTitle>Logs</PageTitle>
 
-<PageScaffold>
+<PageScaffold MaxWidthClass="max-w-full">
     <Header>
         <PageHeader Eyebrow="Diagnostics"
                     Title="Application logs"
-                    Description="Recent application events.">
+                    Description="Recent application events."
+                    Compact="true">
+            <Stats>
+                <CompactStat Label="window"
+                             Value="@selectedWindow.Label"
+                             Tone="info" />
+                <CompactStat Label="entries"
+                             Value="@logSlice.Entries.Count.ToString("n0")"
+                             Tone="success" />
+                <CompactStat Label="errors"
+                             Value="@CountEntries("Error", "Critical").ToString("n0")"
+                             Tone="danger" />
+                <CompactStat Label="warnings"
+                             Value="@CountEntries("Warning").ToString("n0")"
+                             Tone="warning" />
+            </Stats>
             <Actions>
                 <Button Text="Refresh" Click="RefreshLogs" />
-                <a class="fx-panel-button fx-panel-link--accent" href="@BuildDownloadUrl()">
-                    Download window
-                </a>
+                <Button Text="Download window"
+                        ButtonStyle="@(ButtonStyle.Light)"
+                        Variant="@(Variant.Outlined)"
+                        Href="@BuildDownloadUrl()" />
                 <HelpPopover AriaLabel="Show log help"
                              Heading="Application logs"
                              Body="Use the time window filters to focus the slice, then download the same slice when you need to share it."
@@ -24,16 +40,6 @@
             </Actions>
         </PageHeader>
     </Header>
-
-    <Lead>
-        <SummaryTiles>
-            <SummaryTile Label="Window" Value="@selectedWindow.Label" Tone="info" />
-            <SummaryTile Label="Entries" Value="@logSlice.Entries.Count.ToString("n0")" Tone="success" />
-            <SummaryTile Label="Errors" Value="@CountEntries("Error", "Critical").ToString("n0")" Tone="danger" />
-            <SummaryTile Label="Warnings" Value="@CountEntries("Warning").ToString("n0")" Tone="warning" />
-        </SummaryTiles>
-    </Lead>
-
     <ChildContent>
         <section class="log-shell">
             <div class="rp-filters">

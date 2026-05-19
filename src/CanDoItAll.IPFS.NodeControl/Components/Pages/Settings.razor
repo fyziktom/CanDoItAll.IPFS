@@ -9,11 +9,27 @@
 
 <PageTitle>Settings</PageTitle>
 
-<PageScaffold>
+<PageScaffold MaxWidthClass="max-w-full">
     <Header>
         <PageHeader Eyebrow="Endpoint and maintenance"
                     Title="Settings"
-                    Description="Endpoint, config, and maintenance controls.">
+                    Description="Endpoint, config, and maintenance controls."
+                    Compact="true">
+            <Stats>
+                <CompactStat Label="target"
+                             Value="@Shorten(editModel.BaseUrl, 24)"
+                             TooltipText="@editModel.BaseUrl"
+                             Tone="info" />
+                <CompactStat Label="api path"
+                             Value="@editModel.ApiPath"
+                             Tone="neutral" />
+                <CompactStat Label="timeout"
+                             Value="@($"{editModel.TimeoutSeconds}s")"
+                             Tone="warning" />
+                <CompactStat Text="@maintenanceCapability.Status"
+                             TooltipText="@maintenanceCapability.Detail"
+                             Tone="@maintenanceCapability.Tone" />
+            </Stats>
             <Actions>
                 <Button Text="Save settings" Click="SaveSettingsAsync" />
                 <Button Text="Test connection"
@@ -66,48 +82,81 @@
             <TabItems>
                 <TabsItem Text="Endpoint"
                           Icon="lan">
-                    <FormSection Title="Node endpoint" Description="Change the target node and save the values for future sessions.">
-                        <div class="node-page-grid">
-                            <FormField Text="Label">
-                                <TextBox Value="@editModel.Label"
-                                         ValueChanged="HandleLabelChanged"
-                                         Placeholder="Local IPFS node"
-                                         Disabled="@isBusy" />
-                            </FormField>
+                    <Grid Gap="LayoutGap.Medium"
+                          ColumnTemplateXl="minmax(0,1.45fr) minmax(24rem,0.7fr)">
+                            <FormSection Title="Node endpoint" Description="Change the target node and save the values for future sessions.">
+                                <div class="node-page-grid">
+                                    <FormField Text="Label">
+                                        <TextBox Value="@editModel.Label"
+                                                 ValueChanged="HandleLabelChanged"
+                                                 Placeholder="Local IPFS node"
+                                                 Disabled="@isBusy" />
+                                    </FormField>
 
-                            <FormField Text="Base URL">
-                                <TextBox Value="@editModel.BaseUrl"
-                                         ValueChanged="HandleBaseUrlChanged"
-                                         Placeholder="http://127.0.0.1:5001/"
-                                         Disabled="@isBusy" />
-                            </FormField>
+                                    <FormField Text="Base URL">
+                                        <TextBox Value="@editModel.BaseUrl"
+                                                 ValueChanged="HandleBaseUrlChanged"
+                                                 Placeholder="http://127.0.0.1:5001/"
+                                                 Disabled="@isBusy" />
+                                    </FormField>
 
-                            <FormField Text="API path">
-                                <TextBox Value="@editModel.ApiPath"
-                                         ValueChanged="HandleApiPathChanged"
-                                         Placeholder="api/v0"
-                                         Disabled="@isBusy" />
-                            </FormField>
+                                    <FormField Text="API path">
+                                        <TextBox Value="@editModel.ApiPath"
+                                                 ValueChanged="HandleApiPathChanged"
+                                                 Placeholder="api/v0"
+                                                 Disabled="@isBusy" />
+                                    </FormField>
 
-                            <FormField Text="Timeout (seconds)">
-                                <Numeric TValue="int"
-                                         Value="@editModel.TimeoutSeconds"
-                                         ValueChanged="HandleTimeoutChanged"
-                                         Min="5"
-                                         Max="600"
-                                         Step="5"
-                                         Disabled="@isBusy" />
-                            </FormField>
-                        </div>
+                                    <FormField Text="Timeout (seconds)">
+                                        <Numeric TValue="int"
+                                                 Value="@editModel.TimeoutSeconds"
+                                                 ValueChanged="HandleTimeoutChanged"
+                                                 Min="5"
+                                                 Max="600"
+                                                 Step="5"
+                                                 Disabled="@isBusy" />
+                                    </FormField>
+                                </div>
 
-                        <div class="node-action-row">
-                            <Button Text="Reset local copy"
-                                    ButtonStyle="@(ButtonStyle.Light)"
-                                    Variant="@(Variant.Outlined)"
-                                    Click="ResetSettingsAsync"
-                                    Disabled="@isBusy" />
-                        </div>
-                    </FormSection>
+                                <div class="node-action-row">
+                                    <Button Text="Reset local copy"
+                                            ButtonStyle="@(ButtonStyle.Light)"
+                                            Variant="@(Variant.Outlined)"
+                                            Click="ResetSettingsAsync"
+                                            Disabled="@isBusy" />
+                                </div>
+                            </FormSection>
+
+                            <Stack Gap="1rem">
+                                <SectionCard Title="Session copy" Description="The browser copy hydrates this shell on startup.">
+                                    <CompactStatStrip>
+                                        <CompactStat Label="target"
+                                                     Value="@Shorten(editModel.BaseUrl, 18)"
+                                                     TooltipText="@editModel.BaseUrl"
+                                                     Tone="info" />
+                                        <CompactStat Label="timeout"
+                                                     Value="@($"{editModel.TimeoutSeconds}s")"
+                                                     Tone="warning" />
+                                    </CompactStatStrip>
+                                </SectionCard>
+
+                                <SectionCard Title="Maintenance posture" Description="@maintenanceCapability.Detail">
+                                    <Stack Gap="0.75rem">
+                                        <StatusBadge Text="@maintenanceCapability.Status" Tone="@maintenanceCapability.Tone" />
+                                        <InlineActions>
+                                            <Button Text="Config"
+                                                    ButtonStyle="@(ButtonStyle.Light)"
+                                                    Variant="@(Variant.Outlined)"
+                                                    Click="@(() => HandleSettingsTabChanged(1))" />
+                                            <Button Text="Maintenance"
+                                                    ButtonStyle="@(ButtonStyle.Light)"
+                                                    Variant="@(Variant.Outlined)"
+                                                    Click="@(() => HandleSettingsTabChanged(2))" />
+                                        </InlineActions>
+                                    </Stack>
+                                </SectionCard>
+                            </Stack>
+                    </Grid>
                 </TabsItem>
 
                 <TabsItem Text="Config"
@@ -422,6 +471,16 @@
     {
         configTreatValueAsJson = value;
         return Task.CompletedTask;
+    }
+
+    private static string Shorten(string value, int limit)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length <= limit)
+        {
+            return value;
+        }
+
+        return $"{value[..(limit - 3)]}...";
     }
 
     private void HandleNodeSessionChanged()
