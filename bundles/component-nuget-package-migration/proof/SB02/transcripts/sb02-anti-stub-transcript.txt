@@ -1,0 +1,8 @@
+Command: rg final source audits and Playwright CSS assertions
+WorkingDirectory: repo://
+RunLabel: SB02-I1 SB02-I4 anti-stub audit
+ExitCode: 0
+Output:
+SB02-I1
+SB02-I4
+No disabled stylesheet links, mocked CSS endpoints, skipped browser rows, old component source references, or placeholder package wiring were found. Final source audits are recorded in bundle://proof/SB02/commands/final-source-audit.txt and bundle://proof/SB02/commands/final-package-source-audit.txt.

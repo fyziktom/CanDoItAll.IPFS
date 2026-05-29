@@ -1,9 +1,9 @@
 <Project>
   <PropertyGroup>
-    <CanDoItAllRepoRoot Condition="'$(CanDoItAllRepoRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\CanDoItAll\'))</CanDoItAllRepoRoot>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <CanDoItAllComponentsPackageVersion>0.1.0</CanDoItAllComponentsPackageVersion>
     <DefaultItemExcludes>
       $(DefaultItemExcludes);
       .artifacts/**;

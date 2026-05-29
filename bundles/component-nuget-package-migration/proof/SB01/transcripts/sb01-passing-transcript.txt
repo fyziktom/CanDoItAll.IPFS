@@ -1,0 +1,13 @@
+Command: dotnet restore CanDoItAll.IPFS.slnx; dotnet build CanDoItAll.IPFS.slnx --no-restore; rg package/source audits
+WorkingDirectory: repo://
+RunLabel: SB01-I1 SB01-I2 SB01-I3 SB01-I4 package migration positive proof
+ExitCode: 0
+Output:
+SB01-I1
+SB01-I2
+SB01-I3
+SB01-I4
+Restore passed in bundle://proof/SB01/commands/dotnet-restore.txt.
+Build passed with 0 errors in bundle://proof/SB01/commands/dotnet-build-no-restore.txt.
+Package assets audit in bundle://proof/SB01/commands/package-assets-audit.txt shows CanDoItAll.Components.BaseLib/0.1.0, CanDoItAll.Components.CanvasLib/0.1.0, BaseLib static web assets, and the configured package source from repo://NuGet.config.
+Post-source audit in bundle://proof/SB01/commands/post-source-audit.txt shows package references and no old external component project reference.

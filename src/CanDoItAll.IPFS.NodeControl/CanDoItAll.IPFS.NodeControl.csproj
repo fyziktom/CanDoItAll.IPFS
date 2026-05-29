@@ -25,9 +25,10 @@
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.15.0" />
+    <PackageReference Include="CanDoItAll.Components.BaseLib" Version="$(CanDoItAllComponentsPackageVersion)" />
+    <PackageReference Include="CanDoItAll.Components.CanvasLib" Version="$(CanDoItAllComponentsPackageVersion)" />
     <ProjectReference Include="..\CanDoItAll.IPFS.Engine\CanDoItAll.IPFS.Engine.csproj" />
     <ProjectReference Include="..\CanDoItAll.IPFS.Client\CanDoItAll.IPFS.Client.csproj" />
-    <ProjectReference Include="$(CanDoItAllRepoRoot)src\CanDoItAll.Components\CanDoItAll.Components.csproj" />
   </ItemGroup>
 
   <ItemGroup>
