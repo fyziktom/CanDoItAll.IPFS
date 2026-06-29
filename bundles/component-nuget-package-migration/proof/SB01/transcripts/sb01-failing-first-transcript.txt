@@ -1,7 +1,0 @@
-Command: rg -n "CanDoItAllRepoRoot|ProjectReference.*CanDoItAll.Components" -S Directory.Build.props src
-WorkingDirectory: repo://
-RunLabel: SB01-I2 failing-first old component project reference audit
-ExitCode: 1
-Output:
-SB01-I2
-The pre-edit audit in bundle://proof/SB01/commands/pre-source-audit.txt showed the old CanDoItAllRepoRoot property and external CanDoItAll.Components.csproj ProjectReference. Under the intended migration invariant, that pre-edit state is a failure.

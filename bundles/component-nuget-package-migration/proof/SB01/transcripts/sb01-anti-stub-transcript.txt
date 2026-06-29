@@ -1,7 +1,0 @@
-Command: rg -n -e TODO -e NotImplemented -e CanDoItAllRepoRoot -e "ProjectReference.*CanDoItAll.Components" -e PLACEHOLDER NuGet.config Directory.Build.props src/CanDoItAll.IPFS.NodeControl/CanDoItAll.IPFS.NodeControl.csproj
-WorkingDirectory: repo://
-RunLabel: SB01-I4 anti-stub audit
-ExitCode: 0
-Output:
-SB01-I4
-No stubs, TODO migration markers, NotImplemented markers, placeholder package IDs, old CanDoItAllRepoRoot property, or old component project reference were found in the changed production files.
