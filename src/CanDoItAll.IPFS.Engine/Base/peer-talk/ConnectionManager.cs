@@ -118,11 +118,13 @@ namespace PeerTalk
                 (key) => new List<PeerConnection> { connection },
                 (key, conns) =>
                 {
-                    if (!conns.Contains(connection))
+                    if (conns.Contains(connection))
                     {
-                        conns.Add(connection);
+                        return conns;
                     }
-                    return conns;
+
+                    var newConns = new List<PeerConnection>(conns) { connection };
+                    return newConns;
                 }
             );
 

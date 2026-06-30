@@ -1,0 +1,11 @@
+{
+    "project":  "candoitallipfssb09",
+    "nodeA":  "QmbHdoXrNQEZGsADjHSxsM13F5tY7XCC9yhxibm9onbQmG",
+    "nodeB":  "QmWaH2nbSW6QVgwuzkhw9YzaicVAhQymFdGgLs9dZzYRUS",
+    "cid":  "QmZWQuVsqg5FoTLPn3PAek6kbgN8QgScaPCrL8mj8iNhYo",
+    "nodeAPersistentAfterRestart":  true,
+    "nodeAPersistentAfterRebuild":  true,
+    "nodeBPinAddVerified":  true,
+    "nodeBUnpinVerified":  true,
+    "completedAtUtc":  "2026-06-30T03:38:14.1990266Z"
+}

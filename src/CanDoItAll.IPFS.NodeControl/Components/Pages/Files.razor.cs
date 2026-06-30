@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using CanDoItAll.Components.BaseLib;
 using CanDoItAll.Components.CanvasLib;
 using CanDoItAll.IPFS.NodeControl.Components.Pages.FilesComponents;
@@ -215,7 +215,7 @@ public partial class Files : IDisposable
             detailSnapshot = previewSnapshot is not null
                              && string.Equals(previewSnapshot.Path, path, StringComparison.Ordinal)
                 ? previewSnapshot
-                : await NodeOperatorService.GetPreviewSnapshotAsync(path, displayName, CancellationToken.None);
+                : await ExplorerWorkflow.GetPreviewSnapshotAsync(path, displayName, CancellationToken.None);
         });
     }
 
@@ -427,7 +427,7 @@ public partial class Files : IDisposable
                 return;
             }
 
-            await NodeOperatorService.PinAsync(previewSnapshot.Target, recursive: true, CancellationToken.None);
+            await FileWorkflow.PinAsync(previewSnapshot.Target, recursive: true, CancellationToken.None);
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Success,
@@ -449,13 +449,13 @@ public partial class Files : IDisposable
         var target = unpinTargetItem;
         await RunBusyAsync(async () =>
         {
-            await NodeOperatorService.UnpinAsync(target.Target, recursive: true, CancellationToken.None);
+            await FileWorkflow.UnpinAsync(target.Target, recursive: true, CancellationToken.None);
             var garbageCollected = false;
             if (unpinDeleteImmediately)
             {
                 try
                 {
-                    await NodeOperatorService.RunRepositoryGcAsync(CancellationToken.None);
+                    await MaintenanceWorkflow.RunRepositoryGcAsync(CancellationToken.None);
                     garbageCollected = true;
                 }
                 catch (Exception ex)
@@ -496,7 +496,7 @@ public partial class Files : IDisposable
 
         await RunBusyAsync(async () =>
         {
-            topologySnapshot = await NodeOperatorService.InspectFileSystemAsync(targetPath, CancellationToken.None);
+            topologySnapshot = await FileWorkflow.InspectFileSystemAsync(targetPath, CancellationToken.None);
         });
     }
 
@@ -509,13 +509,13 @@ public partial class Files : IDisposable
 
         if (!forceReload)
         {
-            var cachedItems = NodeOperatorService.GetCachedPinnedExplorerItems();
+            var cachedItems = ExplorerWorkflow.GetCachedPinnedExplorerItems();
             if (cachedItems.Count > 0)
             {
                 var useCache = false;
                 try
                 {
-                    useCache = await NodeOperatorService.HasTrustedCachedPinnedExplorerItemsAsync(CancellationToken.None);
+                    useCache = await ExplorerWorkflow.HasTrustedCachedPinnedExplorerItemsAsync(CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
@@ -534,7 +534,7 @@ public partial class Files : IDisposable
             }
         }
 
-        var loadedItems = await NodeOperatorService.ListPinnedExplorerItemsAsync(CancellationToken.None);
+        var loadedItems = await ExplorerWorkflow.ListPinnedExplorerItemsAsync(CancellationToken.None);
         pinnedItems = loadedItems.Select(ApplyKnownDisplayName).ToList();
         rootItems = BuildRootItems(pinnedItems);
         pinnedItemsLoaded = true;
@@ -580,7 +580,7 @@ public partial class Files : IDisposable
 
     private async Task BrowseToPathCoreAsync(string path, string? displayName, string? preferredSelectionPath = null)
     {
-        var snapshot = await NodeOperatorService.GetExplorerSnapshotAsync(path, CancellationToken.None);
+        var snapshot = await ExplorerWorkflow.GetExplorerSnapshotAsync(path, CancellationToken.None);
         if (snapshot.Current.IsDirectory)
         {
             currentFolderSnapshot = snapshot;
@@ -605,7 +605,7 @@ public partial class Files : IDisposable
 
         if (!string.IsNullOrWhiteSpace(snapshot.ParentPath))
         {
-            var parentSnapshot = await NodeOperatorService.GetExplorerSnapshotAsync(snapshot.ParentPath, CancellationToken.None);
+            var parentSnapshot = await ExplorerWorkflow.GetExplorerSnapshotAsync(snapshot.ParentPath, CancellationToken.None);
             currentFolderSnapshot = parentSnapshot;
             inspectPath = parentSnapshot.NormalizedPath;
 
@@ -630,7 +630,7 @@ public partial class Files : IDisposable
 
     private async Task LoadPreviewCoreAsync(string path, string? displayName)
     {
-        var snapshot = await NodeOperatorService.GetPreviewSnapshotAsync(path, displayName, CancellationToken.None);
+        var snapshot = await ExplorerWorkflow.GetPreviewSnapshotAsync(path, displayName, CancellationToken.None);
         previewSnapshot = ApplyKnownDisplayName(snapshot);
     }
 
@@ -699,7 +699,7 @@ public partial class Files : IDisposable
 
         await RunBusyAsync(async () =>
         {
-            var created = await NodeOperatorService.UploadTextAsync(textFileName, textContent, textPin, textWrap, CancellationToken.None);
+            var created = await FileWorkflow.UploadTextAsync(textFileName, textContent, textPin, textWrap, CancellationToken.None);
             await RefreshCurrentViewCoreAsync(created.ResolvedId, forcePinnedReload: true);
             showUploadModal = false;
             showCreateTextPanel = false;
@@ -870,13 +870,13 @@ public partial class Files : IDisposable
     {
         try
         {
-            var loadedItems = await NodeOperatorService.ListPinnedExplorerItemsAsync(CancellationToken.None);
+            var loadedItems = await ExplorerWorkflow.ListPinnedExplorerItemsAsync(CancellationToken.None);
             pinnedItems = loadedItems.Select(ApplyKnownDisplayName).ToList();
             rootItems = BuildRootItems(pinnedItems);
 
             if (currentFolderSnapshot is null && previewSnapshot is not null)
             {
-                previewSnapshot = await NodeOperatorService.GetPreviewSnapshotAsync(previewSnapshot.Path, previewSnapshot.DisplayName, CancellationToken.None);
+                previewSnapshot = await ExplorerWorkflow.GetPreviewSnapshotAsync(previewSnapshot.Path, previewSnapshot.DisplayName, CancellationToken.None);
                 previewSnapshot = ApplyKnownDisplayName(previewSnapshot);
             }
 
@@ -994,3 +994,4 @@ public partial class Files : IDisposable
         };
     }
 }
+

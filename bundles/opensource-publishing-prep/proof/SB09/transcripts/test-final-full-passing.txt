@@ -1,0 +1,21 @@
+﻿Command: historical proof transcript test-final-full-passing.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB09-VALIDATION-001 SB09-PIN-001 SB09-DOCKER-001 SB09-BROWSER-001 SB09-HANDOFF-001
+--- original captured output follows ---
+Test run for C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\bin\Debug\net10.0\CanDoItAll.IPFS.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  Skipped NullData
+  Skipped SomeData
+  Skipped Example1
+  Skipped Mars_Info
+  Skipped FindProvider
+  Skipped ReadTextFromNetwork
+  Skipped Resolve_DnsLink_Recursive
+  Skipped Connect_Disconnect_Mars
+  Skipped JsIPFS_Connect
+  Skipped GoIPFS_Connect
+  Skipped GoIPFS_Connect_v0_4_17
+
+Passed!  - Failed:     0, Passed:   372, Skipped:    11, Total:   383, Duration: 6 m 44 s - CanDoItAll.IPFS.Tests.dll (net10.0)
+

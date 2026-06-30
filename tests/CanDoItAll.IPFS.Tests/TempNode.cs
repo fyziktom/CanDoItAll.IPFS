@@ -17,12 +17,10 @@ namespace Ipfs.Engine
     /// </remarks>
     class TempNode : IpfsEngine
     {
-        static int nodeNumber;
-
         public TempNode()
             : base("xyzzy".ToCharArray())
         {
-            Options.Repository.Folder = Path.Combine(Path.GetTempPath(), $"ipfs-{nodeNumber++}");
+            Options.Repository.Folder = Path.Combine(Path.GetTempPath(), "ipfs-engine-temp-nodes", Guid.NewGuid().ToString("N"));
             Options.KeyChain.DefaultKeyType = "ed25519";
             Config.SetAsync(
                 "Addresses.Swarm",

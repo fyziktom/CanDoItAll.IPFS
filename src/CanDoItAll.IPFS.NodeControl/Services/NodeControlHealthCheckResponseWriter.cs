@@ -5,6 +5,11 @@ namespace CanDoItAll.IPFS.NodeControl.Services;
 
 public static class NodeControlHealthCheckResponseWriter
 {
+    private static readonly JsonSerializerOptions HealthResponseJsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        WriteIndented = true
+    };
+
     public static async Task WriteJsonAsync(HttpContext context, HealthReport report)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -31,10 +36,7 @@ public static class NodeControlHealthCheckResponseWriter
         await JsonSerializer.SerializeAsync(
                 context.Response.Body,
                 payload,
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    WriteIndented = true
-                })
+                HealthResponseJsonOptions)
             .ConfigureAwait(false);
     }
 }

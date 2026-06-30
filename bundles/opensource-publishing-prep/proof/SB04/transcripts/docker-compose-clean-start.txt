@@ -1,0 +1,14 @@
+﻿Command: historical proof transcript docker-compose-clean-start.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB04-PERSISTENCE-001
+--- original captured output follows ---
+docker : time="2026-06-29T19:34:18-04:00" level=warning msg="Warning: No resource found to remove for project 
+\"candoitallipfssb04\"."
+At line:2 char:41
++ ... tion-2026'; docker compose -p candoitallipfssb04 down --volumes --rem ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (time="2026-06-2...allipfssb04\".":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+

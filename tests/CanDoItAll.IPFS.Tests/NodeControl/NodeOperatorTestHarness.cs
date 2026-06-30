@@ -39,8 +39,36 @@ internal static class NodeOperatorTestHarness
                 ? Path.Combine(Path.GetTempPath(), "IpfsNodeControlTests", $"explorer-index-{Guid.NewGuid():N}.db")
                 : indexStorePath
         }));
-        return new NodeOperatorTestContext(new NodeOperatorService(clientFactory, indexStore), clientFactory, indexStore);
+        var fileWorkflow = new NodeFileWorkflowService(clientFactory, indexStore);
+        var explorerWorkflow = new NodeExplorerWorkflowService(fileWorkflow, indexStore);
+        var contentWorkflow = new NodeContentWorkflowService(clientFactory);
+        var networkWorkflow = new NodeNetworkWorkflowService(clientFactory);
+        var maintenanceWorkflow = new NodeMaintenanceWorkflowService(clientFactory);
+        var service = new NodeOperatorService(
+            fileWorkflow,
+            explorerWorkflow,
+            contentWorkflow,
+            networkWorkflow,
+            maintenanceWorkflow);
+
+        return new NodeOperatorTestContext(
+            service,
+            clientFactory,
+            indexStore,
+            fileWorkflow,
+            explorerWorkflow,
+            contentWorkflow,
+            networkWorkflow,
+            maintenanceWorkflow);
     }
 }
 
-internal sealed record NodeOperatorTestContext(NodeOperatorService Service, IpfsClientFactory ClientFactory, ExplorerIndexStore IndexStore);
+internal sealed record NodeOperatorTestContext(
+    NodeOperatorService Service,
+    IpfsClientFactory ClientFactory,
+    ExplorerIndexStore IndexStore,
+    NodeFileWorkflowService FileWorkflow,
+    NodeExplorerWorkflowService ExplorerWorkflow,
+    NodeContentWorkflowService ContentWorkflow,
+    NodeNetworkWorkflowService NetworkWorkflow,
+    NodeMaintenanceWorkflowService MaintenanceWorkflow);

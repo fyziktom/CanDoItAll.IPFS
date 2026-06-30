@@ -1,0 +1,8 @@
+﻿Command: historical proof transcript pack-engine-final.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB09-VALIDATION-001 SB09-PIN-001 SB09-DOCKER-001 SB09-BROWSER-001 SB09-HANDOFF-001
+--- original captured output follows ---
+  Successfully created package 'C:\repositories\CanDoItAll.IPFS\.artifacts\packages\CanDoItAll.IPFS.Engine.0.42.0.nupkg'.
+  Successfully created package 'C:\repositories\CanDoItAll.IPFS\.artifacts\packages\CanDoItAll.IPFS.Engine.0.42.0.snupkg'.
+

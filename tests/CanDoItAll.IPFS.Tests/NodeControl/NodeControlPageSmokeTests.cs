@@ -34,16 +34,18 @@ public sealed class NodeControlPageSmokeTests
             cut.WaitForAssertion(() =>
             {
                 StringAssert.Contains(cut.Markup, "Endpoint and maintenance");
-                StringAssert.Contains(cut.Markup, "Config read and write");
+                StringAssert.Contains(cut.Markup, "Node endpoint");
+                StringAssert.Contains(cut.Markup, "Config");
                 StringAssert.Contains(cut.Markup, host.BaseAddress.ToString());
-                StringAssert.Contains(cut.Markup, "Repo and node maintenance");
-                StringAssert.Contains(cut.Markup, "Repo verify is intentionally omitted here because the current engine HTTP surface still returns HTTP 501 for verify requests.");
+                StringAssert.Contains(cut.Markup, "Maintenance posture");
+                StringAssert.Contains(cut.Markup, "Repo verify remains unavailable because the current HTTP surface returns 501.");
                 Assert.IsFalse(cut.FindAll("button").Any(button => string.Equals(button.TextContent.Trim(), "Verify repo", StringComparison.Ordinal)));
             }, TimeSpan.FromSeconds(10));
 
-            cut.FindAll("button")
-                .Single(button => string.Equals(button.TextContent.Trim(), "Test connection", StringComparison.Ordinal))
-                .Click();
+            await cut.InvokeAsync(() =>
+                cut.FindAll("button")
+                    .Single(button => string.Equals(button.TextContent.Trim(), "Test connection", StringComparison.Ordinal))
+                    .Click()).ConfigureAwait(false);
 
             cut.WaitForAssertion(() =>
             {
@@ -72,9 +74,9 @@ public sealed class NodeControlPageSmokeTests
                 StringAssert.Contains(cut.Markup, "Swarm and bootstrap");
                 StringAssert.Contains(cut.Markup, "Known node host or API URL");
                 StringAssert.Contains(cut.Markup, "Resolve and connect");
-                StringAssert.Contains(cut.Markup, "DHT lookups");
-                StringAssert.Contains(cut.Markup, "PubSub publish and peers");
-                StringAssert.Contains(cut.Markup, "No connected peers");
+                StringAssert.Contains(cut.Markup, "DHT");
+                StringAssert.Contains(cut.Markup, "PubSub");
+                StringAssert.Contains(cut.Markup, "0 peers");
             }, TimeSpan.FromSeconds(10));
         }
         finally
@@ -98,8 +100,8 @@ public sealed class NodeControlPageSmokeTests
             {
                 StringAssert.Contains(cut.Markup, "Block store");
                 StringAssert.Contains(cut.Markup, "DAG JSON");
-                StringAssert.Contains(cut.Markup, "IPNS");
-                StringAssert.Contains(cut.Markup, "self");
+                StringAssert.Contains(cut.Markup, "Naming + keys");
+                StringAssert.Contains(cut.Markup, "1 keys");
             }, TimeSpan.FromSeconds(10));
         }
         finally
@@ -156,6 +158,16 @@ public sealed class NodeControlPageSmokeTests
         });
         context.Services.AddScoped<IpfsClientFactory>();
         context.Services.AddScoped<NodeDashboardService>();
+        context.Services.AddScoped<NodeFileWorkflowService>();
+        context.Services.AddScoped<INodeFileWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeFileWorkflowService>());
+        context.Services.AddScoped<NodeExplorerWorkflowService>();
+        context.Services.AddScoped<INodeExplorerWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeExplorerWorkflowService>());
+        context.Services.AddScoped<NodeContentWorkflowService>();
+        context.Services.AddScoped<INodeContentWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeContentWorkflowService>());
+        context.Services.AddScoped<NodeNetworkWorkflowService>();
+        context.Services.AddScoped<INodeNetworkWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeNetworkWorkflowService>());
+        context.Services.AddScoped<NodeMaintenanceWorkflowService>();
+        context.Services.AddScoped<INodeMaintenanceWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeMaintenanceWorkflowService>());
         context.Services.AddScoped<NodeSettingsBrowserStorage>();
         context.Services.AddScoped<KnownRemotePinTargetBrowserStorage>();
         context.Services.AddScoped<NodeCanvasSurfaceFactory>();

@@ -1,0 +1,41 @@
+{
+  "subbundle": "SB05",
+  "status": "completed",
+  "date": "2026-06-29",
+  "facade": {
+    "file": "repo://src/CanDoItAll.IPFS.NodeControl/Services/NodeOperatorService.cs",
+    "lineCount": 134,
+    "directRawDependenciesForbidden": [
+      "IpfsClientFactory",
+      "IExplorerIndexStore"
+    ]
+  },
+  "workflowInterfaces": [
+    "INodeFileWorkflow",
+    "INodeExplorerWorkflow",
+    "INodeContentWorkflow",
+    "INodeNetworkWorkflow",
+    "INodeMaintenanceWorkflow"
+  ],
+  "workflowServices": [
+    "NodeFileWorkflowService",
+    "NodeExplorerWorkflowService",
+    "NodeContentWorkflowService",
+    "NodeNetworkWorkflowService",
+    "NodeMaintenanceWorkflowService"
+  ],
+  "proof": {
+    "build": "bundle://proof/SB05/transcripts/build-after-nodeoperator-decomposition.txt",
+    "focusedTests": "bundle://proof/SB05/transcripts/focused-nodeoperator-decomposition-tests.txt",
+    "pageSmoke": "bundle://proof/SB05/transcripts/nodeoperator-page-smoke-tests-passing.txt",
+    "lineCounts": "bundle://proof/SB05/transcripts/nodeoperator-line-counts-after-decomposition.txt"
+  },
+  "invariants": [
+    "workflow interfaces live in the abstractions assembly",
+    "workflow interfaces are UI-neutral",
+    "NodeOperatorService delegates to workflow services",
+    "workflow service tests pass",
+    "route smoke tests render through decomposed registrations",
+    "NodeOperatorService remains as temporary compatibility facade until SB06"
+  ]
+}

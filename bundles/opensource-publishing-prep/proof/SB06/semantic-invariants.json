@@ -1,0 +1,43 @@
+{
+  "subbundle": "SB06",
+  "status": "Completed",
+  "completionDate": "2026-06-30",
+  "invariants": [
+    {
+      "id": "SB06-UI-001",
+      "kind": "architecture",
+      "statement": "Large page markup may be paired with code-behind files to reduce mixed responsibilities without changing desktop workflows.",
+      "evidence": "bundle://proof/SB06/transcripts/ui-line-counts-after-codebehind-split.txt"
+    },
+    {
+      "id": "SB06-UI-002",
+      "kind": "architecture",
+      "statement": "Pages should depend on narrower workflow interfaces where available after SB05.",
+      "evidence": "repo://src/CanDoItAll.IPFS.NodeControl/Components/Pages"
+    },
+    {
+      "id": "SB06-UI-003",
+      "kind": "scope",
+      "statement": "SB06 validates large desktop viewports only and does not tune small or medium screens.",
+      "evidence": "bundle://proof/SB06/browser-smoke-summary.json"
+    },
+    {
+      "id": "SB06-BEH-001",
+      "kind": "behavior",
+      "statement": "Files, Content, Network, and Settings routes load at 1920x1080 and 1600x900 with no browser errors.",
+      "evidence": "bundle://proof/SB06/browser-smoke-summary.json"
+    },
+    {
+      "id": "SB06-BEH-002",
+      "kind": "behavior",
+      "statement": "RemotePinShareModal opens from the Files route at both validated desktop viewports.",
+      "evidence": "bundle://proof/SB06/screenshots/sb06-remote-pin-share-modal-1920x1080.png"
+    },
+    {
+      "id": "SB06-FOLLOWUP-001",
+      "kind": "follow-up",
+      "statement": "Files.razor.cs remains a large route-state file and should be revisited for helper extraction after release-critical hardening.",
+      "evidence": "bundle://proof/SB06/transcripts/ui-line-counts-after-codebehind-split.txt"
+    }
+  ]
+}

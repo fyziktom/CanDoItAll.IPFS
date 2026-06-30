@@ -10,20 +10,24 @@
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
     <DebugType>portable</DebugType>
 
-    <AssemblyVersion>0.42</AssemblyVersion>
-    <Version>0.42</Version>
+    <AssemblyVersion>0.42.0.0</AssemblyVersion>
+    <Version>0.42.0</Version>
 
     <PackageId>CanDoItAll.IPFS.Client</PackageId>
-    <Authors>Richard Schneider</Authors>
+    <Authors>Richard Schneider; CanDoItAll contributors</Authors>
     <Title>CanDoItAll IPFS Client</Title>
     <Description>A typed HTTP client for communicating with a CanDoItAll IPFS node.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>https://github.com/richardschneider/net-ipfs-engine/releases</PackageReleaseNotes>
-    <Copyright>© 2018-2019 Richard Schneider</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>package-icon.png</PackageIcon>
+    <PackageReleaseNotes>https://github.com/fyziktom/CanDoItAll.IPFS/releases</PackageReleaseNotes>
+    <Copyright>Copyright (c) 2018 Richard Schneider and CanDoItAll contributors</Copyright>
     <PackageTags>ipfs peer-to-peer p2p distributed file-system web http client</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
-    <PackageProjectUrl>https://github.com/richardschneider/net-ipfs-engine</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/richardschneider/net-ipfs-core/master/doc/images/ipfs-cs-logo-64x64.png</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/fyziktom/CanDoItAll.IPFS</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/fyziktom/CanDoItAll.IPFS</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <GeneratePackageOnBuild Condition=" '$(Configuration)' == 'Release' ">true</GeneratePackageOnBuild>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>false</EmbedUntrackedSources>
@@ -33,6 +37,11 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\docs\package-icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>

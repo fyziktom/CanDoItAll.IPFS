@@ -1,0 +1,227 @@
+﻿Command: historical proof transcript test-final-full-clean.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB09-VALIDATION-001 SB09-PIN-001 SB09-DOCKER-001 SB09-BROWSER-001 SB09-HANDOFF-001
+--- original captured output follows ---
+Test run for C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\bin\Debug\net10.0\CanDoItAll.IPFS.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  Skipped NullData
+  Skipped SomeData
+  Failed GetsBlock_OnConnect_Bitswap1 [11 s]
+  Error Message:
+   Test method Ipfs.Engine.BitswapApiTest.GetsBlock_OnConnect_Bitswap1 threw exception:
+System.Threading.Tasks.TaskCanceledException: A task was canceled.
+  Stack Trace:
+     at Ipfs.Engine.CoreApi.BitswapApi.GetAsync(Cid id, CancellationToken cancel) in C:\repositories\CanDoItAll.IPFS\src\CanDoItAll.IPFS.Engine\CoreApi\BitswapApi.cs:line 23
+   at Ipfs.Engine.CoreApi.BlockApi.GetAsync(Cid id, CancellationToken cancel) in C:\repositories\CanDoItAll.IPFS\src\CanDoItAll.IPFS.Engine\CoreApi\BlockApi.cs:line 131
+   at Ipfs.Engine.BitswapApiTest.GetsBlock_OnConnect_Bitswap1() in C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\CoreApi\BitswapApiTest.cs:line 214
+   at Ipfs.Engine.BitswapApiTest.GetsBlock_OnConnect_Bitswap1() in C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\CoreApi\BitswapApiTest.cs:line 252
+   at Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ExecuteInternalAsync(Object[] arguments, CancellationTokenSource timeoutTokenSource) in /_/src/Adapter/MSTestAdapter.PlatformServices/Execution/TestMethodInfo.cs:line 397
+
+  Standard Output Messages:
+ 21:56:09.224 [DEBUG] Ipfs.Engine.IpfsEngine - starting QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.224 [DEBUG] PeerTalk.Swarm - Started
+ 21:56:09.224 [DEBUG] PeerTalk.PeerManager - started
+ 21:56:09.224 [DEBUG] Ipfs.Engine.IpfsEngine - waiting for services to start
+ 21:56:09.224 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Starting
+ 21:56:09.224 [DEBUG] PeerTalk.Routing.Dht1 - Starting
+ 21:56:09.224 [DEBUG] PeerTalk.Protocols.Ping1 - Starting
+ 21:56:09.224 [DEBUG] PeerTalk.PubSub.FloodRouter - Starting
+ 21:56:09.225 [DEBUG] PeerTalk.Transports.Tcp - listening on /ip4/0.0.0.0/tcp/59284
+ 21:56:09.469 [DEBUG] PeerTalk.Swarm - Listening on /ip4/192.168.10.189/tcp/59284/ipfs/QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.469 [DEBUG] PeerTalk.Swarm - Listening on /ip4/127.0.0.1/tcp/59284/ipfs/QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.469 [DEBUG] PeerTalk.Swarm - Listening on /ip4/172.21.96.1/tcp/59284/ipfs/QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.469 [DEBUG] Ipfs.Engine.IpfsEngine - waiting for discovery services to start
+ 21:56:09.469 [DEBUG] PeerTalk.Discovery.Bootstrap - Starting
+ 21:56:09.469 [DEBUG] Ipfs.Engine.RandomWalk - started
+ 21:56:09.469 [DEBUG] Ipfs.Engine.IpfsEngine - started
+ 21:56:09.470 [DEBUG] Ipfs.Engine.IpfsEngine - starting QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.470 [DEBUG] PeerTalk.Swarm - Started
+ 21:56:09.470 [DEBUG] PeerTalk.PeerManager - started
+ 21:56:09.470 [DEBUG] Ipfs.Engine.IpfsEngine - waiting for services to start
+ 21:56:09.470 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Starting
+ 21:56:09.470 [DEBUG] PeerTalk.Routing.Dht1 - Starting
+ 21:56:09.470 [DEBUG] PeerTalk.Protocols.Ping1 - Starting
+ 21:56:09.470 [DEBUG] PeerTalk.PubSub.FloodRouter - Starting
+ 21:56:09.470 [DEBUG] PeerTalk.Transports.Tcp - listening on /ip4/0.0.0.0/tcp/59285
+ 21:56:09.703 [DEBUG] PeerTalk.Swarm - Listening on /ip4/192.168.10.189/tcp/59285/ipfs/QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.703 [DEBUG] PeerTalk.Swarm - Listening on /ip4/127.0.0.1/tcp/59285/ipfs/QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.703 [DEBUG] PeerTalk.Swarm - Listening on /ip4/172.21.96.1/tcp/59285/ipfs/QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.703 [DEBUG] Ipfs.Engine.IpfsEngine - waiting for discovery services to start
+ 21:56:09.703 [DEBUG] PeerTalk.Discovery.Bootstrap - Starting
+ 21:56:09.703 [DEBUG] Ipfs.Engine.RandomWalk - started
+ 21:56:09.703 [DEBUG] Ipfs.Engine.IpfsEngine - started
+ 21:56:09.704 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'Qmeq8ssKmPrQTWbnpUimbYvXnSuScE1VaE9XdeUhRM1mca'
+ 21:56:09.705 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG wants Qmeq8ssKmPrQTWbnpUimbYvXnSuScE1VaE9XdeUhRM1mca
+ 21:56:09.705 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Spamming 0 connected peers
+ 21:56:09.705 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Spam 0 connected peers done
+ 21:56:09.705 [DEBUG] PeerTalk.Routing.DistributedQuery - Q6 run GetProviders Qmeq8ssKmPrQTWbnpUimbYvXnSuScE1VaE9XdeUhRM1mca
+ 21:56:09.705 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connecting to /ip4/192.168.10.189/tcp/59285/ipfs/QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.705 [DEBUG] PeerTalk.Swarm - New peer registerd QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.705 [DEBUG] PeerTalk.AutoDialer - Dialing new QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.705 [DEBUG] PeerTalk.Swarm - Dialing QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.707 [DEBUG] PeerTalk.Transports.Tcp - connection from /ip4/192.168.10.189/tcp/59287
+ 21:56:09.707 [DEBUG] PeerTalk.Swarm - remote connect from /ip4/192.168.10.189/tcp/59287
+ 21:56:09.707 [DEBUG] PeerTalk.PeerConnection - start reading messsages from /ip4/192.168.10.189/tcp/59287
+ 21:56:09.707 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:09.708 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /secio/1.0.0
+ 21:56:09.728 [DEBUG] PeerTalk.SecureCommunication.Secio1 - Secure session with QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.728 [DEBUG] PeerTalk.SecureCommunication.Secio1 - Secure session with QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.729 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:09.729 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /mplex/6.7.0
+ 21:56:09.729 [DEBUG] PeerTalk.Protocols.Mplex67 - start processing requests from /ip4/192.168.10.189/tcp/59287
+ 21:56:09.729 [DEBUG] PeerTalk.Protocols.Identify1 - Get remote identity
+ 21:56:09.729 [DEBUG] PeerTalk.Protocols.Identify1 - Get remote identity
+ 21:56:09.730 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:09.730 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:09.730 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/id/1.0.0
+ 21:56:09.730 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/id/1.0.0
+ 21:56:09.730 [DEBUG] PeerTalk.Protocols.Identify1 - Sending identity to /ip4/192.168.10.189/tcp/59285/ipfs/QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.730 [DEBUG] PeerTalk.Protocols.Identify1 - Sending identity to /ip4/192.168.10.189/tcp/59287
+ 21:56:09.731 [DEBUG] PeerTalk.Protocols.Identify1 - Peer id 'QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8' of /ip4/192.168.10.189/tcp/59285/ipfs/QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.731 [DEBUG] PeerTalk.PeerManager - Alive 'QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8'.
+ 21:56:09.732 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - sending want list to QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.732 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connected to /ip4/192.168.10.189/tcp/59285/ipfs/QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.733 [DEBUG] PeerTalk.Protocols.Identify1 - Peer id 'QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG' of /ip4/192.168.10.189/tcp/59287
+ 21:56:09.733 [DEBUG] PeerTalk.Swarm - New peer registerd QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.733 [DEBUG] PeerTalk.AutoDialer - Dialing new QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.733 [DEBUG] PeerTalk.PeerManager - Alive 'QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG'.
+ 21:56:09.733 [DEBUG] PeerTalk.Swarm - Dialing QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.738 [DEBUG] PeerTalk.Transports.Tcp - connection from /ip4/192.168.10.189/tcp/59288
+ 21:56:09.738 [DEBUG] PeerTalk.Swarm - remote connect from /ip4/192.168.10.189/tcp/59288
+ 21:56:09.738 [DEBUG] PeerTalk.PeerConnection - start reading messsages from /ip4/192.168.10.189/tcp/59288
+ 21:56:09.740 [DEBUG] PeerTalk.Transports.Tcp - connection from /ip4/127.0.0.1/tcp/59289
+ 21:56:09.740 [DEBUG] PeerTalk.Swarm - remote connect from /ip4/127.0.0.1/tcp/59289
+ 21:56:09.740 [DEBUG] PeerTalk.PeerConnection - start reading messsages from /ip4/127.0.0.1/tcp/59289
+ 21:56:09.741 [DEBUG] PeerTalk.Transports.Tcp - connection from /ip4/172.21.96.1/tcp/59290
+ 21:56:09.741 [DEBUG] PeerTalk.Swarm - remote connect from /ip4/172.21.96.1/tcp/59290
+ 21:56:09.741 [DEBUG] PeerTalk.PeerConnection - start reading messsages from /ip4/172.21.96.1/tcp/59290
+ 21:56:09.742 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:09.742 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /secio/1.0.0
+ 21:56:09.752 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:09.753 [ERROR] PeerTalk.PeerConnection - reading message failed Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host..
+ 21:56:09.753 [DEBUG] PeerTalk.PeerConnection - stop reading messsages from /ip4/127.0.0.1/tcp/59289
+ 21:56:09.754 [ERROR] PeerTalk.PeerConnection - reading message failed Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host..
+ 21:56:09.754 [DEBUG] PeerTalk.PeerConnection - stop reading messsages from /ip4/172.21.96.1/tcp/59290
+ 21:56:09.754 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/bitswap/1.0.0
+ 21:56:09.761 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap1 - Sending want list
+ 21:56:09.772 [DEBUG] PeerTalk.SecureCommunication.Secio1 - Secure session with QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.772 [DEBUG] PeerTalk.SecureCommunication.Secio1 - Secure session with QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.772 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:09.773 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /mplex/6.7.0
+ 21:56:09.773 [DEBUG] PeerTalk.Protocols.Mplex67 - start processing requests from /ip4/192.168.10.189/tcp/59288
+ 21:56:09.773 [DEBUG] PeerTalk.Protocols.Identify1 - Get remote identity
+ 21:56:09.773 [DEBUG] PeerTalk.Protocols.Identify1 - Get remote identity
+ 21:56:09.774 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:09.774 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:09.774 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/id/1.0.0
+ 21:56:09.774 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/id/1.0.0
+ 21:56:09.774 [DEBUG] PeerTalk.Protocols.Identify1 - Sending identity to /ip4/192.168.10.189/tcp/59288
+ 21:56:09.774 [DEBUG] PeerTalk.Protocols.Identify1 - Sending identity to /ip4/192.168.10.189/tcp/59284/p2p/QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.775 [DEBUG] PeerTalk.Protocols.Identify1 - Peer id 'QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG' of /ip4/192.168.10.189/tcp/59284/p2p/QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.775 [DEBUG] PeerTalk.Protocols.Identify1 - Peer id 'QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8' of /ip4/192.168.10.189/tcp/59288
+ 21:56:09.775 [DEBUG] PeerTalk.PeerManager - Alive 'QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG'.
+ 21:56:09.775 [DEBUG] PeerTalk.PeerManager - Alive 'QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8'.
+ 21:56:09.775 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - sending want list to QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.776 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:09.776 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/bitswap/1.0.0
+ 21:56:09.777 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap1 - Sending want list
+ 21:56:09.805 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap1 - got message from QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.805 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap1 - got want list
+ 21:56:09.808 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap1 - got message from QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.808 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap1 - got want list
+ 21:56:09.810 [WARN]  PeerTalk.Multiplex.Muxer - Stream 1003 already exists
+ 21:56:09.810 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:09.811 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:09.811 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/bitswap/1.0.0
+ 21:56:09.811 [WARN]  PeerTalk.Multiplex.Muxer - Message to unknown stream #1003
+ 21:56:09.811 [DEBUG] PeerTalk.Routing.DistributedQuery - Q6.16.1 ask QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:09.812 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:09.812 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/kad/1.0.0
+ 21:56:09.813 [DEBUG] PeerTalk.Routing.Dht1 - got GetProviders from QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:09.813 [DEBUG] PeerTalk.Routing.Dht1 - returning 1 closer peers
+ 21:56:09.813 [DEBUG] PeerTalk.Routing.DistributedQuery - Q6.16.1 ok QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8 (1.9392 ms)
+ 21:56:09.812 [WARN]  Ipfs.Engine.BlockExchange.Bitswap1 - getting block for remote failed
+ =======================================================(inner most exception)===
+  (1) System.Exception
+ ================================================================================
+ 
+ Message:
+ "Protocol '/ipfs/bitswap/1.0.0' not supported by 'QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG'."
+ 
+ Stack Trace:
+    at PeerTalk.Swarm.DialAsync(Peer peer, String protocol, CancellationToken cancel) in C:\repositories\CanDoItAll.IPFS\src\CanDoItAll.IPFS.Engine\Base\peer-talk\Swarm.cs:line 553
+    at Ipfs.Engine.BlockExchange.Bitswap1.GetBlockAsync(Cid cid, Peer remotePeer, CancellationToken cancel) in C:\repositories\CanDoItAll.IPFS\src\CanDoItAll.IPFS.Engine\BlockExchange\Bitswap1.cs:line 101
+ ================================================================================
+ 
+ 21:56:11.858 [DEBUG] PeerTalk.Routing.DistributedQuery - Q6 found 1 answers, visited 1 peers, failed 0
+ 21:56:11.859 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Connecting to provider QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:14.487 [DEBUG] Ipfs.Engine.RandomWalk - Running a query
+ 21:56:14.488 [DEBUG] PeerTalk.Routing.DistributedQuery - Q7 run FindNode QmUYao5zNJ1gCr9jxmTFeWVxyy96dAX9G5fYjKFGewajdW
+ 21:56:14.488 [DEBUG] PeerTalk.Routing.DistributedQuery - Q7.1.1 ask QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:14.489 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:14.489 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/kad/1.0.0
+ 21:56:14.490 [DEBUG] PeerTalk.Routing.Dht1 - got FindNode from QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:14.490 [DEBUG] PeerTalk.Routing.Dht1 - returning 1 closer peers
+ 21:56:14.490 [DEBUG] PeerTalk.Routing.DistributedQuery - Q7.1.1 ok QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8 (1.9052 ms)
+ 21:56:14.719 [DEBUG] Ipfs.Engine.RandomWalk - Running a query
+ 21:56:14.719 [DEBUG] PeerTalk.Routing.DistributedQuery - Q8 run FindNode QmVjiGGUtpDGyNMWXFCvgnuGWpfTxYcyLZLX5WMpRVLuJ3
+ 21:56:14.719 [DEBUG] PeerTalk.Routing.DistributedQuery - Q8.1.1 ask QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:14.721 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+ 21:56:14.721 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/kad/1.0.0
+ 21:56:14.721 [DEBUG] PeerTalk.Routing.Dht1 - got FindNode from QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:14.722 [DEBUG] PeerTalk.Routing.Dht1 - returning 1 closer peers
+ 21:56:14.722 [DEBUG] PeerTalk.Routing.DistributedQuery - Q8.1.1 ok QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG (2.7289 ms)
+ 21:56:16.653 [DEBUG] PeerTalk.Routing.DistributedQuery - Q7 found 0 answers, visited 1 peers, failed 0
+ 21:56:16.656 [DEBUG] Ipfs.Engine.RandomWalk - query finished
+ 21:56:16.859 [DEBUG] PeerTalk.Routing.DistributedQuery - Q8 found 0 answers, visited 1 peers, failed 0
+ 21:56:16.859 [DEBUG] Ipfs.Engine.RandomWalk - query finished
+ 21:56:19.715 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Unwant Qmeq8ssKmPrQTWbnpUimbYvXnSuScE1VaE9XdeUhRM1mca
+ 21:56:19.715 [DEBUG] Ipfs.Engine.IpfsEngine - stopping
+ 21:56:19.715 [DEBUG] Ipfs.Engine.RandomWalk - stopped
+ 21:56:19.715 [DEBUG] PeerTalk.Discovery.Bootstrap - Stopping
+ 21:56:19.715 [DEBUG] PeerTalk.PubSub.FloodRouter - Stopping
+ 21:56:19.715 [DEBUG] PeerTalk.Protocols.Ping1 - Stopping
+ 21:56:19.715 [DEBUG] PeerTalk.Routing.Dht1 - Stopping
+ 21:56:19.715 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Stopping
+ 21:56:19.715 [DEBUG] PeerTalk.PeerManager - stopped
+ 21:56:19.715 [DEBUG] PeerTalk.Swarm - Stopping QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:19.715 [DEBUG] PeerTalk.Transports.Tcp - Got cancel on /ip4/0.0.0.0/tcp/59285
+ 21:56:19.715 [DEBUG] PeerTalk.Transports.Tcp - stop listening on /ip4/0.0.0.0/tcp/59285
+ 21:56:19.830 [DEBUG] PeerTalk.PeerConnection - Closing connection to /ip4/192.168.10.189/tcp/59287/ipfs/QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:19.830 [DEBUG] PeerTalk.PeerConnection - Closing connection to /ip4/192.168.10.189/tcp/59284/p2p/QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:19.831 [DEBUG] PeerTalk.Swarm - Stopped QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:19.835 [DEBUG] PeerTalk.PeerConnection - Closing connection to /ip4/192.168.10.189/tcp/59285/ipfs/QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:19.837 [DEBUG] PeerTalk.Protocols.Mplex67 - stop processing from /ip4/192.168.10.189/tcp/59287/ipfs/QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:19.837 [DEBUG] PeerTalk.PeerConnection - stop reading messsages from /ip4/192.168.10.189/tcp/59287/ipfs/QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:19.838 [DEBUG] PeerTalk.PeerConnection - Closing connection to /ip4/192.168.10.189/tcp/59288/ipfs/QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:19.839 [DEBUG] PeerTalk.Protocols.Mplex67 - stop processing from /ip4/192.168.10.189/tcp/59288/ipfs/QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:19.839 [DEBUG] PeerTalk.PeerConnection - stop reading messsages from /ip4/192.168.10.189/tcp/59288/ipfs/QmeyGh1G1d4d7q9yNPFv5rTzmPHX5KoQeNLhag2xZKtfB8
+ 21:56:19.962 [DEBUG] Ipfs.Engine.IpfsEngine - stopped
+ 21:56:19.962 [DEBUG] Ipfs.Engine.IpfsEngine - stopping
+ 21:56:19.962 [DEBUG] Ipfs.Engine.RandomWalk - stopped
+ 21:56:19.962 [DEBUG] PeerTalk.Discovery.Bootstrap - Stopping
+ 21:56:19.962 [DEBUG] PeerTalk.PubSub.FloodRouter - Stopping
+ 21:56:19.962 [DEBUG] PeerTalk.Protocols.Ping1 - Stopping
+ 21:56:19.962 [DEBUG] PeerTalk.Routing.Dht1 - Stopping
+ 21:56:19.962 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Stopping
+ 21:56:19.962 [DEBUG] PeerTalk.PeerManager - stopped
+ 21:56:19.962 [DEBUG] PeerTalk.Swarm - Stopping QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:19.962 [DEBUG] PeerTalk.Transports.Tcp - Got cancel on /ip4/0.0.0.0/tcp/59284
+ 21:56:19.963 [DEBUG] PeerTalk.Transports.Tcp - stop listening on /ip4/0.0.0.0/tcp/59284
+ 21:56:20.076 [DEBUG] PeerTalk.Swarm - Stopped QmYH35hCwrGNTRukAsf3hzWw5yDxKCiJsQyoZwNqD6QJoG
+ 21:56:20.226 [DEBUG] Ipfs.Engine.IpfsEngine - stopped
+
+
+  Skipped Example1
+  Skipped Mars_Info
+  Skipped FindProvider
+  Skipped ReadTextFromNetwork
+  Skipped Resolve_DnsLink_Recursive
+  Skipped Connect_Disconnect_Mars
+  Skipped JsIPFS_Connect
+  Skipped GoIPFS_Connect
+  Skipped GoIPFS_Connect_v0_4_17
+
+Failed!  - Failed:     1, Passed:   371, Skipped:    11, Total:   383, Duration: 6 m 48 s - CanDoItAll.IPFS.Tests.dll (net10.0)
+

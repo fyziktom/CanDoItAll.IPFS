@@ -100,7 +100,7 @@ public sealed class NodeOperatorNetworkWorkflowTests
         var topic = $"bundle-network-{Guid.NewGuid():N}";
         var payload = $"bundle pubsub proof {Guid.NewGuid():N}";
         var remoteAddress = (await TestIpfsHttpHost.GetDialAddressAsync(remote).ConfigureAwait(false)).ToString();
-        await service.ConnectAsync(remoteAddress, CancellationToken.None).ConfigureAwait(false);
+        var remotePeer = await remote.Generic.IdAsync().ConfigureAwait(false);
 
         using var localCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         using var remoteCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
@@ -117,6 +117,12 @@ public sealed class NodeOperatorNetworkWorkflowTests
         {
             remoteReceived.TrySetResult(Encoding.UTF8.GetString(message.DataBytes));
         }, remoteCts.Token);
+
+        await service.ConnectAsync(remoteAddress, CancellationToken.None).ConfigureAwait(false);
+        var connected = await WaitForAsync(
+            async () => (await service.GetNetworkSnapshotAsync(CancellationToken.None).ConfigureAwait(false)).ConnectedPeers.Any(peer => peer.Id == remotePeer.Id.ToString()),
+            TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+        Assert.IsTrue(connected, "The remote peer should be connected before pubsub peer discovery is asserted.");
 
         var topicsReady = await WaitForAsync(
             async () => (await service.GetNetworkSnapshotAsync(CancellationToken.None).ConfigureAwait(false)).PubSubTopics.Contains(topic, StringComparer.Ordinal),

@@ -1,0 +1,22 @@
+﻿Command: historical proof transcript browser-compose-down.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB09-VALIDATION-001 SB09-PIN-001 SB09-DOCKER-001 SB09-BROWSER-001 SB09-HANDOFF-001
+--- original captured output follows ---
+docker :  Container candoitallipfsbrowser-node-control-1 Stopping 
+At line:6 char:1
++ docker compose -p candoitallipfsbrowser -f .\docker-compose.yml down  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( Container cand...rol-1 Stopping :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ Container candoitallipfsbrowser-node-control-1 Stopped 
+ Container candoitallipfsbrowser-node-control-1 Removing 
+ Container candoitallipfsbrowser-node-control-1 Removed 
+ Container candoitallipfsbrowser-ipfs-node-1 Stopping 
+ Container candoitallipfsbrowser-ipfs-node-1 Stopped 
+ Container candoitallipfsbrowser-ipfs-node-1 Removing 
+ Container candoitallipfsbrowser-ipfs-node-1 Removed 
+ Network candoitallipfsbrowser_default Removing 
+ Network candoitallipfsbrowser_default Removed 
+

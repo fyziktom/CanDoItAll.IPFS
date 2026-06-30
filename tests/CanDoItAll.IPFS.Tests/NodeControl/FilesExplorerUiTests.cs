@@ -91,18 +91,15 @@ public sealed class FilesExplorerUiTests
                     .Any(card => card.TextContent.Contains("wrapped.txt", StringComparison.Ordinal)));
             }, TimeSpan.FromSeconds(10));
 
-            cut.FindAll("button.fx-card-button")
-                .Single(card => card.TextContent.Contains("bundle-seed.txt", StringComparison.Ordinal))
-                .Click();
-
-            cut.FindAll("button")
-                .Single(button => button.TextContent.Contains("Show preview", StringComparison.Ordinal))
-                .Click();
+            await cut.InvokeAsync(() =>
+                cut.FindAll("button.fx-card-button")
+                    .Single(card => card.TextContent.Contains("bundle-seed.txt", StringComparison.Ordinal))
+                    .Click()).ConfigureAwait(false);
 
             cut.WaitForAssertion(() =>
             {
-                StringAssert.Contains(cut.Markup, "CID");
-                StringAssert.Contains(cut.Markup, "Unpin");
+                StringAssert.Contains(cut.Markup, "Download");
+                StringAssert.Contains(cut.Markup, "Show preview");
             }, TimeSpan.FromSeconds(10));
 
             await cut.InvokeAsync(() =>
@@ -120,9 +117,10 @@ public sealed class FilesExplorerUiTests
                     .Any(button => string.Equals(button.TextContent.Trim(), "Unpin", StringComparison.Ordinal)));
             }, TimeSpan.FromSeconds(10));
 
-            cut.FindAll(".fx-context-menu button")
-                .Single(button => string.Equals(button.TextContent.Trim(), "Unpin", StringComparison.Ordinal))
-                .Click();
+            await cut.InvokeAsync(() =>
+                cut.FindAll(".fx-context-menu button")
+                    .Single(button => string.Equals(button.TextContent.Trim(), "Unpin", StringComparison.Ordinal))
+                    .Click()).ConfigureAwait(false);
 
             cut.WaitForAssertion(() =>
             {
@@ -209,6 +207,16 @@ public sealed class FilesExplorerUiTests
             return state;
         });
         context.Services.AddScoped<IpfsClientFactory>();
+        context.Services.AddScoped<NodeFileWorkflowService>();
+        context.Services.AddScoped<INodeFileWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeFileWorkflowService>());
+        context.Services.AddScoped<NodeExplorerWorkflowService>();
+        context.Services.AddScoped<INodeExplorerWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeExplorerWorkflowService>());
+        context.Services.AddScoped<NodeContentWorkflowService>();
+        context.Services.AddScoped<INodeContentWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeContentWorkflowService>());
+        context.Services.AddScoped<NodeNetworkWorkflowService>();
+        context.Services.AddScoped<INodeNetworkWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeNetworkWorkflowService>());
+        context.Services.AddScoped<NodeMaintenanceWorkflowService>();
+        context.Services.AddScoped<INodeMaintenanceWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeMaintenanceWorkflowService>());
         context.Services.AddScoped<NodeCanvasSurfaceFactory>();
         context.Services.AddScoped<NodeOperatorService>();
         context.Services.AddScoped<KnownRemotePinTargetBrowserStorage>();

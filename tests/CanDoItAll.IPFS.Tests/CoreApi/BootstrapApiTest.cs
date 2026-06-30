@@ -32,9 +32,26 @@ namespace Ipfs.Engine
         [TestMethod]
         public async Task List()
         {
-            var addrs = await ipfs.Bootstrap.ListAsync();
-            Assert.IsNotNull(addrs);
-            Assert.AreNotEqual(0, addrs.Count());
+            var original = (await ipfs.Bootstrap.ListAsync()).ToArray();
+            if (original.Length == 0)
+            {
+                await ipfs.Bootstrap.AddAsync(somewhere);
+            }
+
+            try
+            {
+                var addrs = await ipfs.Bootstrap.ListAsync();
+                Assert.IsNotNull(addrs);
+                Assert.AreNotEqual(0, addrs.Count());
+            }
+            finally
+            {
+                await ipfs.Bootstrap.RemoveAllAsync();
+                foreach (var addr in original)
+                {
+                    await ipfs.Bootstrap.AddAsync(addr);
+                }
+            }
         }
 
         [TestMethod]

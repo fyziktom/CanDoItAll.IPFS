@@ -1,0 +1,643 @@
+﻿Command: historical proof transcript test-final-full-after-progress-fix.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB09-VALIDATION-001 SB09-PIN-001 SB09-DOCKER-001 SB09-BROWSER-001 SB09-HANDOFF-001
+--- original captured output follows ---
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  CanDoItAll.IPFS.Engine -> C:\repositories\CanDoItAll.IPFS\src\CanDoItAll.IPFS.Engine\bin\Debug\net10.0\CanDoItAll.IPFS.Engine.dll
+  CanDoItAll.IPFS.Client -> C:\repositories\CanDoItAll.IPFS\src\CanDoItAll.IPFS.Client\bin\Debug\net10.0\CanDoItAll.IPFS.Client.dll
+  CanDoItAll.IPFS.NodeControl.Abstractions -> C:\repositories\CanDoItAll.IPFS\src\CanDoItAll.IPFS.NodeControl.Abstractions\bin\Debug\net10.0\CanDoItAll.IPFS.NodeControl.Abstractions.dll
+  CanDoItAll.IPFS.NodeControl -> C:\repositories\CanDoItAll.IPFS\src\CanDoItAll.IPFS.NodeControl\bin\Debug\net10.0\CanDoItAll.IPFS.NodeControl.dll
+  CanDoItAll.IPFS.NodeControl -> C:\repositories\CanDoItAll.IPFS\src\CanDoItAll.IPFS.NodeControl\bin\Debug\net10.0-windows\CanDoItAll.IPFS.NodeControl.dll
+  CanDoItAll.IPFS.Tests -> C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\bin\Debug\net10.0\CanDoItAll.IPFS.Tests.dll
+Test run for C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\bin\Debug\net10.0\CanDoItAll.IPFS.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  Skipped NullData
+  Skipped SomeData
+  Passed ApplicationLogStore_ReadRecent_Filters_And_Formats_A_Selected_Window [732 ms]
+  Passed Logs_Page_Renders_Current_Window_Entries [1 s]
+  Passed ApplicationLogStore_Rotates_And_Retains_Archived_Files [58 ms]
+  Passed ApplicationLogStore_Rotation_Uses_Existing_Active_File_Count_After_Reload [29 ms]
+  Passed CreateAsync_Stages_A_Single_File_Without_Promoting_It_To_A_Folder [90 ms]
+  Passed CreateAsync_Uses_The_Sanitized_Root_Name_And_Preserves_Nested_Files [38 ms]
+  Passed CreateAsync_Rejects_Path_Traversal_In_File_And_Directory_Hints [13 ms]
+23:54:09.531 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmYtrD3AEkwA2EUvdrNHRn8GVXE8KNsRvwX8QonRofsrMu'
+  Passed FilesContentEndpoint_Returns_File_Content_And_Download_Metadata [8 s]
+23:54:14.562 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'Qmc4FJkhTiS23e7naCmVWwgfMsvFH3Js9yAHT9VqAYSUvc'
+  Passed UploadBrowserEndpoint_Accepts_Multipart_Form_Data_And_Stores_The_File [3 s]
+  Passed LogsEndpoints_Return_A_Recent_Json_Slice_And_A_Downloadable_Text_File [2 s]
+  Passed RemotePinEndpoints_Return_Probe_Metadata_And_Enqueue_Requests [3 s]
+  Passed RemotePinEndpoints_Reject_Unsigned_Requests_In_Pro_Mode_When_Compatibility_Is_Disabled [2 s]
+  Passed RemotePinEndpoints_Accept_Signed_Requests_And_Reject_Replays_In_Pro_Mode [2 s]
+  Passed HealthEndpoints_Distinguish_Liveness_And_Readiness [2 s]
+  Passed ReadinessEndpoint_Fails_When_Current_Node_Is_Unreachable [15 s]
+  Passed ReadinessEndpoint_Requires_Admin_Access_When_Profile_Requires_Authentication [2 s]
+  Passed Security_Policy_Metadata_Is_Discoverable_On_Protected_Minimal_Apis [2 s]
+  Passed Pro_Mode_Rejects_Anonymous_Admin_And_Remote_Pin_Requests [2 s]
+  Passed Light_Mode_Explicitly_Allows_Local_Anonymous_Admin_And_Remote_Pin_Flows [2 s]
+  Passed Pro_Mode_Admin_And_Remote_Pin_Keys_Unlock_Their_Protected_Endpoints [1 s]
+  Passed Pro_Mode_Admin_And_Remote_Pin_Policies_Reject_Over_Limit_Requests [2 s]
+  Passed Gateway_Endpoints_Remain_Public_In_Pro_Mode [10 s]
+  Passed AddIpfsNodeControlApplication_Defaults_Control_App_Security_For_Light_Mode [9 ms]
+  Passed AddIpfsNodeControlApplication_Binds_Pro_Mode_Security_Defaults [25 ms]
+  Passed CreateLease_Uses_A_Healthy_Local_Target_And_Disposes_Its_HttpClient [1 s]
+  Passed CreateLease_Skips_Local_Bootstrap_For_Remote_Targets [742 ms]
+  Passed CreateLeaseWithMinimumTimeoutSeconds_Raises_The_Lease_Timeout_Without_Mutating_The_Registry [74 ms]
+  Passed UpsertRoot_Initializes_The_Schema_And_RoundTrips_Roots_On_Reload [66 ms]
+  Passed MarkPinnedRootsSeen_And_MarkMissingPinnedRootsAsUnpinned_Update_Visibility [75 ms]
+  Passed Legacy_Database_Is_Upgraded_To_The_Versioned_Schema [66 ms]
+23:55:12.844 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmWHEgKu7ztjAW6m7E4eM4mqgjapim8CmM4i6Cg6QXcaY7'
+23:55:12.909 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmPF6AjFNVgHobhJpxvqADJnyiEdQUqvVk37BG1tPVKeww'
+23:55:12.929 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmdpWdNGYaA7qhfxdqFLFYpeWjAecz7XrmxBG5ZeqEGwM3'
+  Passed Files_Renders_Folders_At_Root_And_Unsorted_Branch_For_Pinned_Files [2 s]
+23:55:15.710 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmRZGhNNuQJoU2sqDw4nCNJZGedMS8wjRbjvgaSrFKepkv'
+23:55:15.718 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmTx8i3zhmSsspZwGFqBTszwXpG3EGrbYB1qyQxqDuiyVk'
+  Passed Files_Does_Not_Render_Stale_Cached_Roots_For_A_Fresh_Node [2 s]
+  Passed AddIpfsNodeControlApplication_Defaults_To_Preview_Mode_In_Light_Profile [8 ms]
+  Passed AddIpfsNodeControlApplication_Defaults_To_Publish_Mode_In_Pro_Profile [31 ms]
+  Passed AddIpfsNodeControlApplication_Allows_Explicit_Gateway_Mode_Overrides [7 ms]
+  Passed Home_Loads_Dashboard_Summary_For_Healthy_Node [1 s]
+  Passed Home_Shows_Warning_When_Dashboard_Summary_Fails [1 s]
+  Passed Start_Stop_And_Restart_Local_Node_On_A_Custom_Port [53 s]
+  Passed EnsureNodeForSettingsAsync_Rejects_An_Unhealthy_Local_Listener [14 s]
+  Passed ResolveStartupSettingsAsync_Falls_Back_To_Local_Default_When_Remote_Target_Is_Unreachable [19 s]
+  Passed ResolveStartupSettingsAsync_Keeps_A_Healthy_Remote_Target [24 ms]
+  Passed CreateNetworkSurface_Includes_Known_Peers_And_Group_Frames [55 ms]
+  Passed CreateLeaseAsync_Uses_The_Expected_Named_Client (ReadOnlyUi,"IpfsNodeControl.Node.Read") [488 ms]
+  Passed CreateLeaseAsync_Uses_The_Expected_Named_Client (Gateway,"IpfsNodeControl.Node.Gateway") [475 ms]
+  Passed CreateLeaseAsync_Uses_The_Expected_Named_Client (Mutation,"IpfsNodeControl.Node.Mutation") [504 ms]
+  Passed CreateLeaseAsync_Uses_The_Expected_Named_Client (Admin,"IpfsNodeControl.Node.Admin") [895 ms]
+  Passed CreateLeaseAsync_Uses_The_Expected_Named_Client (RemotePin,"IpfsNodeControl.Node.RemotePin") [564 ms]
+  Passed CreateLease_Compatibility_Adapter_Defaults_To_The_Read_Client_Name [496 ms]
+  Passed CreateLeaseAsync_Reuses_The_Same_Category_Resolution_On_Repeated_Leases [1 s]
+  Passed AddIpfsNodeControlApplication_Resolves_Compatibility_Service_Graph_And_Interface_Aliases [51 ms]
+  Passed AddIpfsNodeControlApplication_Binds_Persistence_Store_FilePaths [7 ms]
+  Passed AbstractionsAssembly_DoesNotReference_NodeControlWebOrUiAssemblies [5 ms]
+  Passed NodeOperatorContract_And_NodeSnapshots_Live_In_ContractsAssembly [1 ms]
+  Passed Settings_Page_Renders_Node_And_Maintenance_Workflows [1 s]
+  Passed Network_Page_Loads_Workbench_And_Network_Sections [1 s]
+  Passed Content_Page_Loads_Key_And_Content_Sections [1 s]
+23:56:59.301 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'Qme1UEARUftMkxAaj3efnxxxJKGouK4RhBqKURjVqTsiQ4'
+23:56:59.303 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmRnUbKpSn4Q66zvDcewnCo2wRowmHp2mi6L5XQj6Huy9n'
+23:56:59.316 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'Qmd1UHvSWptTn8fq9qp5NXPTibST4XCG3x2Hqdxb5XqLi3'
+23:56:59.333 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmawGYtPQieJ21H5KKQ6Va9xN7sE2AQX5aC4PV3j9WnEwa'
+  Passed ResolveAsync_Redirects_Directories_And_Serves_Default_Index_Files [1 s]
+23:57:01.017 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmeY6drQHRF4brQx7bhpdUufdVV6HgtwCJcrajQpWras8G'
+23:57:01.018 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmbGhTGzZKGwMntfjH8M5sS6rELShnANz7JFxTH9Hiqgpm'
+23:57:01.044 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'Qmb1vAjknBevGA47x9sxFiEGTYQTJArGvPTPggebQN1AZM'
+23:57:01.058 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmaqQaoVQeEDLAU7W2uhdJL1iVmTRkiVqGCDUJYG5FfTgX'
+  Passed ResolveAsync_Returns_A_Directory_Listing_When_No_Default_Index_Exists [1 s]
+23:57:02.922 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmeY6drQHRF4brQx7bhpdUufdVV6HgtwCJcrajQpWras8G'
+23:57:02.928 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'Qmb1vAjknBevGA47x9sxFiEGTYQTJArGvPTPggebQN1AZM'
+23:57:02.930 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmbGhTGzZKGwMntfjH8M5sS6rELShnANz7JFxTH9Hiqgpm'
+23:57:02.940 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmaqQaoVQeEDLAU7W2uhdJL1iVmTRkiVqGCDUJYG5FfTgX'
+  Passed ResolveAsync_Publish_Mode_Hides_Directory_Listings_When_No_Default_Index_Exists [1 s]
+23:57:04.812 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmZuU7yPtP2q34gXaNu7ACQgogDPDpZntJTR5zw4eVS13d'
+23:57:04.817 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmfQ1iLvZdJcBbETM3roiyzNtwZfoxC9vsSTYJy4jWGh8B'
+23:57:04.833 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmXcneECSd7Rk9UmmF6szfZwwNaq1j7ua6zJJeSpSNkHni'
+23:57:04.848 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmZxUCmGPrfFamWa3mZEEoGgSUeRDFcXcNrNFuPYZDYBA5'
+23:57:04.851 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmTHKDhiRGxCFKAWesi4CefGVrmPurtv8qS3tkg5VY5SUR'
+23:57:04.874 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmeJm5zQUEwqwuGnngkDtKw32wqFsQ6PaDRd97WQ8DUFZL'
+23:57:04.878 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmPxNCaimucNGkEoQV1iTyfJfxvU8ZMKNmGY2Dx2KYzvsN'
+  Passed Gateway_Serves_Pinned_Website_Index_And_Relative_Assets_In_Preview_Mode [2 s]
+23:57:07.059 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmRnUbKpSn4Q66zvDcewnCo2wRowmHp2mi6L5XQj6Huy9n'
+23:57:07.063 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmRUGoS4PLDnCgCF7UNy8qjeVifAgHa2h7MdPvWfd8yF1U'
+23:57:07.067 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'Qmd1UHvSWptTn8fq9qp5NXPTibST4XCG3x2Hqdxb5XqLi3'
+23:57:07.071 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmWHmRrpEXYi4j5vdGWrj1QTZJuV9BRQFQ3CC92y1Kb9Ds'
+23:57:07.170 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmdcTtcyxQveWuxLWgLCJGZrt3SZSgzJLFTpWvRZhWXyWj'
+23:57:07.177 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmVf98VFabBQXmPKaP5HK5CNwzJtKedVZvLRfaxD5Vo5uF'
+23:57:07.181 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'Qmc8Hr2TUf7ABfqDinRnsF1i1ZEqEvYYm6ZvgjiNq6y3Wi'
+  Passed Gateway_Uses_Publish_Cache_Posture_And_Disables_Directory_Listings_When_Hardened [2 s]
+23:57:08.503 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmWKur99X33ub2txPZXRKPZXZ2NgmtC3tt5S1HtLJZJ2ne'
+23:57:08.510 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmeiBx48Jix7BSeMaHaJCgSgdNJnvQQLaMdxZybWWdigJt'
+  Passed Gateway_Uses_NoCache_For_Ipns_Content_In_Publish_Mode [1 s]
+23:57:10.567 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmWuDEVZhML4tNCybK4XsULRDibV5vQbc3XXBitxqfVdVM'
+23:57:11.113 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'bafyreif53axyhhbdavjn73gb6qyb45klh6jixrir7pegxrdq3kc6ylwjjq'
+  Passed BlockObjectAndDag_Workflows_Roundtrip_Through_NodeOperatorService [2 s]
+23:57:13.378 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Creating rsa key named 'bundle-key-d895860cbed44054804f794f88991cd7'
+23:57:13.652 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Created key
+23:57:13.668 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Added key 'bundle-key-d895860cbed44054804f794f88991cd7' with ID QmNrxiyLUEf25qstaDwHaPS62BBZyXPvGMzDUpRhaP93Td
+23:57:13.883 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmXqmobeBFoMvz6UVHejS6XyNbXrih57majtZew5hMV6cn'
+  Passed KeyLifecycle_And_IpnsPublishResolve_Work_Through_NodeOperatorService [2 s]
+23:57:15.563 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmZYbMC3sN59xjV9LHndHp4T85J5M7317EGxYoAjKPudgc'
+23:57:15.751 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmRDR5CCmEsHgzSsj2sLHrqzEvjNdbhJJhahirkPczhuwb'
+23:57:15.799 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmcmkdW9KicQKUQYjiLPVa8RPuEkmmr7nK36zHGxaG3Txv'
+  Passed Workflow_Interfaces_Live_In_Ui_Neutral_Abstractions_Assembly [1 ms]
+  Passed NodeOperatorService_Depends_On_Workflow_Boundaries_Not_Raw_Node_Dependencies [17 ms]
+  Passed Explorer_ListPinnedExplorerItemsAsync_Classifies_Pinned_Files_And_Folders [1 s]
+23:57:18.003 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmVJXsqobvVfqffEmhPKukUR9bbLYzesJBWLTfemkDPdJz'
+  Passed Explorer_GetCachedPinnedExplorerItems_Returns_Indexed_Roots_After_Live_Load [2 s]
+23:57:19.448 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmajihULH9pX5V34yywRgevEcjrH45Ai3UYymWt4zVchdk'
+23:57:19.455 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmdWEUNGSYmJjZ22Yx3mmiSU3mnJMiwMoeuYZKP4AyrrxR'
+  Passed Explorer_GetExplorerSnapshotAsync_Builds_Breadcrumbs_And_Child_Browse_Paths [1 s]
+23:57:21.261 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmdFXm3MUQaatAXMMeXBGCZxaonoYYSh1Kn3ktK5QVCKUL'
+23:57:21.265 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmSd4nNdJrS1G1njNXDtmqb9YzJ8uhh58n91ANZrARNAk5'
+23:57:21.276 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmU2ev9kcodHEqoRXMVWc8R66Qv1BFTysPB9g5QLcTEPqj'
+23:57:21.280 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmX9r5qQpUuT2WYKFMH8qcANiYhDjbLEuVjjCcx4PhjkrV'
+  Passed Explorer_GetExplorerSnapshotAsync_Uses_Link_Metadata_For_Child_Folders [1 s]
+23:57:23.010 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmRU6uCsSqUCMn2wDBh9V9WNsn6PfzX345oCBfPXcEo3zB'
+23:57:23.134 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmYnihKCQQxYc5WuKJ9i5uuYJmpMJCJWZiGWaQuf4JvFGm'
+23:57:23.150 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmXkHfz6pakSJdys8cdkJ4Fm5v6ArkH6m8EVB84qXDqDcS'
+  Passed Explorer_GetExplorerSnapshotAsync_Builds_Virtual_Unsorted_Year_And_Month_Folders_For_Files_Only [1 s]
+23:57:24.465 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmRZGhNNuQJoU2sqDw4nCNJZGedMS8wjRbjvgaSrFKepkv'
+23:57:24.475 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmTx8i3zhmSsspZwGFqBTszwXpG3EGrbYB1qyQxqDuiyVk'
+  Passed Explorer_ListPinnedExplorerItemsAsync_Invalidates_Stale_Cached_Roots_Before_Directory_Traversal [2 s]
+23:57:26.744 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmcKR4DhaMhQ8FVbHLL2xJBjEPDntEbCDReXDQUnSMdmt5'
+  Passed UploadBrowserFileAsync_Inspects_And_Previews_Text_Content [1 s]
+23:57:28.023 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmXGbtEvi8CEmhESiFhqy8Qade4q8TK8XHKfvKWL1konW8'
+23:57:28.029 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmVXnkWQaoCtW6e9SnoYBE1AVJYzLmcivGVEgzz43c51GF'
+  Passed UploadTextAsync_WithWrap_Creates_A_Browsable_Directory_Root [1 s]
+23:57:29.645 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmdcTtcyxQveWuxLWgLCJGZrt3SZSgzJLFTpWvRZhWXyWj'
+23:57:29.645 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmSd4nNdJrS1G1njNXDtmqb9YzJ8uhh58n91ANZrARNAk5'
+23:57:29.655 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmdFXm3MUQaatAXMMeXBGCZxaonoYYSh1Kn3ktK5QVCKUL'
+23:57:29.678 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmU2ev9kcodHEqoRXMVWc8R66Qv1BFTysPB9g5QLcTEPqj'
+23:57:29.682 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmNM8Fdw8jHJVFiz3pqb4nbHK4kSLmKvKDtCA7dCeLBMVr'
+  Passed UploadLocalDirectoryAsync_Preserves_Nested_Files_And_Empty_Subfolders [1 s]
+23:57:31.015 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmdvDdni3GmLabR6ZAMGTLi88Rw7jzCTd46a9LQjRHoM4V'
+  Passed PinAndUnpinAsync_WithRepositoryGc_Removes_The_Current_Content [1 s]
+23:57:32.879 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmaZ5HU4Cy3XmagoRA5K5wPSDbULHGowFYAFQGBy5w1SUc'
+23:57:32.894 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmX534go1DspnxHkR3fjnpXaA97pC52BwvwzwBZs742tth'
+  Passed WrappedUpload_Can_Be_Exported_As_A_Tar_Stream [1 s]
+  Passed Maintenance_Config_RoundTrips_And_Reports_Repository_Version [1 s]
+  Passed Maintenance_Repository_Gc_Completes_And_Verify_Surfaces_The_Current_Server_Gap [1 s]
+23:57:37.500 [DEBUG] Ipfs.Engine.IpfsEngine - stopping
+23:57:37.500 [DEBUG] PeerTalk.Discovery.Bootstrap - Stopping
+23:57:37.500 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Stopping
+23:57:37.500 [DEBUG] PeerTalk.Routing.Dht1 - Stopping
+23:57:37.500 [DEBUG] PeerTalk.Protocols.Ping1 - Stopping
+23:57:37.500 [DEBUG] PeerTalk.PubSub.FloodRouter - Stopping
+23:57:37.501 [DEBUG] PeerTalk.PeerManager - stopped
+23:57:37.501 [DEBUG] PeerTalk.Swarm - Stopping 18n3naE9kBZoVvgYMV6saMZdrjLELnphpcgc89sZgeQxzLbUkqw2HUaZVvcJYL1v4eSP
+23:57:37.608 [DEBUG] PeerTalk.Swarm - Stopped 18n3naE9kBZoVvgYMV6saMZdrjLELnphpcgc89sZgeQxzLbUkqw2HUaZVvcJYL1v4eSP
+23:57:37.758 [DEBUG] Ipfs.Engine.IpfsEngine - stopped
+  Passed ShutdownNodeAsync_Stops_The_Current_Node_Listener [3 s]
+23:57:41.701 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connecting to /ip4/127.0.0.1/tcp/50442/ipfs/18n3naE9kBZoVvgYMV6saMZdx2wtKhTsvtZpY5dEyUnmxzky1UqTB2f8fsAp5F9w6TX2
+23:57:41.714 [DEBUG] PeerTalk.Swarm - New peer registerd 18n3naE9kBZoVvgYMV6saMZdx2wtKhTsvtZpY5dEyUnmxzky1UqTB2f8fsAp5F9w6TX2
+23:57:41.726 [DEBUG] PeerTalk.AutoDialer - Dialing new 18n3naE9kBZoVvgYMV6saMZdx2wtKhTsvtZpY5dEyUnmxzky1UqTB2f8fsAp5F9w6TX2
+23:57:41.743 [DEBUG] PeerTalk.Swarm - Dialing 18n3naE9kBZoVvgYMV6saMZdx2wtKhTsvtZpY5dEyUnmxzky1UqTB2f8fsAp5F9w6TX2
+23:57:42.540 [DEBUG] PeerTalk.SecureCommunication.Secio1 - Secure session with 18n3naE9kBZoVvgYMV6saMZdx2wtKhTsvtZpY5dEyUnmxzky1UqTB2f8fsAp5F9w6TX2
+23:57:42.564 [DEBUG] PeerTalk.Protocols.Identify1 - Get remote identity
+23:57:42.584 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+23:57:42.586 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/id/1.0.0
+23:57:42.589 [DEBUG] PeerTalk.Protocols.Identify1 - Sending identity to /ip4/127.0.0.1/tcp/50442/ipfs/18n3naE9kBZoVvgYMV6saMZdx2wtKhTsvtZpY5dEyUnmxzky1UqTB2f8fsAp5F9w6TX2
+23:57:42.638 [DEBUG] PeerTalk.Protocols.Identify1 - Peer id '18n3naE9kBZoVvgYMV6saMZdx2wtKhTsvtZpY5dEyUnmxzky1UqTB2f8fsAp5F9w6TX2' of /ip4/127.0.0.1/tcp/50442/ipfs/18n3naE9kBZoVvgYMV6saMZdx2wtKhTsvtZpY5dEyUnmxzky1UqTB2f8fsAp5F9w6TX2
+23:57:42.659 [DEBUG] PeerTalk.PeerManager - Alive '18n3naE9kBZoVvgYMV6saMZdx2wtKhTsvtZpY5dEyUnmxzky1UqTB2f8fsAp5F9w6TX2'.
+23:57:42.663 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connected to /ip4/127.0.0.1/tcp/50442/ipfs/18n3naE9kBZoVvgYMV6saMZdx2wtKhTsvtZpY5dEyUnmxzky1UqTB2f8fsAp5F9w6TX2
+23:57:43.229 [DEBUG] PeerTalk.PeerConnection - Closing connection to /ip4/127.0.0.1/tcp/50442/ipfs/18n3naE9kBZoVvgYMV6saMZdx2wtKhTsvtZpY5dEyUnmxzky1UqTB2f8fsAp5F9w6TX2
+23:57:43.233 [DEBUG] PeerTalk.PeerConnection - Closing connection to /ip4/192.168.10.189/tcp/50445/ipfs/18n3naE9kBZoVvgYMV6saMZdx2wtKhTsvtZpY5dEyUnmxzky1UqTB2f8fsAp5F9w6TX2
+  Passed SwarmBootstrapAndAddressFilters_Work_Through_NodeOperatorService [3 s]
+23:57:45.596 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connecting to /ip4/127.0.0.1/tcp/50458/ipfs/18n3naE9kBZoVvgYMV6saMZdvj8P8eQi8pfzZfpXWgW1TYURW2Sbeywnz8AMkh2pchZZ
+23:57:45.596 [DEBUG] PeerTalk.Swarm - New peer registerd 18n3naE9kBZoVvgYMV6saMZdvj8P8eQi8pfzZfpXWgW1TYURW2Sbeywnz8AMkh2pchZZ
+23:57:45.596 [DEBUG] PeerTalk.AutoDialer - Dialing new 18n3naE9kBZoVvgYMV6saMZdvj8P8eQi8pfzZfpXWgW1TYURW2Sbeywnz8AMkh2pchZZ
+23:57:45.596 [DEBUG] PeerTalk.Swarm - Dialing 18n3naE9kBZoVvgYMV6saMZdvj8P8eQi8pfzZfpXWgW1TYURW2Sbeywnz8AMkh2pchZZ
+23:57:46.046 [DEBUG] PeerTalk.SecureCommunication.Secio1 - Secure session with 18n3naE9kBZoVvgYMV6saMZdvj8P8eQi8pfzZfpXWgW1TYURW2Sbeywnz8AMkh2pchZZ
+23:57:46.061 [DEBUG] PeerTalk.Protocols.Identify1 - Get remote identity
+23:57:46.065 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+23:57:46.070 [DEBUG] PeerTalk.Protocols.Identify1 - Peer id '18n3naE9kBZoVvgYMV6saMZdvj8P8eQi8pfzZfpXWgW1TYURW2Sbeywnz8AMkh2pchZZ' of /ip4/127.0.0.1/tcp/50458/ipfs/18n3naE9kBZoVvgYMV6saMZdvj8P8eQi8pfzZfpXWgW1TYURW2Sbeywnz8AMkh2pchZZ
+23:57:46.071 [DEBUG] PeerTalk.PeerManager - Alive '18n3naE9kBZoVvgYMV6saMZdvj8P8eQi8pfzZfpXWgW1TYURW2Sbeywnz8AMkh2pchZZ'.
+23:57:46.072 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connected to /ip4/127.0.0.1/tcp/50458/ipfs/18n3naE9kBZoVvgYMV6saMZdvj8P8eQi8pfzZfpXWgW1TYURW2Sbeywnz8AMkh2pchZZ
+23:57:46.073 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/id/1.0.0
+23:57:46.074 [DEBUG] PeerTalk.Protocols.Identify1 - Sending identity to /ip4/127.0.0.1/tcp/50458/ipfs/18n3naE9kBZoVvgYMV6saMZdvj8P8eQi8pfzZfpXWgW1TYURW2Sbeywnz8AMkh2pchZZ
+23:57:46.245 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmVke9s99eKhtgL7JxPcarNj4B7zLs8tkfrSA5f4iSzFxx'
+23:57:46.379 [DEBUG] PeerTalk.Routing.DistributedQuery - Q1 run GetProviders QmVke9s99eKhtgL7JxPcarNj4B7zLs8tkfrSA5f4iSzFxx
+23:57:46.397 [DEBUG] PeerTalk.Routing.DistributedQuery - Q1.1.1 ask 18n3naE9kBZoVvgYMV6saMZdvj8P8eQi8pfzZfpXWgW1TYURW2Sbeywnz8AMkh2pchZZ
+23:57:46.416 [DEBUG] PeerTalk.Routing.DistributedQuery - Q1.1.1 ok 18n3naE9kBZoVvgYMV6saMZdvj8P8eQi8pfzZfpXWgW1TYURW2Sbeywnz8AMkh2pchZZ (19.09 ms)
+23:57:48.873 [DEBUG] PeerTalk.Routing.DistributedQuery - Q1 found 1 answers, visited 1 peers, failed 0
+23:57:49.003 [DEBUG] PeerTalk.PeerConnection - Closing connection to /ip4/127.0.0.1/tcp/50458/ipfs/18n3naE9kBZoVvgYMV6saMZdvj8P8eQi8pfzZfpXWgW1TYURW2Sbeywnz8AMkh2pchZZ
+  Passed DhtPeerAndProviderLookups_Work_Through_NodeOperatorService [5 s]
+23:57:50.592 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connecting to /ip4/127.0.0.1/tcp/50469/ipfs/18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:50.606 [DEBUG] PeerTalk.Swarm - New peer registerd 18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:50.606 [DEBUG] PeerTalk.AutoDialer - Dialing new 18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:50.606 [DEBUG] PeerTalk.Swarm - Dialing 18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:50.671 [DEBUG] PeerTalk.SecureCommunication.Secio1 - Secure session with 18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:50.681 [DEBUG] PeerTalk.Protocols.Identify1 - Get remote identity
+23:57:50.682 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+23:57:50.687 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/id/1.0.0
+23:57:50.687 [DEBUG] PeerTalk.Protocols.Identify1 - Sending identity to /ip4/127.0.0.1/tcp/50469/ipfs/18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:50.696 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+23:57:50.697 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /floodsub/1.0.0
+23:57:50.706 [DEBUG] PeerTalk.PubSub.FloodRouter - got message from 18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:50.706 [DEBUG] PeerTalk.PubSub.FloodRouter - Subscribe 'bundle-network-0af4da8e76b44c7bb95a180de14ece6f' by 18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:50.727 [DEBUG] PeerTalk.Protocols.Identify1 - Peer id '18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV' of /ip4/127.0.0.1/tcp/50469/ipfs/18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:50.727 [DEBUG] PeerTalk.PeerManager - Alive '18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV'.
+23:57:50.728 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connected to /ip4/127.0.0.1/tcp/50469/ipfs/18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:50.730 [DEBUG] PeerTalk.PubSub.FloodRouter - sending message to 18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:50.788 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+23:57:50.789 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /floodsub/1.0.0
+23:57:50.790 [DEBUG] PeerTalk.PubSub.FloodRouter - got message from 18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:50.790 [DEBUG] PeerTalk.PubSub.FloodRouter - Subscribe 'bundle-network-0af4da8e76b44c7bb95a180de14ece6f' by 18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:51.028 [DEBUG] PeerTalk.PubSub.FloodRouter - sending message to 18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:51.059 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+23:57:51.061 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /floodsub/1.0.0
+23:57:51.063 [DEBUG] PeerTalk.PubSub.FloodRouter - sending message to 18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:51.063 [DEBUG] PeerTalk.PubSub.FloodRouter - got message from 18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:51.063 [DEBUG] PeerTalk.PubSub.FloodRouter - Unsubscribe 'bundle-network-0af4da8e76b44c7bb95a180de14ece6f' by 18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+23:57:51.247 [DEBUG] PeerTalk.PeerConnection - Closing connection to /ip4/127.0.0.1/tcp/50469/ipfs/18n3naE9kBZoVvgYMV6saMZe8bDc3pE1FJnaTawtifwupCkD2TZ9u9XiEnkJP8WB8QgV
+  Passed PubSubPublishPeersAndSubscribe_Work_Through_OperatorClientPaths [2 s]
+23:57:53.908 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connecting to /ip4/127.0.0.1/tcp/50485/ipfs/18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+23:57:53.908 [DEBUG] PeerTalk.Swarm - New peer registerd 18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+23:57:53.908 [DEBUG] PeerTalk.AutoDialer - Dialing new 18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+23:57:53.909 [DEBUG] PeerTalk.Swarm - Dialing 18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+23:57:53.974 [DEBUG] PeerTalk.SecureCommunication.Secio1 - Secure session with 18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+23:57:53.976 [DEBUG] PeerTalk.Protocols.Identify1 - Get remote identity
+23:57:53.976 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+23:57:53.979 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/id/1.0.0
+23:57:53.980 [DEBUG] PeerTalk.Protocols.Identify1 - Sending identity to /ip4/127.0.0.1/tcp/50485/ipfs/18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+23:57:53.980 [DEBUG] PeerTalk.Protocols.Identify1 - Peer id '18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7' of /ip4/127.0.0.1/tcp/50485/ipfs/18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+23:57:53.981 [DEBUG] PeerTalk.PeerManager - Alive '18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7'.
+23:57:53.981 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connected to /ip4/127.0.0.1/tcp/50485/ipfs/18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+23:57:53.996 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+23:57:54.004 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/kad/1.0.0
+23:57:54.006 [DEBUG] PeerTalk.Routing.Dht1 - got AddProvider from 18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+23:57:54.077 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - 18n3naE9kBZoVvgYMV6saMZe2bMbVNAU9PPCP1hvHNEJV6swXndPW2gDA1BctwFDxJfa wants QmXMXBTtXTaCfAzH6tsnBzq2PaWbMJhH2ga24eFxfV6uKz
+23:57:54.084 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - sending want list to 18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+23:57:54.085 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Spamming 1 connected peers
+23:57:54.086 [DEBUG] PeerTalk.Routing.DistributedQuery - Q2 run GetProviders QmXMXBTtXTaCfAzH6tsnBzq2PaWbMJhH2ga24eFxfV6uKz
+23:57:54.086 [DEBUG] PeerTalk.Routing.DistributedQuery - Q2.1.1 ask 18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+23:57:54.097 [DEBUG] PeerTalk.Routing.DistributedQuery - Q2.1.1 ok 18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7 (10.3863 ms)
+23:57:54.127 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Spam 1 connected peers done
+23:57:54.142 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+23:57:54.143 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/bitswap/1.1.0
+23:57:54.158 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap11 - got block(s) from 18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+23:57:54.162 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmXMXBTtXTaCfAzH6tsnBzq2PaWbMJhH2ga24eFxfV6uKz'
+23:57:56.363 [DEBUG] PeerTalk.Routing.DistributedQuery - Q2 found 1 answers, visited 1 peers, failed 0
+23:57:56.367 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Connecting to provider 18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+23:57:56.368 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - bitswap got the block
+23:57:56.370 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Unwant QmXMXBTtXTaCfAzH6tsnBzq2PaWbMJhH2ga24eFxfV6uKz
+23:57:56.606 [DEBUG] PeerTalk.PeerConnection - Closing connection to /ip4/127.0.0.1/tcp/50485/ipfs/18n3naE9kBZoVvgYMV6saMZds73a8ugW3yj6aPPkCKmzAbs8RjKGa2sf9ZTD6kg9fxb7
+  Passed CrossNodeShareAndFetch_Work_Through_NodeOperatorService [5 s]
+23:57:58.545 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connecting to /ip4/127.0.0.1/tcp/53304/ipfs/18n3naE9kBZoVvgYMV6saMZe5gm6Jdwb8KoGetw1uBUbYiJ68Fggh9gWxcs6pQVXt4J9
+23:57:58.546 [DEBUG] PeerTalk.Swarm - New peer registerd 18n3naE9kBZoVvgYMV6saMZe5gm6Jdwb8KoGetw1uBUbYiJ68Fggh9gWxcs6pQVXt4J9
+23:57:58.546 [DEBUG] PeerTalk.AutoDialer - Dialing new 18n3naE9kBZoVvgYMV6saMZe5gm6Jdwb8KoGetw1uBUbYiJ68Fggh9gWxcs6pQVXt4J9
+23:57:58.546 [DEBUG] PeerTalk.Swarm - Dialing 18n3naE9kBZoVvgYMV6saMZe5gm6Jdwb8KoGetw1uBUbYiJ68Fggh9gWxcs6pQVXt4J9
+23:57:58.590 [DEBUG] PeerTalk.SecureCommunication.Secio1 - Secure session with 18n3naE9kBZoVvgYMV6saMZe5gm6Jdwb8KoGetw1uBUbYiJ68Fggh9gWxcs6pQVXt4J9
+23:57:58.591 [DEBUG] PeerTalk.Protocols.Identify1 - Get remote identity
+23:57:58.592 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+23:57:58.592 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/id/1.0.0
+23:57:58.592 [DEBUG] PeerTalk.Protocols.Identify1 - Sending identity to /ip4/127.0.0.1/tcp/53304/ipfs/18n3naE9kBZoVvgYMV6saMZe5gm6Jdwb8KoGetw1uBUbYiJ68Fggh9gWxcs6pQVXt4J9
+23:57:58.593 [DEBUG] PeerTalk.Protocols.Identify1 - Peer id '18n3naE9kBZoVvgYMV6saMZe5gm6Jdwb8KoGetw1uBUbYiJ68Fggh9gWxcs6pQVXt4J9' of /ip4/127.0.0.1/tcp/53304/ipfs/18n3naE9kBZoVvgYMV6saMZe5gm6Jdwb8KoGetw1uBUbYiJ68Fggh9gWxcs6pQVXt4J9
+23:57:58.593 [DEBUG] PeerTalk.PeerManager - Alive '18n3naE9kBZoVvgYMV6saMZe5gm6Jdwb8KoGetw1uBUbYiJ68Fggh9gWxcs6pQVXt4J9'.
+23:57:58.593 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connected to /ip4/127.0.0.1/tcp/53304/ipfs/18n3naE9kBZoVvgYMV6saMZe5gm6Jdwb8KoGetw1uBUbYiJ68Fggh9gWxcs6pQVXt4J9
+23:57:58.909 [DEBUG] PeerTalk.PeerConnection - Closing connection to /ip4/127.0.0.1/tcp/53304/ipfs/18n3naE9kBZoVvgYMV6saMZe5gm6Jdwb8KoGetw1uBUbYiJ68Fggh9gWxcs6pQVXt4J9
+  Passed ConnectByKnownNodeApiAsync_Resolves_Identity_And_Connects_Using_Explicit_Dial_Address [2 s]
+  Passed CurrentNodeLeaseFactory_Emits_Custom_Activity_And_Metrics [420 ms]
+  Passed Named_Node_HttpClient_Propagates_Correlation_Header_From_Request_Context [8 ms]
+  Passed RemotePinWorkflow_Enqueue_Emits_Custom_Activity [45 ms]
+  Passed AddIpfsNodeControlApplication_Defaults_To_Light_Profile_With_Local_First_Compatibility [3 ms]
+  Passed AddIpfsNodeControlApplication_Binds_Pro_Profile_Defaults [9 ms]
+  Passed PinRequestsFilterToolbar_Renders_Counts_And_Raises_Filter_Selection [226 ms]
+  Passed PinRequestCard_Renders_Request_Metadata_And_Pending_Actions [159 ms]
+  Passed PinRequestDetailsDialog_Renders_Callouts_And_Copy_Actions [40 ms]
+  Passed PinRequests_Renders_Stored_Request_And_Pending_Actions [2 s]
+  Passed PinRequests_Filter_Buttons_Reduce_Card_List [1 s]
+  Passed MainLayout_Shows_Pending_Pin_Request_Count_In_Navigation [1 s]
+  Passed TryWriteResponseAsync_Serves_Styles_Icons_Scripts_And_FrameworkAssets_From_Published_Manifest [114 ms]
+  Passed TryWriteResponseAsync_Prefers_Brotli_Encoded_Asset_When_Client_Accepts_It [17 ms]
+  Passed Serialize_And_Deserialize_Roundtrip_Version_Two_Metadata [2 ms]
+  Passed PrepareOutgoingEnvelope_Signs_Version_Two_Request_When_Local_Shared_Secret_Is_Configured [4 ms]
+  Passed ValidateIncomingEnvelope_Allows_Legacy_Request_Only_When_Compatibility_Mode_Is_Enabled [1 ms]
+  Passed ValidateIncomingEnvelope_Rejects_Expired_Request [1 ms]
+  Passed ValidateIncomingEnvelope_Rejects_Replayed_Nonce [3 ms]
+  Passed ValidateIncomingEnvelope_Rejects_Untrusted_Sender [1 ms]
+  Passed Add_Deduplicates_By_RequestId_And_Persists_Across_Restarts [33 ms]
+  Passed Update_Throws_For_Unknown_Request [34 ms]
+  Passed List_Migrates_A_Legacy_Array_And_Creates_A_Backup [100 ms]
+  Passed List_Quarantines_A_Corrupt_Document [51 ms]
+  Passed Reject_Persists_Request_State_Without_Pinning [1 s]
+23:58:09.333 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connecting to /ip4/127.0.0.1/tcp/53335/ipfs/18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs
+23:58:09.333 [DEBUG] PeerTalk.Swarm - New peer registerd 18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs
+23:58:09.333 [DEBUG] PeerTalk.AutoDialer - Dialing new 18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs
+23:58:09.333 [DEBUG] PeerTalk.Swarm - Dialing 18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs
+23:58:09.395 [DEBUG] PeerTalk.SecureCommunication.Secio1 - Secure session with 18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs
+23:58:09.401 [DEBUG] PeerTalk.Protocols.Identify1 - Get remote identity
+23:58:09.403 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+23:58:09.406 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/id/1.0.0
+23:58:09.406 [DEBUG] PeerTalk.Protocols.Identify1 - Sending identity to /ip4/127.0.0.1/tcp/53335/ipfs/18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs
+23:58:09.414 [DEBUG] PeerTalk.Protocols.Identify1 - Peer id '18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs' of /ip4/127.0.0.1/tcp/53335/ipfs/18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs
+23:58:09.414 [DEBUG] PeerTalk.PeerManager - Alive '18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs'.
+23:58:09.414 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connected to /ip4/127.0.0.1/tcp/53335/ipfs/18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs
+23:58:09.492 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - 18n3naE9kBZoVvgYMV6saMZdueAj5Wc6RvDvANy52H2j5GA48U1CRWP96Y4QzGdorKjK wants QmX5XLoamRCNpRsaiGyoW3RRvucVrG3C2ubh3cYw8pMA2E
+23:58:09.492 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - sending want list to 18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs
+23:58:09.493 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Spamming 1 connected peers
+23:58:09.496 [DEBUG] PeerTalk.Routing.DistributedQuery - Q3 run GetProviders QmX5XLoamRCNpRsaiGyoW3RRvucVrG3C2ubh3cYw8pMA2E
+23:58:09.497 [DEBUG] PeerTalk.Routing.DistributedQuery - Q3.1.1 ask 18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs
+23:58:09.502 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Spam 1 connected peers done
+23:58:09.503 [DEBUG] PeerTalk.Routing.DistributedQuery - Q3.1.1 ok 18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs (6.4703 ms)
+23:58:09.505 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+23:58:09.506 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/bitswap/1.1.0
+23:58:09.507 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap11 - got block(s) from 18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs
+23:58:09.508 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmX5XLoamRCNpRsaiGyoW3RRvucVrG3C2ubh3cYw8pMA2E'
+23:58:11.701 [DEBUG] PeerTalk.Routing.DistributedQuery - Q3 found 1 answers, visited 1 peers, failed 0
+23:58:11.706 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Connecting to provider 18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs
+23:58:11.707 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - bitswap got the block
+23:58:11.707 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Unwant QmX5XLoamRCNpRsaiGyoW3RRvucVrG3C2ubh3cYw8pMA2E
+23:58:12.011 [DEBUG] PeerTalk.PeerConnection - Closing connection to /ip4/127.0.0.1/tcp/53335/ipfs/18n3naE9kBZoVvgYMV6saMZe3DXC49C8paggxAU2aasqv7fsGC6F4gXbekDtsZioYsQs
+  Passed AcceptAsync_Connects_To_Sender_And_Pins_Content [4 s]
+No IPFS host passphrase is configured. Set 'IpfsHttpHost:Passphrase' or the 'IPFS_PASS' environment variable.
+  Passed AcceptAsync_Marks_Request_As_Accepted_When_Pin_Is_Persisted_Before_Api_Returns_Failure [456 ms]
+  Passed AcceptAsync_Marks_Request_As_Failed_When_Content_Cannot_Be_Reached [1 s]
+  Passed Enqueue_Persists_A_Rejected_Request_When_Security_Validation_Fails [91 ms]
+  Passed ResolvePinTimeoutSeconds_Extends_Accept_Window_For_Folders_And_Large_Content [< 1 ms]
+  Passed ShouldAllowPrivateNetworkCertificateBypass_ReturnsTrue_ForPrivateHttpsTargets [2 ms]
+  Passed ShouldAllowPrivateNetworkCertificateBypass_ReturnsFalse_ForPublicOrNonHttpsTargets [1 ms]
+  Passed CreateEnvelopeAsync_Uses_The_Configured_Node_Status_Snapshot [1 s]
+  Passed CreateEnvelopeAsync_Signs_A_Version_Two_Request_When_A_Local_Shared_Secret_Is_Configured [1 s]
+  Passed ProbeAsync_Returns_Receiver_Metadata_From_The_Remote_Control_App [193 ms]
+  Passed SendAsync_Posts_Requests_And_Returns_The_Stored_Response [98 ms]
+  Passed ProbeAsync_And_SendAsync_Include_The_Configured_Remote_Pin_Access_Key [97 ms]
+  Passed SendAsync_Surfaces_Server_Detail_When_The_Remote_Control_App_Rejects_The_Request [53 ms]
+  Passed NodeRead_Client_Retries_Post_Based_Read_Semantics [4 s]
+  Passed Mutation_And_Admin_Clients_Do_Not_Retry_Unsafe_Posts ("IpfsNodeControl.Node.Mutation") [55 ms]
+  Passed Mutation_And_Admin_Clients_Do_Not_Retry_Unsafe_Posts ("IpfsNodeControl.Node.Admin") [17 ms]
+  Passed Mutation_And_Admin_Clients_Do_Not_Retry_Unsafe_Posts ("IpfsNodeControl.Node.RemotePin") [9 ms]
+  Passed SaveLoadAndClear_Roundtrip_Node_Settings [51 ms]
+  Passed Load_Migrates_A_Legacy_Document_And_Creates_A_Backup [25 ms]
+  Passed Load_Quarantines_A_Corrupt_Document [17 ms]
+  Passed ConfiguredNodeStatusService_Uses_Persisted_Target_For_Probe_Metadata [1 s]
+  Passed BuildAdvertisedAddresses_Appends_Configured_Host_When_Reported_Addresses_Are_Local_Only [1 ms]
+  Passed BuildAdvertisedAddresses_Does_Not_Add_Fallback_When_Remote_Address_Already_Exists [< 1 ms]
+  Passed RemotePinRequestEnvelope_Serializes_And_Roundtrips_Metadata [23 ms]
+  Passed Wants [2 s]
+  Passed Unwant [1 s]
+  Passed OnConnect_Sends_WantList [2 s]
+  Passed GetsBlock_OnConnect [4 s]
+  Passed GetsBlock_OnConnect_Bitswap1 [3 s]
+  Passed GetsBlock_OnConnect_Bitswap11 [4 s]
+  Passed GetsBlock_OnRequest [3 s]
+  Passed GetsBlock_Cidv1 [24 s]
+  Passed GetBlock_Timeout [2 s]
+  Passed PeerLedger [2 s]
+  Passed Put_Bytes [28 ms]
+  Passed Put_Bytes_TooBig [2 ms]
+  Passed Put_Bytes_ContentType [2 ms]
+  Passed Put_Bytes_Inline_Cid [6 ms]
+  Passed Put_Bytes_Hash [8 ms]
+  Passed Put_Bytes_Cid_Encoding [18 ms]
+  Passed Put_Stream [13 ms]
+  Passed Put_Stream_ContentType [2 ms]
+  Passed Put_Stream_Hash [10 ms]
+  Passed Get [2 ms]
+  Passed Stat [2 ms]
+  Passed Stat_Inline_CID [7 ms]
+  Passed Stat_Unknown [2 ms]
+  Passed Remove [2 ms]
+  Passed Remove_Inline_CID [2 ms]
+  Passed Remove_Unknown [< 1 ms]
+  Passed Remove_Unknown_OK [1 ms]
+  Passed Get_Inline_CID [7 ms]
+  Passed Put_Informs_Bitswap [6 ms]
+  Passed Put_Informs_Dht [1 s]
+  Passed Exists [< 1 ms]
+  Passed Stats [18 ms]
+  Passed GarbageCollection [40 ms]
+  Passed VersionFileMissing [25 ms]
+  Passed Add_Remove [7 ms]
+  Passed List [7 ms]
+  Passed Remove_All [6 ms]
+  Passed Add_Defaults [23 ms]
+  Passed Override_FactoryDefaults [2 ms]
+  Passed Get_Entire_Config [2 ms]
+  Passed Get_Scalar_Key_Value [2 ms]
+  Passed Get_Object_Key_Value [2 ms]
+  Passed Keys_are_Case_Sensitive [1 ms]
+  Passed Set_String_Value [5 ms]
+  Passed Set_JSON_Value [3 ms]
+  Passed Get_Raw [32 ms]
+  Passed PutAndGet_JSON [28 ms]
+  Passed PutAndGet_poco [83 ms]
+  Passed PutAndGet_poco_CidEncoding [46 ms]
+  Passed PutAndGet_POCO [28 ms]
+  Passed Get_Raw2 [7 ms]
+  Skipped Example1
+  Passed Local_Info [13 ms]
+  Skipped Mars_Info
+  Skipped FindProvider
+  Passed Resolve [222 ms]
+  Passed Resolve_NoLink [4 s]
+  Passed Resolve_Recursive [180 ms]
+  Passed AddText [23 ms]
+  Passed AddEmptyText [19 ms]
+  Passed AddEmpty_Check_Object [10 ms]
+  Passed AddDuplicateWithPin [20 ms]
+  Passed Add_SizeChunking [118 ms]
+  Passed StreamBehaviour [23 ms]
+  Passed Add_HashAlgorithm [22 ms]
+  Passed AddFile [162 ms]
+  Passed AddFile_CidEncoding [8 ms]
+  Passed AddFile_Large [6 s]
+  Passed AddFile_Larger [9 s]
+  Passed AddFile_Wrap [50 ms]
+  Passed Add_Raw [9 ms]
+  Passed Add_Inline [7 ms]
+  Passed Add_RawAndChunked [57 ms]
+  Passed Add_Protected [317 ms]
+  Passed Add_Protected_Chunked [273 ms]
+  Passed Add_OnlyHash [11 ms]
+  Passed ReadWithOffset [161 ms]
+  Passed Read_RawWithLength [184 ms]
+  Passed Read_ChunkedWithLength [167 ms]
+  Passed Read_ProtectedWithLength [2 s]
+  Passed Read_ProtectedChunkedWithLength [7 s]
+  Passed Read_ProtectedMissingKey [102 ms]
+  Passed AddFile_WithProgress [23 ms]
+  Passed AddDirectory [31 ms]
+  Passed AddDirectoryRecursive [133 ms]
+  Passed AddDirectory_WithHashAlgorithm [59 ms]
+  Passed AddDirectory_WithCidEncoding [67 ms]
+  Passed AddDirectoryRecursive_ObjectLinks [72 ms]
+  Skipped ReadTextFromNetwork
+  Passed Read_From_OtherNode [4 s]
+  Passed GetTar [68 ms]
+  Passed GetTar_RawLeaves [65 ms]
+  Passed GetTar_EmptyDirectory [12 ms]
+  Passed Isssue108 [6 ms]
+  Passed Read_SameFile_DifferentCids [29 ms]
+  Passed Local_Info [2 ms]
+  Passed Mars_Info [3 ms]
+  Passed Version_Info [2 ms]
+  Passed Shutdown [1 s]
+  Passed Resolve_Cid [2 ms]
+  Passed Resolve_Cid_Path [25 ms]
+  Passed Resolve_Cid_Invalid [< 1 ms]
+  Passed Resolve_DnsLink [383 ms]
+  Skipped Resolve_DnsLink_Recursive
+  Passed Api_Exists [1 ms]
+  Passed Self_Key_Exists [7 ms]
+  Passed Export_Import [51 ms]
+  Passed Export_Unknown_Key [1 ms]
+  Passed Import_Wrong_Password [35 ms]
+  Passed Import_JSIPFS_Node [34 ms]
+  Passed Import_Bad_Format [2 ms]
+  Passed Import_Corrupted_Format [2 ms]
+  Passed Create_RSA_Key [28 ms]
+  Passed Create_Bitcoin_Key [123 ms]
+  Passed Import_OpenSSL_Bitcoin [37 ms]
+  Passed Remove_Key [19 ms]
+  Passed Rename_Key [25 ms]
+  Passed Remove_Unknown_Key [1 ms]
+  Passed Rename_Unknown_Key [8 ms]
+  Passed Create_Unknown_KeyType [2 ms]
+  Passed UnsafeKeyName [17 ms]
+  Passed Create_Ed25519_Key [30 ms]
+  Passed Ed25519_Id_IdentityHash_of_PublicKey [8 ms]
+  Passed Import_OpenSSL_Ed25519 [19 ms]
+  Passed SampleFiles_RoundTrip_OnSingleLocalNode [1 s]
+  Passed DuplicateLargeFileUpload_DoesNotCreateAdditionalBlocks [976 ms]
+  Passed MultiNode_Pin_Share_Read_Remove_Workflow [20 s]
+  Passed Resolve_DnsLink [318 ms]
+  Passed Resolve_DnsLink_Recursive [471 ms]
+  Passed Resolve_NoDnsLink [4 s]
+  Passed Add_Remove [200 ms]
+  Passed Remove_Unknown [5 ms]
+  Passed Inline_Cid [287 ms]
+  Passed Add_Unknown [366 ms]
+  Passed Add_Recursive [77 ms]
+  Passed Remove_Recursive [62 ms]
+  Passed Api_Exists [2 ms]
+  Passed Peers_Unknown_Topic [30 ms]
+  Passed Subscribed_Topics [1 s]
+  Passed Subscribe [1 s]
+  Passed Subscribe_Mutiple_Messages [1 s]
+  Passed Multiple_Subscribe_Mutiple_Messages [1 s]
+  Passed Unsubscribe [1 s]
+  Passed Subscribe_BinaryMessage [1 s]
+  Passed Subscribe_StreamMessage [1 s]
+  Passed Exists [< 1 ms]
+  Passed SmokeTest [81 ms]
+  Passed Filter_Add_Remove [6 ms]
+  Skipped Connect_Disconnect_Mars
+  Skipped JsIPFS_Connect
+  Skipped GoIPFS_Connect
+  Skipped GoIPFS_Connect_v0_4_17
+  Passed PrivateNetwork_WithOptionsKey [142 ms]
+  Passed PrivateNetwork_WithSwarmKeyFile [155 ms]
+  Passed Defaults [< 1 ms]
+  Passed Can_Create [425 ms]
+  Passed CanConnect [3 s]
+  Passed PutAndGet [100 ms]
+  Passed TryGet [43 ms]
+  Passed Get_Unknown [4 ms]
+  Passed Remove [15 ms]
+  Passed Remove_Unknown [44 ms]
+  Passed Length [8 ms]
+  Passed Length_Unknown [10 ms]
+  Passed Values [34 ms]
+  Passed Names [109 ms]
+  Passed Atomic [235 ms]
+  Passed PutWithException [13 ms]
+  Passed Can_Create [1 ms]
+  Passed Can_Dispose [1 s]
+  Passed SecureString_Passphrase [116 ms]
+  Passed IpfsPass_Passphrase [179 ms]
+  Passed Wrong_Passphrase [266 ms]
+  Passed Can_Start_And_Stop [5 s]
+  Passed Can_Start_And_Stop_MultipleEngines [10 s]
+  Passed Can_Use_Private_Node [1 s]
+  Passed LocalPeer [6 ms]
+  Passed KeyChain [5 ms]
+  Passed KeyChain_GetKey [10 ms]
+  Passed Swarm_Gets_Bootstrap_Peers [1 s]
+  Passed Start_NoListeners [1 s]
+  Passed Start_InvalidListener [1 s]
+  Passed CanStartAndStop [4 ms]
+  Passed CannotStartTwice [1 ms]
+  Passed CanStopMultipletimes [2 ms]
+  Passed Defaults [< 1 ms]
+  Passed Repository_Directory [2 ms]
+  Passed Environment_IpfsPath [7 ms]
+  Passed Defaults [15 ms]
+  Passed Engine_Exists [< 1 ms]
+  Passed ToLink [1 ms]
+  Passed HasMigrations [1 ms]
+  Passed MirgrateToUnknownVersion [2 ms]
+  Passed MigrateToLowestThenHighest [11 ms]
+  Passed Empty [12 ms]
+  Passed DataOnly [1 ms]
+  Passed LinksOnly [35 ms]
+  Passed Empty [1 ms]
+  Passed Data [1 ms]
+  Passed Create_Rsa [41 ms]
+  Passed Create_Secp256k1 [68 ms]
+  Passed Create_Ed25519 [30 ms]
+  Passed ReadCms [81 ms]
+  Passed ReadCms_FailsWithoutKey [5 ms]
+  Passed CreateCms_Rsa [80 ms]
+  Passed CreateCms_Secp256k1 [118 ms]
+  Passed CreateCms_Ed25519 [41 ms]
+  Passed ReadPrivateKey [35 ms]
+  Passed ReadPrivateAndPublicKey [27 ms]
+  Passed UseBytes [2 ms]
+  Passed New_Template_Null [2 ms]
+  Passed New_Template_UnixfsDir [4 ms]
+  Passed New_Template_Unknown [8 ms]
+  Passed Put_Get_Dag [29 ms]
+  Passed Put_Get_Data [7 ms]
+  Passed Data [6 ms]
+  Passed Links [7 ms]
+  Passed Stat [6 ms]
+  Passed Get_Nonexistent [568 ms]
+  Passed Get_Inlinefile [22 ms]
+  Passed Links_InlineCid [4 ms]
+  Passed Links_RawCid [7 ms]
+  Passed Light_Mode_Defaults_Preserve_Anonymous_Access_And_Permissive_Cors [5 ms]
+  Passed Pro_Mode_Defaults_Require_Admin_Key_And_Origin_Allowlist [6 ms]
+  Passed Configured_Passphrase_Takes_Precedence_Over_Environment [1 ms]
+  Passed Environment_Passphrase_Is_Used_When_Configured_Value_Is_Missing [1 ms]
+  Passed Missing_Passphrase_Throws_A_Clear_Error [3 ms]
+  Passed Pro_Mode_Requires_An_Admin_Key_During_Host_Startup [1 s]
+  Passed Pro_Mode_Rejects_Anonymous_Core_Api_Requests [1 s]
+  Passed Pro_Mode_Admin_Key_Preserves_Core_Client_Operations [1 s]
+  Passed Light_Mode_Allows_Anonymous_Cors_Preflight_From_Any_Origin [1 s]
+00:01:15.139 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmU3r6t1UWmeBNqZdSSQ6xnrV1cdowMg2a6YAn1hnf9EHV'
+  Passed Pro_Mode_Cors_Allows_Configured_Origins_And_Omits_Others [1 s]
+00:01:15.335 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'bafkreieokfwongecgd4r2eny6w2l5ratzobq35fo6lukckarazxuu63d7q'
+00:01:15.443 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'bafyreihnnlzfbuzjo6czomxidg7rpql2g4jud7ufgzz7xhlte75sufc6oe'
+00:01:15.610 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmZkNX1W6SJjYKAxJ3quiAKNA3rRagwmDrK5oFdnFHMiwx'
+00:01:15.852 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Creating ed25519 key named 'client-test-key'
+00:01:15.853 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Created key
+00:01:15.859 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Added key 'client-test-key' with ID 18n3naE9kBZoVvgYMV6saMZdr2X59reDGj8EEu8Qb8EFUcByX9VcUi3pgJBbRVM3AviA
+  Passed Basic_Roundtrip_Operations_Work_Over_Http [2 s]
+00:01:17.437 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmdcTtcyxQveWuxLWgLCJGZrt3SZSgzJLFTpWvRZhWXyWj'
+00:01:17.442 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmXgsAnvbJgBHHCHx6YgUYW1GiP3hvsjBzyb4We3e127HL'
+00:01:17.448 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmeZxQYRht2fDsFAu9bCBqgVaipHSvRdv6ckGYZsN3QDUC'
+00:01:17.456 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmZXmXEn7sR9GPRSNz7bWLJ2K51BBiK2dDwxpP8iaSSw2R'
+00:01:17.492 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmbTwGECo3MASFCXGwc6btuZybTPBLL9j8UfvTnKq3KJUQ'
+  Passed FileSystem_AddDirectoryAsync_Uploads_Nested_Files_And_Empty_Folders_Over_Http [1 s]
+  Passed Real_Startup_Serves_Core_Endpoints_Without_Runtime_Xml_Doc_File [1 s]
+  Passed PubSub_String_Subscribe_Works_Over_Http [1 s]
+00:01:22.791 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connecting to /ip4/127.0.0.1/tcp/60546/ipfs/18n3naE9kBZoVvgYMV6saMZdtFHRfQvHyYghYa7n62cLJU8rBsD3tk8vhbctRpMwx1Wg
+00:01:22.791 [DEBUG] PeerTalk.Swarm - New peer registerd 18n3naE9kBZoVvgYMV6saMZdtFHRfQvHyYghYa7n62cLJU8rBsD3tk8vhbctRpMwx1Wg
+00:01:22.791 [DEBUG] PeerTalk.AutoDialer - Dialing new 18n3naE9kBZoVvgYMV6saMZdtFHRfQvHyYghYa7n62cLJU8rBsD3tk8vhbctRpMwx1Wg
+00:01:22.792 [DEBUG] PeerTalk.Swarm - Dialing 18n3naE9kBZoVvgYMV6saMZdtFHRfQvHyYghYa7n62cLJU8rBsD3tk8vhbctRpMwx1Wg
+00:01:22.841 [DEBUG] PeerTalk.SecureCommunication.Secio1 - Secure session with 18n3naE9kBZoVvgYMV6saMZdtFHRfQvHyYghYa7n62cLJU8rBsD3tk8vhbctRpMwx1Wg
+00:01:22.842 [DEBUG] PeerTalk.Protocols.Identify1 - Get remote identity
+00:01:22.843 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /multistream/1.0.0
+00:01:22.847 [DEBUG] PeerTalk.Protocols.Multistream1 - switching to /ipfs/id/1.0.0
+00:01:22.847 [DEBUG] PeerTalk.Protocols.Identify1 - Sending identity to /ip4/127.0.0.1/tcp/60546/ipfs/18n3naE9kBZoVvgYMV6saMZdtFHRfQvHyYghYa7n62cLJU8rBsD3tk8vhbctRpMwx1Wg
+00:01:22.857 [DEBUG] PeerTalk.Protocols.Identify1 - Peer id '18n3naE9kBZoVvgYMV6saMZdtFHRfQvHyYghYa7n62cLJU8rBsD3tk8vhbctRpMwx1Wg' of /ip4/127.0.0.1/tcp/60546/ipfs/18n3naE9kBZoVvgYMV6saMZdtFHRfQvHyYghYa7n62cLJU8rBsD3tk8vhbctRpMwx1Wg
+00:01:22.857 [DEBUG] PeerTalk.PeerManager - Alive '18n3naE9kBZoVvgYMV6saMZdtFHRfQvHyYghYa7n62cLJU8rBsD3tk8vhbctRpMwx1Wg'.
+00:01:22.857 [DEBUG] Ipfs.Engine.CoreApi.SwarmApi - Connected to /ip4/127.0.0.1/tcp/60546/ipfs/18n3naE9kBZoVvgYMV6saMZdtFHRfQvHyYghYa7n62cLJU8rBsD3tk8vhbctRpMwx1Wg
+00:01:23.396 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Unwant QmYwAPJzv5CZsnAzt8auV2J9m9wM4BvP64QekJy5oQ1gnS
+00:01:23.418 [DEBUG] PeerTalk.PeerConnection - Closing connection to /ip4/127.0.0.1/tcp/60546/ipfs/18n3naE9kBZoVvgYMV6saMZdtFHRfQvHyYghYa7n62cLJU8rBsD3tk8vhbctRpMwx1Wg
+00:01:23.419 [DEBUG] PeerTalk.PeerConnection - Closing connection to /ip4/192.168.10.189/tcp/60549/ipfs/18n3naE9kBZoVvgYMV6saMZdtFHRfQvHyYghYa7n62cLJU8rBsD3tk8vhbctRpMwx1Wg
+  Passed Swarm_And_Bitswap_Peer_Operations_Work_Over_Http [3 s]
+  Passed Unsupported_And_Server_Gap_Functions_Are_Explicit [1 s]
+  Passed Public_Dns_And_Name_Resolution_Work_Over_Http [1 s]
+00:01:28.156 [DEBUG] Ipfs.Engine.CoreApi.BlockApi - Added block 'QmckH9ZKpQ8qcPhdo7atewkkJcBR2mK5ukYJYxsLxkBCbA'
+  Passed Name_Publish_And_Resolve_Work_Over_Http [1 s]
+  Passed Hosted_Service_Start_And_Stop_Are_Idempotent [2 s]
+  Passed Hosted_Service_Does_Not_Fail_When_Engine_Is_Already_Started [2 s]
+  Passed WantList [1 ms]
+  Passed Want_Cancel [1 ms]
+  Passed Block_Needed [8 ms]
+  Passed Want_Unwant [1 ms]
+  Passed Found [2 ms]
+  Passed Found_Count [1 ms]
+
+Test Run Successful.
+Total tests: 383
+     Passed: 372
+    Skipped: 11
+ Total time: 7.6481 Minutes
+

@@ -1,0 +1,15 @@
+﻿Command: historical proof transcript failing-first-boundary-missing.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 1
+Invariant IDs: SB03-LAYERING-001
+--- original captured output follows ---
+SB03 failing-first boundary proof
+Repository: C:\repositories\CanDoItAll.IPFS
+TimestampUtc: 2026-06-29T22:59:34.2575655Z
+
+Check: extracted NodeControl abstractions project exists
+MISSING src/CanDoItAll.IPFS.NodeControl.Abstractions/CanDoItAll.IPFS.NodeControl.Abstractions.csproj
+
+Check: UI-independent Node operator contract exists
+MISSING interface INodeOperator
+

@@ -35,11 +35,11 @@ public sealed class HomeDashboardComponentTests
 
         cut.WaitForAssertion(() =>
         {
-            StringAssert.Contains(cut.Markup, peer.Id.ToString());
-            StringAssert.Contains(cut.Markup, "Stable local node identity.");
+            StringAssert.Contains(cut.Markup, peer.Id.ToString()[..16]);
+            StringAssert.Contains(cut.Markup, "Node identity");
             StringAssert.Contains(cut.Markup, "Repository health");
-            StringAssert.Contains(cut.Markup, "Key import/export stays intentionally unavailable");
-            StringAssert.Contains(cut.Markup, "Repo verify remains unavailable because the current HTTP surface returns 501.");
+            StringAssert.Contains(cut.Markup, "Capability posture");
+            StringAssert.Contains(cut.Markup, "Single file upload");
             Assert.IsFalse(cut.Markup.Contains("The IPFS API returned HTTP", StringComparison.Ordinal));
         }, TimeSpan.FromSeconds(10));
     }
@@ -96,6 +96,16 @@ public sealed class HomeDashboardComponentTests
         });
         context.Services.AddSingleton<IpfsClientFactory>();
         context.Services.AddSingleton<NodeDashboardService>();
+        context.Services.AddSingleton<NodeFileWorkflowService>();
+        context.Services.AddSingleton<INodeFileWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeFileWorkflowService>());
+        context.Services.AddSingleton<NodeExplorerWorkflowService>();
+        context.Services.AddSingleton<INodeExplorerWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeExplorerWorkflowService>());
+        context.Services.AddSingleton<NodeContentWorkflowService>();
+        context.Services.AddSingleton<INodeContentWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeContentWorkflowService>());
+        context.Services.AddSingleton<NodeNetworkWorkflowService>();
+        context.Services.AddSingleton<INodeNetworkWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeNetworkWorkflowService>());
+        context.Services.AddSingleton<NodeMaintenanceWorkflowService>();
+        context.Services.AddSingleton<INodeMaintenanceWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeMaintenanceWorkflowService>());
         context.Services.AddSingleton<NodeOperatorService>();
         return context;
     }

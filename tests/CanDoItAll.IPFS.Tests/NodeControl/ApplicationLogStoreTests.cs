@@ -148,11 +148,65 @@ public sealed class ApplicationLogStoreTests
         }
     }
 
+    [TestMethod]
+    public void ApplicationLogStore_Rotation_Uses_Existing_Active_File_Count_After_Reload()
+    {
+        var tempRoot = CreateTempRoot();
+
+        try
+        {
+            var filePath = Path.Combine(tempRoot, "application.log");
+            var firstStore = CreateStore(tempRoot, maxEntriesPerFile: 2);
+            firstStore.Write(new ApplicationLogEntry(
+                DateTimeOffset.UtcNow.AddSeconds(1),
+                "Info",
+                "Reload.Category",
+                "entry-1",
+                1,
+                null));
+
+            var reloadedStore = CreateStore(tempRoot, maxEntriesPerFile: 2);
+            reloadedStore.Write(new ApplicationLogEntry(
+                DateTimeOffset.UtcNow.AddSeconds(2),
+                "Info",
+                "Reload.Category",
+                "entry-2",
+                2,
+                null));
+            Assert.AreEqual(0, Directory.GetFiles(tempRoot, "application-*.log").Length);
+
+            reloadedStore.Write(new ApplicationLogEntry(
+                DateTimeOffset.UtcNow.AddSeconds(3),
+                "Info",
+                "Reload.Category",
+                "entry-3",
+                3,
+                null));
+
+            var archiveFiles = Directory.GetFiles(tempRoot, "application-*.log");
+            var activeText = File.ReadAllText(filePath);
+            var slice = reloadedStore.ReadRecent("1h", 10);
+
+            Assert.AreEqual(1, archiveFiles.Length);
+            StringAssert.Contains(activeText, "entry-3");
+            Assert.IsFalse(activeText.Contains("entry-2", StringComparison.Ordinal));
+            Assert.AreEqual(3, slice.Entries.Count);
+        }
+        finally
+        {
+            TryDelete(tempRoot);
+        }
+    }
+
     private static ApplicationLogStore CreateStore(string tempRoot)
+        => CreateStore(tempRoot, maxEntriesPerFile: null);
+
+    private static ApplicationLogStore CreateStore(string tempRoot, int? maxEntriesPerFile)
         => new(Options.Create(new ApplicationLogStoreOptions
         {
             FilePath = Path.Combine(tempRoot, "application.log"),
-            MaxEntriesPerWindow = 100
+            MaxEntriesPerWindow = 100,
+            MaxEntriesPerFile = maxEntriesPerFile ?? new ApplicationLogStoreOptions().MaxEntriesPerFile
         }));
 
     private static string CreateTempRoot()

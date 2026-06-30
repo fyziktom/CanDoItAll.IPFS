@@ -1,0 +1,87 @@
+﻿Command: historical proof transcript focused-validation-fixes.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB09-VALIDATION-001 SB09-PIN-001 SB09-DOCKER-001 SB09-BROWSER-001 SB09-HANDOFF-001
+--- original captured output follows ---
+Test run for C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\bin\Debug\net10.0\CanDoItAll.IPFS.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  Failed PinRequests_Filter_Buttons_Reduce_Card_List [2 s]
+  Error Message:
+   Test method CanDoItAll.IPFS.Tests.NodeControl.PinRequestUiTests.PinRequests_Filter_Buttons_Reduce_Card_List threw exception:
+System.InvalidOperationException: Sequence contains more than one matching element
+  Stack Trace:
+     at System.Linq.ThrowHelper.ThrowMoreThanOneMatchException()
+   at System.Linq.Enumerable.TryGetSingle[TSource](IEnumerable`1 source, Func`2 predicate, Boolean& found)
+   at System.Linq.Enumerable.Single[TSource](IEnumerable`1 source, Func`2 predicate)
+   at CanDoItAll.IPFS.Tests.NodeControl.PinRequestUiTests.PinRequests_Filter_Buttons_Reduce_Card_List() in C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\NodeControl\PinRequestUiTests.cs:line 96
+   at CanDoItAll.IPFS.Tests.NodeControl.PinRequestUiTests.PinRequests_Filter_Buttons_Reduce_Card_List() in C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\NodeControl\PinRequestUiTests.cs:line 109
+   at Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ExecuteInternalAsync(Object[] arguments, CancellationTokenSource timeoutTokenSource) in /_/src/Adapter/MSTestAdapter.PlatformServices/Execution/TestMethodInfo.cs:line 397
+
+  Standard Output Messages:
+ 21:49:26.547 [INFO]  Ipfs.Engine.Migration.MigrationManager - Migrating to version 1
+ 21:49:26.562 [DEBUG] Ipfs.Engine.IpfsEngine - Building local peer
+ 21:49:26.784 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Pass phrase is okay
+ 21:49:26.784 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Creating ed25519 key named 'self'
+ 21:49:26.785 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Created key
+ 21:49:26.986 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Added key 'self' with ID 18n3naE9kBZoVvgYMV6saMZe2RTu9vxPbtEDt4P6Dr6tN7TgCfDNDatsRmfi9Su7ByP7
+ 21:49:26.986 [DEBUG] Ipfs.Engine.IpfsEngine - Getting key info about self
+ 21:49:27.106 [DEBUG] Ipfs.Engine.IpfsEngine - Built local peer
+ 21:49:27.106 [DEBUG] Ipfs.Engine.IpfsEngine - starting 18n3naE9kBZoVvgYMV6saMZe2RTu9vxPbtEDt4P6Dr6tN7TgCfDNDatsRmfi9Su7ByP7
+ 21:49:27.106 [DEBUG] Ipfs.Engine.IpfsEngine - Building swarm service
+ 21:49:27.130 [DEBUG] Ipfs.Engine.IpfsEngine - Built swarm service
+ 21:49:27.130 [DEBUG] PeerTalk.Swarm - Started
+ 21:49:27.131 [DEBUG] PeerTalk.PeerManager - started
+ 21:49:27.131 [DEBUG] Ipfs.Engine.IpfsEngine - waiting for services to start
+ 21:49:27.131 [DEBUG] Ipfs.Engine.IpfsEngine - Building PubSub service
+ 21:49:27.131 [DEBUG] Ipfs.Engine.IpfsEngine - Built PubSub service
+ 21:49:27.131 [DEBUG] PeerTalk.PubSub.FloodRouter - Starting
+ 21:49:27.131 [DEBUG] Ipfs.Engine.IpfsEngine - Building Ping service
+ 21:49:27.131 [DEBUG] Ipfs.Engine.IpfsEngine - Built Ping service
+ 21:49:27.131 [DEBUG] PeerTalk.Protocols.Ping1 - Starting
+ 21:49:27.131 [DEBUG] Ipfs.Engine.IpfsEngine - Building DHT service
+ 21:49:27.131 [DEBUG] Ipfs.Engine.IpfsEngine - Built DHT service
+ 21:49:27.131 [DEBUG] PeerTalk.Routing.Dht1 - Starting
+ 21:49:27.132 [DEBUG] Ipfs.Engine.IpfsEngine - Building bitswap service
+ 21:49:27.132 [DEBUG] Ipfs.Engine.IpfsEngine - Built bitswap service
+ 21:49:27.132 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Starting
+ 21:49:27.146 [DEBUG] PeerTalk.Transports.Tcp - listening on /ip4/0.0.0.0/tcp/59572
+ 21:49:27.953 [DEBUG] PeerTalk.Swarm - Listening on /ip4/192.168.10.189/tcp/59572/ipfs/18n3naE9kBZoVvgYMV6saMZe2RTu9vxPbtEDt4P6Dr6tN7TgCfDNDatsRmfi9Su7ByP7
+ 21:49:27.953 [DEBUG] PeerTalk.Swarm - Listening on /ip4/127.0.0.1/tcp/59572/ipfs/18n3naE9kBZoVvgYMV6saMZe2RTu9vxPbtEDt4P6Dr6tN7TgCfDNDatsRmfi9Su7ByP7
+ 21:49:27.954 [DEBUG] PeerTalk.Swarm - Listening on /ip4/172.21.96.1/tcp/59572/ipfs/18n3naE9kBZoVvgYMV6saMZe2RTu9vxPbtEDt4P6Dr6tN7TgCfDNDatsRmfi9Su7ByP7
+ 21:49:27.954 [DEBUG] Ipfs.Engine.IpfsEngine - waiting for discovery services to start
+ 21:49:27.954 [DEBUG] PeerTalk.Discovery.Bootstrap - Starting
+ 21:49:27.956 [DEBUG] Ipfs.Engine.IpfsEngine - started
+ info: Ipfs.Server.IpfsEngineHostedService[0]
+       Skipping engine startup because the node is already started.
+ info: Microsoft.Hosting.Lifetime[14]
+       Now listening on: http://127.0.0.1:59573
+ info: Microsoft.Hosting.Lifetime[0]
+       Application started. Press Ctrl+C to shut down.
+ info: Microsoft.Hosting.Lifetime[0]
+       Hosting environment: Production
+ info: Microsoft.Hosting.Lifetime[0]
+       Content root path: C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\bin\Debug\net10.0
+ info: Microsoft.Hosting.Lifetime[0]
+       Application is shutting down...
+ info: Ipfs.Server.IpfsEngineHostedService[0]
+       Stopping the embedded IPFS engine.
+ 21:49:28.575 [DEBUG] Ipfs.Engine.IpfsEngine - stopping
+ 21:49:28.575 [DEBUG] PeerTalk.Discovery.Bootstrap - Stopping
+ 21:49:28.575 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Stopping
+ 21:49:28.575 [DEBUG] PeerTalk.Routing.Dht1 - Stopping
+ 21:49:28.575 [DEBUG] PeerTalk.Protocols.Ping1 - Stopping
+ 21:49:28.576 [DEBUG] PeerTalk.PubSub.FloodRouter - Stopping
+ 21:49:28.576 [DEBUG] PeerTalk.PeerManager - stopped
+ 21:49:28.576 [DEBUG] PeerTalk.Swarm - Stopping 18n3naE9kBZoVvgYMV6saMZe2RTu9vxPbtEDt4P6Dr6tN7TgCfDNDatsRmfi9Su7ByP7
+ 21:49:28.576 [DEBUG] PeerTalk.Transports.Tcp - Got cancel on /ip4/0.0.0.0/tcp/59572
+ 21:49:28.578 [DEBUG] PeerTalk.Transports.Tcp - stop listening on /ip4/0.0.0.0/tcp/59572
+ 21:49:28.687 [DEBUG] PeerTalk.Swarm - Stopped 18n3naE9kBZoVvgYMV6saMZe2RTu9vxPbtEDt4P6Dr6tN7TgCfDNDatsRmfi9Su7ByP7
+ 21:49:28.827 [DEBUG] Ipfs.Engine.IpfsEngine - stopped
+ 21:49:28.829 [DEBUG] Ipfs.Engine.IpfsEngine - stopping
+ 21:49:28.835 [DEBUG] Ipfs.Engine.IpfsEngine - stopping
+ 21:49:28.983 [DEBUG] Ipfs.Engine.IpfsEngine - stopped
+
+
+
+Failed!  - Failed:     1, Passed:     9, Skipped:     0, Total:    10, Duration: 13 s - CanDoItAll.IPFS.Tests.dll (net10.0)
+

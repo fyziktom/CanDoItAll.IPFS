@@ -1,0 +1,2 @@
+This is a tiny deterministic stand-in for a large media payload.
+The duplicate-upload validation checks CID and block reuse, not codec parsing.

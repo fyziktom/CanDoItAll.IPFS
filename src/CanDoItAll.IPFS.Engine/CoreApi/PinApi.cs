@@ -58,7 +58,20 @@ namespace Ipfs.Engine.CoreApi
                 await Store.PutAsync(current, new Pin { Id = current }, cancel).ConfigureAwait(false);
 
                 // Make sure that the content is stored locally.
-                await ipfs.Block.GetAsync(current, cancel).ConfigureAwait(false);
+                try
+                {
+                    await ipfs.Block.GetAsync(current, cancel).ConfigureAwait(false);
+                }
+                catch
+                {
+                    await Store.RemoveAsync(current, CancellationToken.None).ConfigureAwait(false);
+                    throw;
+                }
+
+                // A remote block fetch can store the block with pin=false while
+                // satisfying the bitswap request, so restore the requested pin
+                // after the block is available locally.
+                await Store.PutAsync(current, new Pin { Id = current }, cancel).ConfigureAwait(false);
 
                 // Recursively pin the links?
                 if (recursive && current.ContentType == "dag-pb")

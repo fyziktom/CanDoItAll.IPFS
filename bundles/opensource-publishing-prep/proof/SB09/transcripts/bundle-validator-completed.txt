@@ -1,0 +1,7 @@
+﻿Command: python C:\Users\dell\.codex\skills\candoitall-bundle-preparation\scripts\validate_bundle.py C:\repositories\CanDoItAll.IPFS\bundles\opensource-publishing-prep --profile initiative --stage completed --repo-root C:\repositories\CanDoItAll.IPFS --bundle-root C:\repositories\CanDoItAll.IPFS\bundles\opensource-publishing-prep
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB09-HANDOFF-001
+--- original captured output follows ---
+Bundle is valid for stage 'completed': C:\repositories\CanDoItAll.IPFS\bundles\opensource-publishing-prep
+

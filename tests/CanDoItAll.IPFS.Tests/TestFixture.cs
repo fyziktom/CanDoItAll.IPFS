@@ -15,16 +15,17 @@ namespace Ipfs.Engine
     public class TestFixture
     {
         public static readonly string Passphrase = Guid.NewGuid().ToString("N");
+        private static readonly string RepositoryRoot = Path.Combine(Path.GetTempPath(), "ipfs-engine-tests", Guid.NewGuid().ToString("N"));
         public static IpfsEngine Ipfs = new(Passphrase.ToCharArray());
         public static IpfsEngine IpfsOther = new(Passphrase.ToCharArray());
 
         static TestFixture()
         {
-            Ipfs.Options.Repository.Folder = Path.Combine(Path.GetTempPath(), "ipfs-test");
+            Ipfs.Options.Repository.Folder = Path.Combine(RepositoryRoot, "ipfs-test");
             Ipfs.Options.KeyChain.DefaultKeySize = 512;
             Ipfs.Config.SetAsync("Addresses.Swarm", JToken.FromObject(new string[] { "/ip4/0.0.0.0/tcp/0" })).Wait();
 
-            IpfsOther.Options.Repository.Folder = Path.Combine(Path.GetTempPath(), "ipfs-other");
+            IpfsOther.Options.Repository.Folder = Path.Combine(RepositoryRoot, "ipfs-other");
             IpfsOther.Options.KeyChain.DefaultKeySize = 512;
             IpfsOther.Config.SetAsync("Addresses.Swarm", JToken.FromObject(new string[] { "/ip4/0.0.0.0/tcp/0" })).Wait();
         }
@@ -57,13 +58,9 @@ namespace Ipfs.Engine
         [AssemblyCleanup]
         public static void Cleanup()
         {
-            if (Directory.Exists(Ipfs.Options.Repository.Folder))
+            if (Directory.Exists(RepositoryRoot))
             {
-                Directory.Delete(Ipfs.Options.Repository.Folder, true);
-            }
-            if (Directory.Exists(IpfsOther.Options.Repository.Folder))
-            {
-                Directory.Delete(IpfsOther.Options.Repository.Folder, true);
+                Directory.Delete(RepositoryRoot, true);
             }
         }
     }

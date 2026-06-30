@@ -1,0 +1,19 @@
+{
+  "subbundle": "SB04",
+  "status": "Completed",
+  "completionDate": "2026-06-29",
+  "invariants": [
+    {
+      "Invariant ID": "SB04-PERSISTENCE-001",
+      "Source raw note": "Root docker compose must start node with database/data together and preserve file data after restart/rebuild.",
+      "Expected behavior": "Docker compose starts the Engine API and NodeControl UI together, with IPFS and NodeControl data stored in named Docker volumes that survive restart and rebuild.",
+      "Disallowed shallow implementation": "A compose file that starts containers but stores IPFS repo, settings, remote pin requests, explorer index, or logs only in ephemeral container paths.",
+      "Failing-first test": "N/A process/non-production exemption: SB04 introduced runtime wiring and persistence proof rather than a failing unit test; the negative condition was absence of root compose and durable container paths at SB01.",
+      "Passing test": "bundle://proof/SB04/transcripts/docker-compose-restart-and-verify.txt and bundle://proof/SB04/transcripts/docker-compose-rebuild-and-verify.txt",
+      "Changed source files": "repo://docker-compose.yml; repo://docker/Dockerfile.ipfs-node; repo://docker/Dockerfile.node-control; repo://src/CanDoItAll.IPFS.NodeControl/appsettings.Container.json",
+      "Production assertions": "repo://docker-compose.yml and repo://src/CanDoItAll.IPFS.NodeControl/appsettings.Container.json define the production container topology and durable store paths.",
+      "Red-team negative case": "bundle://proof/SB04/transcripts/docker-compose-restart-and-verify.txt and bundle://proof/SB04/transcripts/docker-compose-rebuild-and-verify.txt would fail if named volumes or durable store paths were missing.",
+      "Downstream dependency check": "bundle://proof/SB08/manifest.md and bundle://proof/SB09/manifest.md consume the durable container paths."
+    }
+  ]
+}

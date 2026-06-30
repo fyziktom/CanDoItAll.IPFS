@@ -61,8 +61,13 @@ namespace Makaretu.Dns
         /// </value>
         public string ServerUrl { get; set; } = "https://cloudflare-dns.com/dns-query";
 
+        static readonly HttpClient SharedHttpClient = new(
+            new SocketsHttpHandler
+            {
+                PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+            });
+
         HttpClient httpClient;
-        readonly object httpClientLock = new object();
         readonly AsyncLock dnsServerLock = new AsyncLock();
 
         /// <summary>
@@ -76,18 +81,11 @@ namespace Makaretu.Dns
         {
             get
             {
-                if (httpClient == null)
-                {
-                    lock (httpClientLock)
-                    {
-                        httpClient = new HttpClient();
-                    }
-                }
-                return httpClient;
+                return httpClient ?? SharedHttpClient;
             }
             set
             {
-                httpClient = value;
+                httpClient = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -121,9 +119,10 @@ namespace Makaretu.Dns
 
             // Cancel the request when either the timeout is reached or the
             // task is cancelled by the caller.
-            var cts = CancellationTokenSource.CreateLinkedTokenSource(
+            using var timeoutCts = new CancellationTokenSource(Timeout);
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(
                 cancel,
-                new CancellationTokenSource(Timeout).Token);
+                timeoutCts.Token);
 
             // Post the request.
             HttpResponseMessage httpResponse;
@@ -133,35 +132,45 @@ namespace Makaretu.Dns
                 ms.Position = 0;
                 var content = new StreamContent(ms);
                 content.Headers.ContentType = new MediaTypeHeaderValue(DnsWireFormat);
+                using var requestMessage = new HttpRequestMessage(HttpMethod.Post, ServerUrl)
+                {
+                    Content = content
+                };
                 // Only one writer at a time.
-                using (await dnsServerLock.LockAsync()) {
-                    httpResponse = await HttpClient.PostAsync(ServerUrl, content, cts.Token);
+                using (await dnsServerLock.LockAsync().ConfigureAwait(false))
+                {
+                    httpResponse = await HttpClient
+                        .SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, cts.Token)
+                        .ConfigureAwait(false);
                 }
             }
 
             // Check the HTTP response.
-            httpResponse.EnsureSuccessStatusCode();
-            var contentType = httpResponse.Content.Headers.ContentType.MediaType;
-            if (DnsWireFormat != contentType)
-                throw new HttpRequestException($"Expected content-type '{DnsWireFormat}' not '{contentType}'.");
-
-            // Check the DNS response.
-            var body = await httpResponse.Content.ReadAsStreamAsync();
-            var dnsResponse = (Message)new Message().Read(body);
-            if (ThrowResponseError)
+            using (httpResponse)
             {
-                if (dnsResponse.Status != MessageStatus.NoError)
-                {
-                    log.Warn($"DNS error '{dnsResponse.Status}'.");
-                    throw new IOException($"DNS error '{dnsResponse.Status}'.");
-                }
-            }
+                httpResponse.EnsureSuccessStatusCode();
+                var contentType = httpResponse.Content.Headers.ContentType.MediaType;
+                if (DnsWireFormat != contentType)
+                    throw new HttpRequestException($"Expected content-type '{DnsWireFormat}' not '{contentType}'.");
 
-            if (log.IsDebugEnabled)
-                log.Debug($"Got response #{dnsResponse.Id}");
-            if (log.IsTraceEnabled)
-                log.Trace(dnsResponse);
-            return dnsResponse;
+                // Check the DNS response.
+                using var body = await httpResponse.Content.ReadAsStreamAsync(cts.Token).ConfigureAwait(false);
+                var dnsResponse = (Message)new Message().Read(body);
+                if (ThrowResponseError)
+                {
+                    if (dnsResponse.Status != MessageStatus.NoError)
+                    {
+                        log.Warn($"DNS error '{dnsResponse.Status}'.");
+                        throw new IOException($"DNS error '{dnsResponse.Status}'.");
+                    }
+                }
+
+                if (log.IsDebugEnabled)
+                    log.Debug($"Got response #{dnsResponse.Id}");
+                if (log.IsTraceEnabled)
+                    log.Trace(dnsResponse);
+                return dnsResponse;
+            }
         }
 
     }

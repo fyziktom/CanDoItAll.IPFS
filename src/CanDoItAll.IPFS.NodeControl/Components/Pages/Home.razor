@@ -1,10 +1,10 @@
-@page "/"
+﻿@page "/"
 @page "/dashboard"
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject NodeDashboardService NodeDashboardService
 @inject NodeSessionState NodeSessionState
-@inject NodeOperatorService NodeOperatorService
+@inject INodeMaintenanceWorkflow MaintenanceWorkflow
 @inject NotificationService NotificationService
 @inject ILogger<Home> Logger
 
@@ -293,7 +293,7 @@
 
     protected override void OnInitialized()
     {
-        capabilityNotes = NodeOperatorService.GetCapabilityNotes();
+        capabilityNotes = MaintenanceWorkflow.GetCapabilityNotes();
         NodeSessionState.Changed += HandleNodeSessionChanged;
     }
 
@@ -388,3 +388,4 @@
         return $"{value[..(limit - 3)]}...";
     }
 }
+

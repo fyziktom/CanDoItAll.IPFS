@@ -53,6 +53,7 @@ namespace Ipfs.Engine
 
                 var pinnedOnSecondNode = (await pinner.Pin.AddAsync(cid).ConfigureAwait(false)).ToArray();
                 Assert.IsTrue(pinnedOnSecondNode.Any(pin => pin == cid), "Second node should pin the CID fetched from the swarm.");
+                Assert.IsTrue((await pinner.Pin.ListAsync().ConfigureAwait(false)).Any(pin => pin == cid), "Second node should list the remote-pinned CID.");
                 Assert.IsNotNull(await pinner.Block.StatAsync(cid).ConfigureAwait(false), "Second node should have the file after pinning.");
                 notes.Add("second node pin by CID: fetched content from swarm without local re-add");
 

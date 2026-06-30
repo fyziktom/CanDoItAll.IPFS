@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Globalization;
+using System.Linq;
 using CanDoItAll.IPFS.NodeControl.Models;
 using CanDoItAll.IPFS.NodeControl.Services;
 using Microsoft.Data.Sqlite;
@@ -26,6 +28,9 @@ public sealed class ExplorerIndexStoreTests
 
             Assert.IsTrue(File.Exists(filePath));
             Assert.IsTrue(store.HasPinnedRoots());
+            CollectionAssert.Contains(
+                GetIndexNames(filePath).ToArray(),
+                "IX_ExplorerPinnedRootIndex_Pinned_DisplayName_Target");
 
             var reloaded = CreateStore(filePath);
             var roots = reloaded.ListPinnedRoots();
@@ -54,8 +59,8 @@ public sealed class ExplorerIndexStoreTests
             store.UpsertRoot(new ExplorerIndexedRootRecord("bafy-two", "beta.txt", false, 20, 0, now, now, now, true));
 
             var seenAt = now.AddMinutes(5);
-            store.MarkPinnedRootsSeen(["bafy-one"], seenAt);
-            store.MarkMissingPinnedRootsAsUnpinned(["bafy-one"]);
+            store.MarkPinnedRootsSeen([" bafy-one ", "bafy-one", ""], seenAt);
+            store.MarkMissingPinnedRootsAsUnpinned([" bafy-one ", "bafy-one", " "]);
 
             Assert.AreEqual(1, store.ListPinnedRoots().Count);
             Assert.AreEqual(seenAt, store.GetRoot("bafy-one")?.LastSeenPinnedAtUtc);
@@ -85,6 +90,9 @@ public sealed class ExplorerIndexStoreTests
             Assert.AreEqual(1, roots.Count);
             Assert.AreEqual("legacy.txt", roots[0].DisplayName);
             Assert.AreEqual(ExplorerIndexStore.CurrentSchemaVersion, store.GetSchemaVersionForTests());
+            CollectionAssert.Contains(
+                GetIndexNames(filePath).ToArray(),
+                "IX_ExplorerPinnedRootIndex_Pinned_DisplayName_Target");
 
             var reloaded = CreateStore(filePath);
             Assert.AreEqual(ExplorerIndexStore.CurrentSchemaVersion, reloaded.GetSchemaVersionForTests());
@@ -155,6 +163,34 @@ public sealed class ExplorerIndexStoreTests
                 1);
             """;
         command.ExecuteNonQuery();
+    }
+
+    private static IReadOnlyList<string> GetIndexNames(string filePath)
+    {
+        var connectionString = new SqliteConnectionStringBuilder
+        {
+            DataSource = filePath,
+            Mode = SqliteOpenMode.ReadOnly
+        }.ToString();
+
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'index'
+            ORDER BY name;
+            """;
+        using var reader = command.ExecuteReader();
+        var indexNames = new List<string>();
+        while (reader.Read())
+        {
+            indexNames.Add(reader.GetString(0));
+        }
+
+        return indexNames;
     }
 
     private static void TryDelete(string path)

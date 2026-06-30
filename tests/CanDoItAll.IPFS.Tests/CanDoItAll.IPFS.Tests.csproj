@@ -17,17 +17,18 @@
 
 	<ItemGroup>
 		<PackageReference Include="bunit.web" Version="1.40.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" PrivateAssets="all" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.0" />
-		<PackageReference Include="MSTest.TestAdapter" Version="4.1.0" PrivateAssets="all" />
-		<PackageReference Include="MSTest.TestFramework" Version="4.1.0" PrivateAssets="all" />
-		<PackageReference Include="coverlet.msbuild" Version="8.0.1" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.9" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.9" />
+		<PackageReference Include="MSTest.TestAdapter" Version="4.2.3" PrivateAssets="all" />
+		<PackageReference Include="MSTest.TestFramework" Version="4.2.3" PrivateAssets="all" />
+		<PackageReference Include="coverlet.msbuild" Version="10.0.1" PrivateAssets="all" />
 		<PackageReference Include="SharpZipLib" Version="1.4.2" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<ProjectReference Include="..\..\src\CanDoItAll.IPFS.NodeControl.Abstractions\CanDoItAll.IPFS.NodeControl.Abstractions.csproj" />
 		<ProjectReference Include="..\..\src\CanDoItAll.IPFS.NodeControl\CanDoItAll.IPFS.NodeControl.csproj" />
 		<ProjectReference Include="..\..\src\CanDoItAll.IPFS.Client\CanDoItAll.IPFS.Client.csproj" />
 		<ProjectReference Include="..\..\src\CanDoItAll.IPFS.Engine\CanDoItAll.IPFS.Engine.csproj" />

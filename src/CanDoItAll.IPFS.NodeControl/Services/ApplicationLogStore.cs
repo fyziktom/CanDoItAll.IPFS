@@ -35,6 +35,7 @@ public sealed class ApplicationLogStore(IOptions<ApplicationLogStoreOptions> opt
     private readonly int maxEntriesPerWindow = Math.Clamp(options.Value.MaxEntriesPerWindow, 50, 5000);
     private readonly int maxEntriesPerFile = Math.Clamp(options.Value.MaxEntriesPerFile, 2, 100000);
     private readonly int retainedArchiveFileCount = Math.Clamp(options.Value.RetainedArchiveFileCount, 1, 20);
+    private int? activeFileEntryCount;
 
     public string FilePath => filePath;
 
@@ -171,6 +172,7 @@ public sealed class ApplicationLogStore(IOptions<ApplicationLogStoreOptions> opt
                 writer.WriteLine(JsonSerializer.Serialize(entry, SerializerOptions));
                 writer.Flush();
                 stream.Flush(true);
+                activeFileEntryCount = (activeFileEntryCount ?? 0) + 1;
                 activity?.SetStatus(ActivityStatusCode.Ok);
                 NodeControlTelemetry.RecordOperation(
                     "persistence",
@@ -217,10 +219,12 @@ public sealed class ApplicationLogStore(IOptions<ApplicationLogStoreOptions> opt
     {
         if (!File.Exists(filePath))
         {
+            activeFileEntryCount = 0;
             return;
         }
 
-        var currentEntryCount = File.ReadLines(filePath).Count(line => !string.IsNullOrWhiteSpace(line));
+        var currentEntryCount = activeFileEntryCount ?? CountActiveFileEntries();
+        activeFileEntryCount = currentEntryCount;
         if (currentEntryCount < maxEntriesPerFile)
         {
             return;
@@ -228,8 +232,12 @@ public sealed class ApplicationLogStore(IOptions<ApplicationLogStoreOptions> opt
 
         var archivePath = BuildArchivePath();
         File.Move(filePath, archivePath);
+        activeFileEntryCount = 0;
         PruneArchives();
     }
+
+    private int CountActiveFileEntries()
+        => File.ReadLines(filePath).Count(line => !string.IsNullOrWhiteSpace(line));
 
     private IEnumerable<string> GetLogFilesForRead()
     {

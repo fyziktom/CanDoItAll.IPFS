@@ -1,0 +1,4 @@
+{
+  "name": "CanDoItAll.IPFS validation fixture",
+  "purpose": "deterministic local file round-trip test"
+}

@@ -1,0 +1,37 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0.200 AS build
+WORKDIR /src
+
+COPY . .
+RUN dotnet restore src/CanDoItAll.IPFS.Engine/CanDoItAll.IPFS.Engine.csproj \
+    --runtime linux-x64 \
+    --configfile docker/NuGet.Docker.config
+RUN dotnet publish src/CanDoItAll.IPFS.Engine/CanDoItAll.IPFS.Engine.csproj \
+    --configuration Release \
+    --framework net10.0 \
+    --runtime linux-x64 \
+    --self-contained false \
+    --no-restore \
+    -p:UseAppHost=false \
+    --output /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /data/ipfs \
+    && chown -R "$APP_UID:$APP_UID" /app /data
+
+COPY --from=build /app/publish .
+
+ENV ASPNETCORE_ENVIRONMENT=Container \
+    IPFS_NODE_API_URL=http://0.0.0.0:5001 \
+    IPFS_PATH=/data/ipfs
+
+EXPOSE 5001
+VOLUME ["/data/ipfs"]
+
+USER $APP_UID
+ENTRYPOINT ["dotnet", "CanDoItAll.IPFS.Engine.dll"]

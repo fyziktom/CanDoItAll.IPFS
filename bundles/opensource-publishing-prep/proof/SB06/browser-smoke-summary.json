@@ -1,0 +1,80 @@
+{
+  "baseUrl": "http://127.0.0.1:5093",
+  "startedAtUtc": "2026-06-30T00:36:36.893Z",
+  "screenshots": [
+    {
+      "label": "files-1920x1080",
+      "route": "/files",
+      "viewport": "1920x1080",
+      "path": "C:\\repositories\\CanDoItAll.IPFS\\bundles\\opensource-publishing-prep\\proof\\SB06\\screenshots\\sb06-files-1920x1080.png"
+    },
+    {
+      "label": "content-1920x1080",
+      "route": "/content",
+      "viewport": "1920x1080",
+      "path": "C:\\repositories\\CanDoItAll.IPFS\\bundles\\opensource-publishing-prep\\proof\\SB06\\screenshots\\sb06-content-1920x1080.png"
+    },
+    {
+      "label": "network-1920x1080",
+      "route": "/network",
+      "viewport": "1920x1080",
+      "path": "C:\\repositories\\CanDoItAll.IPFS\\bundles\\opensource-publishing-prep\\proof\\SB06\\screenshots\\sb06-network-1920x1080.png"
+    },
+    {
+      "label": "settings-1920x1080",
+      "route": "/settings",
+      "viewport": "1920x1080",
+      "path": "C:\\repositories\\CanDoItAll.IPFS\\bundles\\opensource-publishing-prep\\proof\\SB06\\screenshots\\sb06-settings-1920x1080.png"
+    },
+    {
+      "label": "remote-pin-share-modal-1920x1080",
+      "route": "/files",
+      "viewport": "1920x1080",
+      "path": "C:\\repositories\\CanDoItAll.IPFS\\bundles\\opensource-publishing-prep\\proof\\SB06\\screenshots\\sb06-remote-pin-share-modal-1920x1080.png"
+    },
+    {
+      "label": "files-1600x900",
+      "route": "/files",
+      "viewport": "1600x900",
+      "path": "C:\\repositories\\CanDoItAll.IPFS\\bundles\\opensource-publishing-prep\\proof\\SB06\\screenshots\\sb06-files-1600x900.png"
+    },
+    {
+      "label": "content-1600x900",
+      "route": "/content",
+      "viewport": "1600x900",
+      "path": "C:\\repositories\\CanDoItAll.IPFS\\bundles\\opensource-publishing-prep\\proof\\SB06\\screenshots\\sb06-content-1600x900.png"
+    },
+    {
+      "label": "network-1600x900",
+      "route": "/network",
+      "viewport": "1600x900",
+      "path": "C:\\repositories\\CanDoItAll.IPFS\\bundles\\opensource-publishing-prep\\proof\\SB06\\screenshots\\sb06-network-1600x900.png"
+    },
+    {
+      "label": "settings-1600x900",
+      "route": "/settings",
+      "viewport": "1600x900",
+      "path": "C:\\repositories\\CanDoItAll.IPFS\\bundles\\opensource-publishing-prep\\proof\\SB06\\screenshots\\sb06-settings-1600x900.png"
+    },
+    {
+      "label": "remote-pin-share-modal-1600x900",
+      "route": "/files",
+      "viewport": "1600x900",
+      "path": "C:\\repositories\\CanDoItAll.IPFS\\bundles\\opensource-publishing-prep\\proof\\SB06\\screenshots\\sb06-remote-pin-share-modal-1600x900.png"
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "failedRequests": [],
+  "modalResults": [
+    {
+      "label": "remote-pin-share-modal-1920x1080",
+      "status": "opened"
+    },
+    {
+      "label": "remote-pin-share-modal-1600x900",
+      "status": "opened"
+    }
+  ],
+  "finishedAtUtc": "2026-06-30T00:38:28.663Z"
+}

@@ -75,10 +75,10 @@ public static class NodeControlServiceCollectionExtensions
         services.AddNodeControlObservability(configuration, observabilityOptions);
 
         services.Configure<NodeConnectionSettings>(configuration.GetSection("NodeSettingsDefaults"));
-        services.Configure<ServerNodeSettingsStoreOptions>(_ => { });
-        services.Configure<RemotePinRequestStoreOptions>(_ => { });
-        services.Configure<ApplicationLogStoreOptions>(_ => { });
-        services.Configure<ExplorerIndexStoreOptions>(_ => { });
+        services.Configure<ServerNodeSettingsStoreOptions>(configuration.GetSection("ServerNodeSettingsStore"));
+        services.Configure<RemotePinRequestStoreOptions>(configuration.GetSection("RemotePinRequestStore"));
+        services.Configure<ApplicationLogStoreOptions>(configuration.GetSection("ApplicationLogStore"));
+        services.Configure<ExplorerIndexStoreOptions>(configuration.GetSection("ExplorerIndexStore"));
 
         services.AddSingleton<ServerNodeSettingsStore>();
         services.AddSingleton<IServerNodeSettingsStore>(serviceProvider => serviceProvider.GetRequiredService<ServerNodeSettingsStore>());
@@ -109,10 +109,21 @@ public static class NodeControlServiceCollectionExtensions
         services.AddScoped<NodeSessionState>();
         services.AddScoped<IpfsClientFactory>();
         services.AddScoped<NodeDashboardService>();
+        services.AddScoped<NodeFileWorkflowService>();
+        services.AddScoped<INodeFileWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeFileWorkflowService>());
+        services.AddScoped<NodeExplorerWorkflowService>();
+        services.AddScoped<INodeExplorerWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeExplorerWorkflowService>());
+        services.AddScoped<NodeContentWorkflowService>();
+        services.AddScoped<INodeContentWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeContentWorkflowService>());
+        services.AddScoped<NodeNetworkWorkflowService>();
+        services.AddScoped<INodeNetworkWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeNetworkWorkflowService>());
+        services.AddScoped<NodeMaintenanceWorkflowService>();
+        services.AddScoped<INodeMaintenanceWorkflow>(serviceProvider => serviceProvider.GetRequiredService<NodeMaintenanceWorkflowService>());
         services.AddScoped<NodeSettingsBrowserStorage>();
         services.AddScoped<KnownRemotePinTargetBrowserStorage>();
         services.AddScoped<NodeCanvasSurfaceFactory>();
         services.AddScoped<NodeOperatorService>();
+        services.AddScoped<INodeOperator>(serviceProvider => serviceProvider.GetRequiredService<NodeOperatorService>());
         services.AddScoped<RemotePinShareService>();
         services.AddSingleton<NodeGatewayService>();
 

@@ -93,7 +93,7 @@ public sealed class PinRequestUiTests
                 StringAssert.Contains(cut.Markup, "Accepted archive");
             }, TimeSpan.FromSeconds(10));
 
-            cut.FindAll("button")
+            cut.FindAll(".rp-filter")
                 .Single(button => button.TextContent.Trim().StartsWith("Pending", StringComparison.Ordinal))
                 .Click();
 
@@ -159,6 +159,12 @@ public sealed class PinRequestUiTests
         }));
         context.Services.AddSingleton<RemotePinRequestStore>();
         context.Services.AddSingleton<IRemotePinRequestStore>(serviceProvider => serviceProvider.GetRequiredService<RemotePinRequestStore>());
+        context.Services.AddSingleton(Options.Create(new ServerNodeSettingsStoreOptions
+        {
+            FilePath = Path.Combine(tempRoot, "current-node-settings.json")
+        }));
+        context.Services.AddSingleton<ServerNodeSettingsStore>();
+        context.Services.AddSingleton<IServerNodeSettingsStore>(serviceProvider => serviceProvider.GetRequiredService<ServerNodeSettingsStore>());
         context.Services.AddSingleton<CurrentNodeTargetRegistry>();
         context.Services.AddSingleton<INodeHostController, DesktopNodeHostController>();
         context.Services.AddSingleton<LocalNodeBootstrapService>();

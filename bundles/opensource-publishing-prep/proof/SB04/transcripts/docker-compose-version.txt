@@ -1,0 +1,7 @@
+﻿Command: historical proof transcript docker-compose-version.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB04-PERSISTENCE-001
+--- original captured output follows ---
+Docker Compose version v5.1.3
+

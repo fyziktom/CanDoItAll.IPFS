@@ -54,8 +54,75 @@ public sealed class NodeControlCompositionTests
             Assert.IsNotNull(services.GetRequiredService<RemotePinRequestWorkflowService>());
             Assert.IsNotNull(services.GetRequiredService<NodeSessionState>());
             Assert.IsNotNull(services.GetRequiredService<IpfsClientFactory>());
-            Assert.IsNotNull(services.GetRequiredService<NodeOperatorService>());
+            Assert.AreSame(
+                services.GetRequiredService<NodeFileWorkflowService>(),
+                services.GetRequiredService<INodeFileWorkflow>());
+            Assert.AreSame(
+                services.GetRequiredService<NodeExplorerWorkflowService>(),
+                services.GetRequiredService<INodeExplorerWorkflow>());
+            Assert.AreSame(
+                services.GetRequiredService<NodeContentWorkflowService>(),
+                services.GetRequiredService<INodeContentWorkflow>());
+            Assert.AreSame(
+                services.GetRequiredService<NodeNetworkWorkflowService>(),
+                services.GetRequiredService<INodeNetworkWorkflow>());
+            Assert.AreSame(
+                services.GetRequiredService<NodeMaintenanceWorkflowService>(),
+                services.GetRequiredService<INodeMaintenanceWorkflow>());
+            Assert.AreSame(
+                services.GetRequiredService<NodeOperatorService>(),
+                services.GetRequiredService<INodeOperator>());
             Assert.IsNotNull(services.GetRequiredService<RemotePinShareService>());
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    [TestMethod]
+    public void AddIpfsNodeControlApplication_Binds_Persistence_Store_FilePaths()
+    {
+        var tempRoot = Path.Combine(Path.GetTempPath(), $"{nameof(NodeControlCompositionTests)}-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempRoot);
+
+        try
+        {
+            var settingsPath = Path.Combine(tempRoot, "settings", "current-node-settings.json");
+            var requestsPath = Path.Combine(tempRoot, "remote-pin", "remote-pin-requests.json");
+            var logPath = Path.Combine(tempRoot, "logs", "application.log");
+            var explorerPath = Path.Combine(tempRoot, "explorer", "explorer.db");
+
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["OperatingProfile:Mode"] = "Light",
+                    ["NodeSettingsDefaults:BaseUrl"] = "http://ipfs-node:5001/",
+                    ["NodeSettingsDefaults:ApiPath"] = "api/v0",
+                    ["NodeSettingsDefaults:TimeoutSeconds"] = "120",
+                    ["ServerNodeSettingsStore:FilePath"] = settingsPath,
+                    ["RemotePinRequestStore:FilePath"] = requestsPath,
+                    ["ApplicationLogStore:FilePath"] = logPath,
+                    ["ExplorerIndexStore:FilePath"] = explorerPath
+                })
+                .Build();
+
+            var services = new ServiceCollection();
+            services.AddLogging();
+            services.AddIpfsNodeControlApplication(configuration);
+
+            using var provider = services.BuildServiceProvider();
+
+            Assert.AreEqual(Path.GetFullPath(settingsPath), provider.GetRequiredService<ServerNodeSettingsStore>().FilePath);
+            Assert.AreEqual(Path.GetFullPath(requestsPath), provider.GetRequiredService<RemotePinRequestStore>().FilePath);
+            Assert.AreEqual(Path.GetFullPath(logPath), provider.GetRequiredService<ApplicationLogStore>().FilePath);
+            Assert.AreEqual(Path.GetFullPath(explorerPath), provider.GetRequiredService<ExplorerIndexStore>().FilePath);
         }
         finally
         {

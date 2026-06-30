@@ -1,0 +1,60 @@
+name: candoitall-ipfs
+
+services:
+  ipfs-node:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ipfs-node
+    image: candoitall-ipfs-node:local
+    environment:
+      ASPNETCORE_ENVIRONMENT: Container
+      IPFS_NODE_API_URL: http://0.0.0.0:5001
+      IPFS_PATH: /data/ipfs
+      IPFS_PASS: ${IPFS_PASS:?Set IPFS_PASS before running docker compose.}
+      IpfsHttpHost__Mode: Light
+      IpfsHttpHost__RequireAuthentication: "false"
+      IpfsHttpHost__AllowAnyOrigin: "true"
+    ports:
+      - "${IPFS_NODE_API_PORT:-5001}:5001"
+    volumes:
+      - ipfs-node-data:/data/ipfs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -X POST http://127.0.0.1:5001/api/v0/id >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    restart: unless-stopped
+
+  node-control:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.node-control
+    image: candoitall-ipfs-node-control:local
+    depends_on:
+      ipfs-node:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Container
+      ASPNETCORE_URLS: http://+:8080
+      NodeSettingsDefaults__BaseUrl: http://ipfs-node:5001/
+      NodeSettingsDefaults__ApiPath: api/v0
+      ServerNodeSettingsStore__FilePath: /data/node-control/settings/current-node-settings.json
+      RemotePinRequestStore__FilePath: /data/node-control/remote-pin/remote-pin-requests.json
+      ApplicationLogStore__FilePath: /data/node-control/logs/application.log
+      ExplorerIndexStore__FilePath: /data/node-control/explorer-index/explorer.db
+    ports:
+      - "${NODE_CONTROL_PORT:-5093}:8080"
+    volumes:
+      - node-control-data:/data/node-control
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/health/live >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    restart: unless-stopped
+
+volumes:
+  ipfs-node-data:
+  node-control-data:

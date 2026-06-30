@@ -1,0 +1,197 @@
+﻿Command: historical proof transcript test-final-full.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB09-VALIDATION-001 SB09-PIN-001 SB09-DOCKER-001 SB09-BROWSER-001 SB09-HANDOFF-001
+--- original captured output follows ---
+Test run for C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\bin\Debug\net10.0\CanDoItAll.IPFS.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+  Skipped NullData
+  Skipped SomeData
+  Failed PinRequests_Filter_Buttons_Reduce_Card_List [1 s]
+  Error Message:
+   Test method CanDoItAll.IPFS.Tests.NodeControl.PinRequestUiTests.PinRequests_Filter_Buttons_Reduce_Card_List threw exception:
+System.InvalidOperationException: Sequence contains more than one matching element
+  Stack Trace:
+     at System.Linq.ThrowHelper.ThrowMoreThanOneMatchException()
+   at System.Linq.Enumerable.TryGetSingle[TSource](IEnumerable`1 source, Func`2 predicate, Boolean& found)
+   at System.Linq.Enumerable.Single[TSource](IEnumerable`1 source, Func`2 predicate)
+   at CanDoItAll.IPFS.Tests.NodeControl.PinRequestUiTests.PinRequests_Filter_Buttons_Reduce_Card_List() in C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\NodeControl\PinRequestUiTests.cs:line 96
+   at CanDoItAll.IPFS.Tests.NodeControl.PinRequestUiTests.PinRequests_Filter_Buttons_Reduce_Card_List() in C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\NodeControl\PinRequestUiTests.cs:line 109
+   at Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ExecuteInternalAsync(Object[] arguments, CancellationTokenSource timeoutTokenSource) in /_/src/Adapter/MSTestAdapter.PlatformServices/Execution/TestMethodInfo.cs:line 397
+
+  Standard Output Messages:
+ 21:21:09.497 [INFO]  Ipfs.Engine.Migration.MigrationManager - Migrating to version 1
+ 21:21:09.499 [DEBUG] Ipfs.Engine.IpfsEngine - Building local peer
+ 21:21:09.591 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Pass phrase is okay
+ 21:21:09.591 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Creating ed25519 key named 'self'
+ 21:21:09.591 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Created key
+ 21:21:09.606 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Added key 'self' with ID 18n3naE9kBZoVvgYMV6saMZe4TynaW9q4XbjSV39X6gPw9sf5WgM1Yjuqo6UvdMHdp7p
+ 21:21:09.606 [DEBUG] Ipfs.Engine.IpfsEngine - Getting key info about self
+ 21:21:09.615 [DEBUG] Ipfs.Engine.IpfsEngine - Built local peer
+ 21:21:09.615 [DEBUG] Ipfs.Engine.IpfsEngine - starting 18n3naE9kBZoVvgYMV6saMZe4TynaW9q4XbjSV39X6gPw9sf5WgM1Yjuqo6UvdMHdp7p
+ 21:21:09.615 [DEBUG] Ipfs.Engine.IpfsEngine - Building swarm service
+ 21:21:09.621 [DEBUG] Ipfs.Engine.IpfsEngine - Built swarm service
+ 21:21:09.621 [DEBUG] PeerTalk.Swarm - Started
+ 21:21:09.621 [DEBUG] PeerTalk.PeerManager - started
+ 21:21:09.621 [DEBUG] Ipfs.Engine.IpfsEngine - waiting for services to start
+ 21:21:09.621 [DEBUG] Ipfs.Engine.IpfsEngine - Building PubSub service
+ 21:21:09.621 [DEBUG] Ipfs.Engine.IpfsEngine - Built PubSub service
+ 21:21:09.621 [DEBUG] PeerTalk.PubSub.FloodRouter - Starting
+ 21:21:09.621 [DEBUG] Ipfs.Engine.IpfsEngine - Building Ping service
+ 21:21:09.621 [DEBUG] Ipfs.Engine.IpfsEngine - Built Ping service
+ 21:21:09.621 [DEBUG] PeerTalk.Protocols.Ping1 - Starting
+ 21:21:09.621 [DEBUG] Ipfs.Engine.IpfsEngine - Building DHT service
+ 21:21:09.621 [DEBUG] Ipfs.Engine.IpfsEngine - Built DHT service
+ 21:21:09.621 [DEBUG] PeerTalk.Routing.Dht1 - Starting
+ 21:21:09.621 [DEBUG] Ipfs.Engine.IpfsEngine - Building bitswap service
+ 21:21:09.621 [DEBUG] Ipfs.Engine.IpfsEngine - Built bitswap service
+ 21:21:09.621 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Starting
+ 21:21:09.622 [DEBUG] PeerTalk.Transports.Tcp - listening on /ip4/0.0.0.0/tcp/50863
+ 21:21:10.150 [DEBUG] PeerTalk.Swarm - Listening on /ip4/192.168.10.189/tcp/50863/ipfs/18n3naE9kBZoVvgYMV6saMZe4TynaW9q4XbjSV39X6gPw9sf5WgM1Yjuqo6UvdMHdp7p
+ 21:21:10.150 [DEBUG] PeerTalk.Swarm - Listening on /ip4/127.0.0.1/tcp/50863/ipfs/18n3naE9kBZoVvgYMV6saMZe4TynaW9q4XbjSV39X6gPw9sf5WgM1Yjuqo6UvdMHdp7p
+ 21:21:10.150 [DEBUG] PeerTalk.Swarm - Listening on /ip4/172.21.96.1/tcp/50863/ipfs/18n3naE9kBZoVvgYMV6saMZe4TynaW9q4XbjSV39X6gPw9sf5WgM1Yjuqo6UvdMHdp7p
+ 21:21:10.150 [DEBUG] Ipfs.Engine.IpfsEngine - waiting for discovery services to start
+ 21:21:10.150 [DEBUG] PeerTalk.Discovery.Bootstrap - Starting
+ 21:21:10.150 [DEBUG] Ipfs.Engine.IpfsEngine - started
+ info: Ipfs.Server.IpfsEngineHostedService[0]
+       Skipping engine startup because the node is already started.
+ info: Microsoft.Hosting.Lifetime[14]
+       Now listening on: http://127.0.0.1:50864
+ info: Microsoft.Hosting.Lifetime[0]
+       Application started. Press Ctrl+C to shut down.
+ info: Microsoft.Hosting.Lifetime[0]
+       Hosting environment: Production
+ info: Microsoft.Hosting.Lifetime[0]
+       Content root path: C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\bin\Debug\net10.0
+ info: Microsoft.Hosting.Lifetime[0]
+       Application is shutting down...
+ info: Ipfs.Server.IpfsEngineHostedService[0]
+       Stopping the embedded IPFS engine.
+ 21:21:10.362 [DEBUG] Ipfs.Engine.IpfsEngine - stopping
+ 21:21:10.362 [DEBUG] PeerTalk.Discovery.Bootstrap - Stopping
+ 21:21:10.362 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Stopping
+ 21:21:10.362 [DEBUG] PeerTalk.Routing.Dht1 - Stopping
+ 21:21:10.362 [DEBUG] PeerTalk.Protocols.Ping1 - Stopping
+ 21:21:10.362 [DEBUG] PeerTalk.PubSub.FloodRouter - Stopping
+ 21:21:10.362 [DEBUG] PeerTalk.PeerManager - stopped
+ 21:21:10.362 [DEBUG] PeerTalk.Swarm - Stopping 18n3naE9kBZoVvgYMV6saMZe4TynaW9q4XbjSV39X6gPw9sf5WgM1Yjuqo6UvdMHdp7p
+ 21:21:10.362 [DEBUG] PeerTalk.Transports.Tcp - Got cancel on /ip4/0.0.0.0/tcp/50863
+ 21:21:10.366 [DEBUG] PeerTalk.Transports.Tcp - stop listening on /ip4/0.0.0.0/tcp/50863
+ 21:21:10.480 [DEBUG] PeerTalk.Swarm - Stopped 18n3naE9kBZoVvgYMV6saMZe4TynaW9q4XbjSV39X6gPw9sf5WgM1Yjuqo6UvdMHdp7p
+ 21:21:10.618 [DEBUG] Ipfs.Engine.IpfsEngine - stopped
+ 21:21:10.618 [DEBUG] Ipfs.Engine.IpfsEngine - stopping
+ 21:21:10.622 [DEBUG] Ipfs.Engine.IpfsEngine - stopping
+ 21:21:10.766 [DEBUG] Ipfs.Engine.IpfsEngine - stopped
+
+
+  Failed MainLayout_Shows_Pending_Pin_Request_Count_In_Navigation [1 s]
+  Error Message:
+   Test method CanDoItAll.IPFS.Tests.NodeControl.PinRequestUiTests.MainLayout_Shows_Pending_Pin_Request_Count_In_Navigation threw exception:
+System.InvalidOperationException: Cannot provide a value for property 'ServerNodeSettingsStore' on type 'CanDoItAll.IPFS.NodeControl.Components.Layout.MainLayout'. There is no registered service of type 'CanDoItAll.IPFS.NodeControl.Services.ServerNodeSettingsStore'.
+  Stack Trace:
+     at Microsoft.AspNetCore.Components.ComponentFactory.<>c__DisplayClass11_0.<CreatePropertyInjector>g__Initialize|1(IServiceProvider serviceProvider, IComponent component)
+   at Microsoft.AspNetCore.Components.RenderTree.RenderTreeDiffBuilder.InitializeNewSubtree(DiffContext& diffContext, Int32 frameIndex)
+   at Microsoft.AspNetCore.Components.RenderTree.RenderTreeDiffBuilder.InsertNewFrame(DiffContext& diffContext, Int32 newFrameIndex)
+   at Microsoft.AspNetCore.Components.RenderTree.RenderTreeDiffBuilder.AppendDiffEntriesForRange(DiffContext& diffContext, Int32 oldStartIndex, Int32 oldEndIndexExcl, Int32 newStartIndex, Int32 newEndIndexExcl)
+   at Microsoft.AspNetCore.Components.Rendering.ComponentState.RenderIntoBatch(RenderBatchBuilder batchBuilder, RenderFragment renderFragment, Exception& renderFragmentException)
+   at Microsoft.AspNetCore.Components.RenderTree.Renderer.ProcessRenderQueue()
+--- End of stack trace from previous location ---
+   at Bunit.Rendering.TestRenderer.AssertNoUnhandledExceptions() in /_/src/bunit.core/Rendering/TestRenderer.cs:line 708
+   at Bunit.Rendering.TestRenderer.Render[TResult](RenderFragment renderFragment, Func`2 activator) in /_/src/bunit.core/Rendering/TestRenderer.cs:line 553
+   at Bunit.Rendering.TestRenderer.RenderFragment(RenderFragment renderFragment) in /_/src/bunit.core/Rendering/TestRenderer.cs:line 116
+   at Bunit.Extensions.TestContextBaseRenderExtensions.RenderInsideRenderTree(TestContextBase testContext, RenderFragment renderFragment) in /_/src/bunit.core/Extensions/TestContextBaseRenderExtensions.cs:line 43
+   at Bunit.Extensions.TestContextBaseRenderExtensions.RenderInsideRenderTree[TComponent](TestContextBase testContext, RenderFragment renderFragment) in /_/src/bunit.core/Extensions/TestContextBaseRenderExtensions.cs:line 23
+   at Bunit.TestContext.Render[TComponent](RenderFragment renderFragment) in /_/src/bunit.web/TestContext.cs:line 68
+   at Bunit.TestContext.RenderComponent[TComponent](Action`1 parameterBuilder) in /_/src/bunit.web/TestContext.cs:line 54
+   at CanDoItAll.IPFS.Tests.NodeControl.PinRequestUiTests.MainLayout_Shows_Pending_Pin_Request_Count_In_Navigation() in C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\NodeControl\PinRequestUiTests.cs:line 124
+   at CanDoItAll.IPFS.Tests.NodeControl.PinRequestUiTests.MainLayout_Shows_Pending_Pin_Request_Count_In_Navigation() in C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\NodeControl\PinRequestUiTests.cs:line 136
+   at Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ExecuteInternalAsync(Object[] arguments, CancellationTokenSource timeoutTokenSource) in /_/src/Adapter/MSTestAdapter.PlatformServices/Execution/TestMethodInfo.cs:line 397
+
+  Standard Output Messages:
+ 21:21:10.802 [INFO]  Ipfs.Engine.Migration.MigrationManager - Migrating to version 1
+ 21:21:10.803 [DEBUG] Ipfs.Engine.IpfsEngine - Building local peer
+ 21:21:10.920 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Pass phrase is okay
+ 21:21:10.920 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Creating ed25519 key named 'self'
+ 21:21:10.920 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Created key
+ 21:21:10.932 [DEBUG] Ipfs.Engine.Cryptography.KeyChain - Added key 'self' with ID 18n3naE9kBZoVvgYMV6saMZe8bSYNh87GjgDHPYB1dZ9YAaMgaTHSexa99J1XYuRn4yP
+ 21:21:10.932 [DEBUG] Ipfs.Engine.IpfsEngine - Getting key info about self
+ 21:21:10.941 [DEBUG] Ipfs.Engine.IpfsEngine - Built local peer
+ 21:21:10.941 [DEBUG] Ipfs.Engine.IpfsEngine - starting 18n3naE9kBZoVvgYMV6saMZe8bSYNh87GjgDHPYB1dZ9YAaMgaTHSexa99J1XYuRn4yP
+ 21:21:10.941 [DEBUG] Ipfs.Engine.IpfsEngine - Building swarm service
+ 21:21:10.955 [DEBUG] Ipfs.Engine.IpfsEngine - Built swarm service
+ 21:21:10.955 [DEBUG] PeerTalk.Swarm - Started
+ 21:21:10.955 [DEBUG] PeerTalk.PeerManager - started
+ 21:21:10.955 [DEBUG] Ipfs.Engine.IpfsEngine - waiting for services to start
+ 21:21:10.955 [DEBUG] Ipfs.Engine.IpfsEngine - Building PubSub service
+ 21:21:10.955 [DEBUG] Ipfs.Engine.IpfsEngine - Building bitswap service
+ 21:21:10.955 [DEBUG] Ipfs.Engine.IpfsEngine - Built PubSub service
+ 21:21:10.955 [DEBUG] Ipfs.Engine.IpfsEngine - Built bitswap service
+ 21:21:10.955 [DEBUG] PeerTalk.PubSub.FloodRouter - Starting
+ 21:21:10.955 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Starting
+ 21:21:10.955 [DEBUG] Ipfs.Engine.IpfsEngine - Building Ping service
+ 21:21:10.955 [DEBUG] Ipfs.Engine.IpfsEngine - Built Ping service
+ 21:21:10.955 [DEBUG] Ipfs.Engine.IpfsEngine - Building DHT service
+ 21:21:10.955 [DEBUG] PeerTalk.Protocols.Ping1 - Starting
+ 21:21:10.955 [DEBUG] Ipfs.Engine.IpfsEngine - Built DHT service
+ 21:21:10.955 [DEBUG] PeerTalk.Routing.Dht1 - Starting
+ 21:21:10.956 [DEBUG] PeerTalk.Transports.Tcp - listening on /ip4/0.0.0.0/tcp/50865
+ 21:21:11.384 [DEBUG] PeerTalk.Swarm - Listening on /ip4/192.168.10.189/tcp/50865/ipfs/18n3naE9kBZoVvgYMV6saMZe8bSYNh87GjgDHPYB1dZ9YAaMgaTHSexa99J1XYuRn4yP
+ 21:21:11.384 [DEBUG] PeerTalk.Swarm - Listening on /ip4/127.0.0.1/tcp/50865/ipfs/18n3naE9kBZoVvgYMV6saMZe8bSYNh87GjgDHPYB1dZ9YAaMgaTHSexa99J1XYuRn4yP
+ 21:21:11.384 [DEBUG] PeerTalk.Swarm - Listening on /ip4/172.21.96.1/tcp/50865/ipfs/18n3naE9kBZoVvgYMV6saMZe8bSYNh87GjgDHPYB1dZ9YAaMgaTHSexa99J1XYuRn4yP
+ 21:21:11.384 [DEBUG] Ipfs.Engine.IpfsEngine - waiting for discovery services to start
+ 21:21:11.384 [DEBUG] PeerTalk.Discovery.Bootstrap - Starting
+ 21:21:11.384 [DEBUG] Ipfs.Engine.IpfsEngine - started
+ info: Ipfs.Server.IpfsEngineHostedService[0]
+       Skipping engine startup because the node is already started.
+ info: Microsoft.Hosting.Lifetime[14]
+       Now listening on: http://127.0.0.1:50866
+ info: Microsoft.Hosting.Lifetime[0]
+       Application started. Press Ctrl+C to shut down.
+ info: Microsoft.Hosting.Lifetime[0]
+       Hosting environment: Production
+ info: Microsoft.Hosting.Lifetime[0]
+       Content root path: C:\repositories\CanDoItAll.IPFS\tests\CanDoItAll.IPFS.Tests\bin\Debug\net10.0
+ info: Microsoft.Hosting.Lifetime[0]
+       Application is shutting down...
+ info: Ipfs.Server.IpfsEngineHostedService[0]
+       Stopping the embedded IPFS engine.
+ 21:21:11.546 [DEBUG] Ipfs.Engine.IpfsEngine - stopping
+ 21:21:11.546 [DEBUG] PeerTalk.Discovery.Bootstrap - Stopping
+ 21:21:11.546 [DEBUG] PeerTalk.Routing.Dht1 - Stopping
+ 21:21:11.546 [DEBUG] Ipfs.Engine.BlockExchange.Bitswap - Stopping
+ 21:21:11.546 [DEBUG] PeerTalk.Protocols.Ping1 - Stopping
+ 21:21:11.546 [DEBUG] PeerTalk.PubSub.FloodRouter - Stopping
+ 21:21:11.546 [DEBUG] PeerTalk.PeerManager - stopped
+ 21:21:11.546 [DEBUG] PeerTalk.Swarm - Stopping 18n3naE9kBZoVvgYMV6saMZe8bSYNh87GjgDHPYB1dZ9YAaMgaTHSexa99J1XYuRn4yP
+ 21:21:11.546 [DEBUG] PeerTalk.Transports.Tcp - Got cancel on /ip4/0.0.0.0/tcp/50865
+ 21:21:11.547 [DEBUG] PeerTalk.Transports.Tcp - stop listening on /ip4/0.0.0.0/tcp/50865
+ 21:21:11.652 [DEBUG] PeerTalk.Swarm - Stopped 18n3naE9kBZoVvgYMV6saMZe8bSYNh87GjgDHPYB1dZ9YAaMgaTHSexa99J1XYuRn4yP
+ 21:21:11.837 [DEBUG] Ipfs.Engine.IpfsEngine - stopped
+ 21:21:11.837 [DEBUG] Ipfs.Engine.IpfsEngine - stopping
+ 21:21:11.857 [DEBUG] Ipfs.Engine.IpfsEngine - stopping
+ 21:21:12.006 [DEBUG] Ipfs.Engine.IpfsEngine - stopped
+
+
+dotnet : The active test run was aborted. Reason: Test host process crashed : Unhandled exception. 
+System.InvalidOperationException: Collection was modified; enumeration operation may not execute.
+At line:2 char:1
++ dotnet test .\tests\CanDoItAll.IPFS.Tests\CanDoItAll.IPFS.Tests.cspro ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (The active test...ay not execute.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+   at System.Collections.Generic.List`1.Enumerator.MoveNext()
+   at System.Linq.Enumerable.SelectManySingleSelectorIterator`2.MoveNext()
+   at System.Linq.Enumerable.IEnumerableWhereIterator`1.GetCount(Boolean onlyIfCheap)
+   at PeerTalk.AutoDialer.OnPeerDiscovered(Object sender, Peer peer) in 
+C:\repositories\CanDoItAll.IPFS\src\CanDoItAll.IPFS.Engine\Base\peer-talk\AutoDialer.cs:line 97
+   at System.Threading.Tasks.Task.<>c.<ThrowAsync>b__124_1(Object state)
+   at System.Threading.QueueUserWorkItemCallback.Execute()
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart()
+   at System.Threading.Thread.StartCallback()
+
+
+Failed!  - Failed:     2, Passed:   138, Skipped:     2, Total:   142, Duration: 4 m 8 s - CanDoItAll.IPFS.Tests.dll (net10.0)
+Test Run Aborted.
+

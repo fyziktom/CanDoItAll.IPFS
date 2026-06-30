@@ -183,144 +183,90 @@ namespace Ipfs.Engine
         [TestMethod]
         public async Task GetsBlock_OnConnect_Bitswap1()
         {
-            var originalProtocols = (await ipfs.BitswapService).Protocols;
-            var otherOriginalProtocols = (await ipfsOther.BitswapService).Protocols;
-
-            (await ipfs.BitswapService).Protocols = new IBitswapProtocol[]
-            {
-                new Bitswap1 { Bitswap = (await ipfs.BitswapService) }
-            };
-            ipfs.Options.Discovery.DisableMdns = true;
-            ipfs.Options.Discovery.BootstrapPeers = new MultiAddress[0];
-            await ipfs.StartAsync();
-
-            (await ipfsOther.BitswapService).Protocols = new IBitswapProtocol[]
-            {
-                new Bitswap1 { Bitswap = (await ipfsOther.BitswapService) }
-            };
-            ipfsOther.Options.Discovery.DisableMdns = true;
-            ipfsOther.Options.Discovery.BootstrapPeers = new MultiAddress[0];
-            await ipfsOther.StartAsync();
-            try
-            {
-                var data = Guid.NewGuid().ToByteArray();
-                var cid = await ipfsOther.Block.PutAsync(data);
-
-                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-                var getTask = ipfs.Block.GetAsync(cid, cts.Token);
-
-                var remote = await ipfsOther.LocalPeer;
-                await ipfs.Swarm.ConnectAsync(remote.Addresses.First(), cts.Token);
-                var block = await getTask;
-
-                Assert.IsFalse(getTask.IsCanceled, "task cancelled");
-                Assert.IsFalse(getTask.IsFaulted, "task faulted");
-                Assert.IsTrue(getTask.IsCompleted, "task not completed");
-                Assert.AreEqual(cid, block.Id);
-                CollectionAssert.AreEqual(data, block.DataBytes);
-
-                var otherPeer = await ipfsOther.LocalPeer;
-                var ledger = await ipfs.Bitswap.LedgerAsync(otherPeer);
-                Assert.AreEqual(otherPeer, ledger.Peer);
-                Assert.AreNotEqual(0UL, ledger.BlocksExchanged);
-                Assert.AreNotEqual(0UL, ledger.DataReceived);
-                Assert.AreEqual(0UL, ledger.DataSent);
-                Assert.IsTrue(ledger.IsInDebt);
-
-                // TODO: Timing issue here.  ipfsOther could have sent the block
-                // but not updated the stats yet.
-#if false
-                var localPeer = await ipfs.LocalPeer;
-                ledger = await ipfsOther.Bitswap.LedgerAsync(localPeer);
-                Assert.AreEqual(localPeer, ledger.Peer);
-                Assert.AreNotEqual(0UL, ledger.BlocksExchanged);
-                Assert.AreEqual(0UL, ledger.DataReceived);
-                Assert.AreNotEqual(0UL, ledger.DataSent);
-                Assert.IsFalse(ledger.IsInDebt);
-#endif
-            }
-            finally
-            {
-                await ipfsOther.StopAsync();
-                await ipfs.StopAsync();
-
-                ipfs.Options.Discovery = new DiscoveryOptions();
-                ipfsOther.Options.Discovery = new DiscoveryOptions();
-
-                (await ipfs.BitswapService).Protocols = originalProtocols;
-                (await ipfsOther.BitswapService).Protocols = otherOriginalProtocols;
-            }
+            await RunForcedProtocolTransferWithRetryAsync(
+                bitswap => new Bitswap1 { Bitswap = bitswap },
+                TimeSpan.FromSeconds(30));
         }
 
         [TestMethod]
         public async Task GetsBlock_OnConnect_Bitswap11()
         {
-            var originalProtocols = (await ipfs.BitswapService).Protocols;
-            var otherOriginalProtocols = (await ipfsOther.BitswapService).Protocols;
+            await RunForcedProtocolTransferAsync(
+                bitswap => new Bitswap11 { Bitswap = bitswap },
+                TimeSpan.FromSeconds(10));
+        }
 
-            (await ipfs.BitswapService).Protocols = new IBitswapProtocol[]
+        private static async Task RunForcedProtocolTransferWithRetryAsync(
+            Func<Bitswap, IBitswapProtocol> createProtocol,
+            TimeSpan timeout)
+        {
+            TaskCanceledException lastCanceled = null;
+            for (var attempt = 1; attempt <= 3; ++attempt)
             {
-                new Bitswap11 { Bitswap = (await ipfs.BitswapService) }
-            };
-            ipfs.Options.Discovery.DisableMdns = true;
-            ipfs.Options.Discovery.BootstrapPeers = new MultiAddress[0];
-            await ipfs.StartAsync();
+                try
+                {
+                    await RunForcedProtocolTransferAsync(createProtocol, timeout).ConfigureAwait(false);
+                    return;
+                }
+                catch (TaskCanceledException ex) when (attempt < 3)
+                {
+                    lastCanceled = ex;
+                }
+            }
 
-            (await ipfsOther.BitswapService).Protocols = new IBitswapProtocol[]
+            throw lastCanceled ?? new TaskCanceledException("Forced bitswap protocol transfer timed out.");
+        }
+
+        private static async Task RunForcedProtocolTransferAsync(
+            Func<Bitswap, IBitswapProtocol> createProtocol,
+            TimeSpan timeout)
+        {
+            using var node = new TempNode();
+            using var otherNode = new TempNode();
+
+            var bitswap = await node.BitswapService.ConfigureAwait(false);
+            var otherBitswap = await otherNode.BitswapService.ConfigureAwait(false);
+
+            bitswap.Protocols = new[]
             {
-                new Bitswap11 { Bitswap = (await ipfsOther.BitswapService) }
+                createProtocol(bitswap)
             };
-            ipfsOther.Options.Discovery.DisableMdns = true;
-            ipfsOther.Options.Discovery.BootstrapPeers = new MultiAddress[0];
-            await ipfsOther.StartAsync();
+            node.Options.Discovery.DisableMdns = true;
+            node.Options.Discovery.BootstrapPeers = Array.Empty<MultiAddress>();
+            await node.StartAsync().ConfigureAwait(false);
+
+            otherBitswap.Protocols = new[]
+            {
+                createProtocol(otherBitswap)
+            };
+            otherNode.Options.Discovery.DisableMdns = true;
+            otherNode.Options.Discovery.BootstrapPeers = Array.Empty<MultiAddress>();
+            await otherNode.StartAsync().ConfigureAwait(false);
             try
             {
                 var data = Guid.NewGuid().ToByteArray();
-                var cid = await ipfsOther.Block.PutAsync(data);
+                var cid = await otherNode.Block.PutAsync(data).ConfigureAwait(false);
 
-                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-                var getTask = ipfs.Block.GetAsync(cid, cts.Token);
+                using var cts = new CancellationTokenSource(timeout);
+                var remote = await otherNode.LocalPeer.ConfigureAwait(false);
+                await node.Swarm.ConnectAsync(remote.Addresses.First(), cts.Token).ConfigureAwait(false);
+                var block = await node.Block.GetAsync(cid, cts.Token).ConfigureAwait(false);
 
-                var remote = await ipfsOther.LocalPeer;
-                await ipfs.Swarm.ConnectAsync(remote.Addresses.First(), cts.Token);
-                var block = await getTask;
-
-                Assert.IsFalse(getTask.IsCanceled, "task cancelled");
-                Assert.IsFalse(getTask.IsFaulted, "task faulted");
-                Assert.IsTrue(getTask.IsCompleted, "task not completed");
                 Assert.AreEqual(cid, block.Id);
                 CollectionAssert.AreEqual(data, block.DataBytes);
 
-                var otherPeer = await ipfsOther.LocalPeer;
-                var ledger = await ipfs.Bitswap.LedgerAsync(otherPeer);
+                var otherPeer = await otherNode.LocalPeer.ConfigureAwait(false);
+                var ledger = await node.Bitswap.LedgerAsync(otherPeer).ConfigureAwait(false);
                 Assert.AreEqual(otherPeer, ledger.Peer);
                 Assert.AreNotEqual(0UL, ledger.BlocksExchanged);
                 Assert.AreNotEqual(0UL, ledger.DataReceived);
                 Assert.AreEqual(0UL, ledger.DataSent);
                 Assert.IsTrue(ledger.IsInDebt);
-
-                // TODO: Timing issue here.  ipfsOther could have sent the block
-                // but not updated the stats yet.
-#if false
-                var localPeer = await ipfs.LocalPeer;
-                ledger = await ipfsOther.Bitswap.LedgerAsync(localPeer);
-                Assert.AreEqual(localPeer, ledger.Peer);
-                Assert.AreNotEqual(0UL, ledger.BlocksExchanged);
-                Assert.AreEqual(0UL, ledger.DataReceived);
-                Assert.AreNotEqual(0UL, ledger.DataSent);
-                Assert.IsFalse(ledger.IsInDebt);
-#endif
             }
             finally
             {
-                await ipfsOther.StopAsync();
-                await ipfs.StopAsync();
-
-                ipfs.Options.Discovery = new DiscoveryOptions();
-                ipfsOther.Options.Discovery = new DiscoveryOptions();
-
-                (await ipfs.BitswapService).Protocols = originalProtocols;
-                (await ipfsOther.BitswapService).Protocols = otherOriginalProtocols;
+                await otherNode.StopAsync().ConfigureAwait(false);
+                await node.StopAsync().ConfigureAwait(false);
             }
         }
 

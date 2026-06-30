@@ -18,6 +18,7 @@ public sealed class ExplorerIndexStore(IOptions<ExplorerIndexStoreOptions> optio
     private const string SchemaTableName = "ExplorerIndexSchemaVersion";
     private const string SchemaName = "ExplorerIndexStore";
     private const string TableName = "ExplorerPinnedRootIndex";
+    private const string PinnedRootListIndexName = "IX_ExplorerPinnedRootIndex_Pinned_DisplayName_Target";
     private readonly object sync = new();
     private readonly string filePath = ResolveFilePath(options.Value.FilePath);
     private readonly string connectionString = new SqliteConnectionStringBuilder
@@ -117,7 +118,7 @@ public sealed class ExplorerIndexStore(IOptions<ExplorerIndexStoreOptions> optio
                 WHERE Target = $target
                 LIMIT 1;
                 """;
-            command.Parameters.AddWithValue("$target", target.Trim());
+            AddTextParameter(command, "$target", target.Trim());
             using var reader = command.ExecuteReader();
             return reader.Read() ? ReadRecord(reader) : null;
         }
@@ -197,7 +198,8 @@ public sealed class ExplorerIndexStore(IOptions<ExplorerIndexStoreOptions> optio
     {
         ArgumentNullException.ThrowIfNull(targets);
 
-        if (targets.Count == 0)
+        var normalizedTargets = NormalizeTargets(targets);
+        if (normalizedTargets.Count == 0)
         {
             return;
         }
@@ -206,17 +208,17 @@ public sealed class ExplorerIndexStore(IOptions<ExplorerIndexStoreOptions> optio
         {
             using var connection = OpenConnection();
             using var transaction = connection.BeginTransaction();
-            var parameterNames = new List<string>(targets.Count);
+            var parameterNames = new List<string>(normalizedTargets.Count);
             using var command = connection.CreateCommand();
             command.Transaction = transaction;
-            for (var index = 0; index < targets.Count; index++)
+            for (var index = 0; index < normalizedTargets.Count; index++)
             {
                 var parameterName = $"$target{index}";
                 parameterNames.Add(parameterName);
-                command.Parameters.AddWithValue(parameterName, targets.ElementAt(index));
+                AddTextParameter(command, parameterName, normalizedTargets[index]);
             }
 
-            command.Parameters.AddWithValue("$seenAtUtc", seenAtUtc.ToString("O", CultureInfo.InvariantCulture));
+            AddTextParameter(command, "$seenAtUtc", seenAtUtc.ToString("O", CultureInfo.InvariantCulture));
             command.CommandText =
                 $$"""
                 UPDATE {{TableName}}
@@ -239,18 +241,19 @@ public sealed class ExplorerIndexStore(IOptions<ExplorerIndexStoreOptions> optio
             using var transaction = connection.BeginTransaction();
             using var command = connection.CreateCommand();
             command.Transaction = transaction;
-            if (pinnedTargets.Count == 0)
+            var normalizedTargets = NormalizeTargets(pinnedTargets);
+            if (normalizedTargets.Count == 0)
             {
                 command.CommandText = $"UPDATE {TableName} SET IsPinned = 0;";
             }
             else
             {
-                var parameterNames = new List<string>(pinnedTargets.Count);
-                for (var index = 0; index < pinnedTargets.Count; index++)
+                var parameterNames = new List<string>(normalizedTargets.Count);
+                for (var index = 0; index < normalizedTargets.Count; index++)
                 {
                     var parameterName = $"$target{index}";
                     parameterNames.Add(parameterName);
-                    command.Parameters.AddWithValue(parameterName, pinnedTargets.ElementAt(index));
+                    AddTextParameter(command, parameterName, normalizedTargets[index]);
                 }
 
                 command.CommandText =
@@ -280,7 +283,7 @@ public sealed class ExplorerIndexStore(IOptions<ExplorerIndexStoreOptions> optio
                 SET IsPinned = 0
                 WHERE Target = $target;
                 """;
-            command.Parameters.AddWithValue("$target", target.Trim());
+            AddTextParameter(command, "$target", target.Trim());
             command.ExecuteNonQuery();
         }
     }
@@ -384,6 +387,8 @@ public sealed class ExplorerIndexStore(IOptions<ExplorerIndexStoreOptions> optio
             );
             CREATE INDEX IF NOT EXISTS IX_{{TableName}}_Pinned_FirstPinnedAtUtc
                 ON {{TableName}} (IsPinned, FirstPinnedAtUtc);
+            CREATE INDEX IF NOT EXISTS {{PinnedRootListIndexName}}
+                ON {{TableName}} (IsPinned, IsDirectory DESC, DisplayName COLLATE NOCASE, Target);
             CREATE TABLE IF NOT EXISTS {{SchemaTableName}} (
                 Name TEXT NOT NULL PRIMARY KEY,
                 SchemaVersion INTEGER NOT NULL,
@@ -395,9 +400,9 @@ public sealed class ExplorerIndexStore(IOptions<ExplorerIndexStoreOptions> optio
                 SchemaVersion = excluded.SchemaVersion,
                 UpdatedAtUtc = excluded.UpdatedAtUtc;
             """;
-        command.Parameters.AddWithValue("$schemaName", SchemaName);
-        command.Parameters.AddWithValue("$schemaVersion", CurrentSchemaVersion);
-        command.Parameters.AddWithValue("$updatedAtUtc", DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture));
+        AddTextParameter(command, "$schemaName", SchemaName);
+        AddIntegerParameter(command, "$schemaVersion", CurrentSchemaVersion);
+        AddTextParameter(command, "$updatedAtUtc", DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture));
         command.ExecuteNonQuery();
         transaction.Commit();
     }
@@ -420,6 +425,8 @@ public sealed class ExplorerIndexStore(IOptions<ExplorerIndexStoreOptions> optio
             );
             CREATE INDEX IF NOT EXISTS IX_{{TableName}}_Pinned_FirstPinnedAtUtc
                 ON {{TableName}} (IsPinned, FirstPinnedAtUtc);
+            CREATE INDEX IF NOT EXISTS {{PinnedRootListIndexName}}
+                ON {{TableName}} (IsPinned, IsDirectory DESC, DisplayName COLLATE NOCASE, Target);
             CREATE TABLE IF NOT EXISTS {{SchemaTableName}} (
                 Name TEXT NOT NULL PRIMARY KEY,
                 SchemaVersion INTEGER NOT NULL,
@@ -444,7 +451,7 @@ public sealed class ExplorerIndexStore(IOptions<ExplorerIndexStoreOptions> optio
             WHERE Name = $schemaName
             LIMIT 1;
             """;
-        command.Parameters.AddWithValue("$schemaName", SchemaName);
+        AddTextParameter(command, "$schemaName", SchemaName);
         var value = command.ExecuteScalar();
         return value is null || value is DBNull ? 0 : Convert.ToInt32(value, CultureInfo.InvariantCulture);
     }
@@ -460,21 +467,54 @@ public sealed class ExplorerIndexStore(IOptions<ExplorerIndexStoreOptions> optio
                 WHERE type = 'table' AND name = $tableName
                 LIMIT 1);
             """;
-        command.Parameters.AddWithValue("$tableName", tableName);
+        AddTextParameter(command, "$tableName", tableName);
         return Convert.ToInt64(command.ExecuteScalar(), CultureInfo.InvariantCulture) == 1;
     }
 
     private static void AddParameters(SqliteCommand command, ExplorerIndexedRootRecord record)
     {
-        command.Parameters.AddWithValue("$target", record.Target);
-        command.Parameters.AddWithValue("$displayName", record.DisplayName);
-        command.Parameters.AddWithValue("$isDirectory", record.IsDirectory ? 1 : 0);
-        command.Parameters.AddWithValue("$size", record.Size);
-        command.Parameters.AddWithValue("$childCount", record.ChildCount);
-        command.Parameters.AddWithValue("$firstPinnedAtUtc", record.FirstPinnedAtUtc.ToString("O", CultureInfo.InvariantCulture));
-        command.Parameters.AddWithValue("$lastSeenPinnedAtUtc", record.LastSeenPinnedAtUtc.ToString("O", CultureInfo.InvariantCulture));
-        command.Parameters.AddWithValue("$lastMetadataRefreshAtUtc", record.LastMetadataRefreshAtUtc.ToString("O", CultureInfo.InvariantCulture));
-        command.Parameters.AddWithValue("$isPinned", record.IsPinned ? 1 : 0);
+        AddTextParameter(command, "$target", record.Target);
+        AddTextParameter(command, "$displayName", record.DisplayName);
+        AddIntegerParameter(command, "$isDirectory", record.IsDirectory ? 1 : 0);
+        AddIntegerParameter(command, "$size", record.Size);
+        AddIntegerParameter(command, "$childCount", record.ChildCount);
+        AddTextParameter(command, "$firstPinnedAtUtc", record.FirstPinnedAtUtc.ToString("O", CultureInfo.InvariantCulture));
+        AddTextParameter(command, "$lastSeenPinnedAtUtc", record.LastSeenPinnedAtUtc.ToString("O", CultureInfo.InvariantCulture));
+        AddTextParameter(command, "$lastMetadataRefreshAtUtc", record.LastMetadataRefreshAtUtc.ToString("O", CultureInfo.InvariantCulture));
+        AddIntegerParameter(command, "$isPinned", record.IsPinned ? 1 : 0);
+    }
+
+    private static void AddTextParameter(SqliteCommand command, string name, string value)
+    {
+        var parameter = command.Parameters.Add(name, SqliteType.Text);
+        parameter.Value = value;
+    }
+
+    private static void AddIntegerParameter(SqliteCommand command, string name, long value)
+    {
+        var parameter = command.Parameters.Add(name, SqliteType.Integer);
+        parameter.Value = value;
+    }
+
+    private static IReadOnlyList<string> NormalizeTargets(IReadOnlyCollection<string> targets)
+    {
+        var normalizedTargets = new List<string>(targets.Count);
+        var seenTargets = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var target in targets)
+        {
+            if (string.IsNullOrWhiteSpace(target))
+            {
+                continue;
+            }
+
+            var normalizedTarget = target.Trim();
+            if (seenTargets.Add(normalizedTarget))
+            {
+                normalizedTargets.Add(normalizedTarget);
+            }
+        }
+
+        return normalizedTargets;
     }
 
     private static ExplorerIndexedRootRecord ReadRecord(SqliteDataReader reader)

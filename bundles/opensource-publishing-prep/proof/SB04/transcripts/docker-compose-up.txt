@@ -1,0 +1,32 @@
+﻿Command: historical proof transcript docker-compose-up.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB04-PERSISTENCE-001
+--- original captured output follows ---
+docker :  Network candoitallipfssb04_default Creating 
+At line:2 char:41
++ ... tion-2026'; docker compose -p candoitallipfssb04 up -d --wait --wait- ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( Network candoi...fault Creating :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ Network candoitallipfssb04_default Created 
+ Volume candoitallipfssb04_node-control-data Creating 
+ Volume candoitallipfssb04_node-control-data Created 
+ Volume candoitallipfssb04_ipfs-node-data Creating 
+ Volume candoitallipfssb04_ipfs-node-data Created 
+ Container candoitallipfssb04-ipfs-node-1 Creating 
+ Container candoitallipfssb04-ipfs-node-1 Created 
+ Container candoitallipfssb04-node-control-1 Creating 
+ Container candoitallipfssb04-node-control-1 Created 
+ Container candoitallipfssb04-ipfs-node-1 Starting 
+ Container candoitallipfssb04-ipfs-node-1 Started 
+ Container candoitallipfssb04-ipfs-node-1 Waiting 
+ Container candoitallipfssb04-ipfs-node-1 Healthy 
+ Container candoitallipfssb04-node-control-1 Starting 
+ Container candoitallipfssb04-node-control-1 Started 
+ Container candoitallipfssb04-ipfs-node-1 Waiting 
+ Container candoitallipfssb04-node-control-1 Waiting 
+ Container candoitallipfssb04-ipfs-node-1 Healthy 
+ Container candoitallipfssb04-node-control-1 Healthy 
+

@@ -1,0 +1,8 @@
+﻿Command: historical proof transcript workbook-regenerate-after-sb08.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB08-STORAGE-001
+--- original captured output follows ---
+Inspect result written to file: C:\repositories\CanDoItAll.IPFS\bundles\opensource-publishing-prep\inventories\publishing-prep-checklists.xlsx.inspect.ndjson
+Wrote C:\repositories\CanDoItAll.IPFS\bundles\opensource-publishing-prep\inventories\publishing-prep-checklists.xlsx
+

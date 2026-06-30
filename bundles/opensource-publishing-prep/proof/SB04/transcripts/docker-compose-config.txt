@@ -1,0 +1,89 @@
+﻿Command: historical proof transcript docker-compose-config.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB04-PERSISTENCE-001
+--- original captured output follows ---
+name: candoitall-ipfs
+services:
+  ipfs-node:
+    build:
+      context: C:\repositories\CanDoItAll.IPFS
+      dockerfile: docker/Dockerfile.ipfs-node
+    environment:
+      ASPNETCORE_ENVIRONMENT: Container
+      IPFS_NODE_API_URL: http://0.0.0.0:5001
+      IPFS_PASS: Codex-Validation-2026
+      IPFS_PATH: /data/ipfs
+      IpfsHttpHost__AllowAnyOrigin: "true"
+      IpfsHttpHost__Mode: Light
+      IpfsHttpHost__RequireAuthentication: "false"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS -X POST http://127.0.0.1:5001/api/v0/id >/dev/null || exit 1
+      timeout: 5s
+      interval: 10s
+      retries: 12
+      start_period: 15s
+    image: candoitall-ipfs-node:local
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 5001
+        published: "5001"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: ipfs-node-data
+        target: /data/ipfs
+        volume: {}
+  node-control:
+    build:
+      context: C:\repositories\CanDoItAll.IPFS
+      dockerfile: docker/Dockerfile.node-control
+    depends_on:
+      ipfs-node:
+        condition: service_healthy
+        required: true
+    environment:
+      ASPNETCORE_ENVIRONMENT: Container
+      ASPNETCORE_URLS: http://+:8080
+      ApplicationLogStore__FilePath: /data/node-control/logs/application.log
+      ExplorerIndexStore__FilePath: /data/node-control/explorer-index/explorer.db
+      NodeSettingsDefaults__ApiPath: api/v0
+      NodeSettingsDefaults__BaseUrl: http://ipfs-node:5001/
+      RemotePinRequestStore__FilePath: /data/node-control/remote-pin/remote-pin-requests.json
+      ServerNodeSettingsStore__FilePath: /data/node-control/settings/current-node-settings.json
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS http://127.0.0.1:8080/health/live >/dev/null || exit 1
+      timeout: 5s
+      interval: 10s
+      retries: 12
+      start_period: 15s
+    image: candoitall-ipfs-node-control:local
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 8080
+        published: "5093"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: node-control-data
+        target: /data/node-control
+        volume: {}
+networks:
+  default:
+    name: candoitall-ipfs_default
+volumes:
+  ipfs-node-data:
+    name: candoitall-ipfs_ipfs-node-data
+  node-control-data:
+    name: candoitall-ipfs_node-control-data
+

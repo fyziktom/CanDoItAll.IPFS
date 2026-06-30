@@ -1,0 +1,37 @@
+{
+  "subbundle": "SB07",
+  "status": "Completed",
+  "completionDate": "2026-06-30",
+  "invariants": [
+    {
+      "id": "SB07-PERF-001",
+      "kind": "performance",
+      "statement": "Production code should not construct per-call HttpClient instances on selected release-risk paths.",
+      "evidence": "bundle://proof/SB07/transcripts/production-targeted-scan-after-sb07.txt"
+    },
+    {
+      "id": "SB07-PERF-002",
+      "kind": "performance",
+      "statement": "Repeated health-check JSON response formatting should reuse JsonSerializerOptions.",
+      "evidence": "repo://src/CanDoItAll.IPFS.NodeControl/Services/NodeControlHealthCheckResponseWriter.cs"
+    },
+    {
+      "id": "SB07-ASYNC-001",
+      "kind": "async",
+      "statement": "NodeControl network snapshot aggregation should await tasks instead of reading Task.Result.",
+      "evidence": "repo://src/CanDoItAll.IPFS.NodeControl/Services/NodeNetworkWorkflowService.cs"
+    },
+    {
+      "id": "SB07-IO-001",
+      "kind": "io",
+      "statement": "DoH requests should preserve cancellation and avoid buffering full responses when stream parsing is sufficient.",
+      "evidence": "repo://src/CanDoItAll.IPFS.Engine/Base/net-udns/DohClient.cs"
+    },
+    {
+      "id": "SB07-TRIAGE-001",
+      "kind": "deferral",
+      "statement": "Broad LINQ, collection, substring, sealing, and inherited DNS/MDNS sync findings are documented deferrals rather than mechanical rewrites.",
+      "evidence": "bundle://proof/SB07/performance-triage.md"
+    }
+  ]
+}

@@ -5,7 +5,9 @@
 @inject IJSRuntime JSRuntime
 @inject ILogger<Files> Logger
 @inject NodeSessionState NodeSessionState
-@inject NodeOperatorService NodeOperatorService
+@inject INodeFileWorkflow FileWorkflow
+@inject INodeExplorerWorkflow ExplorerWorkflow
+@inject INodeMaintenanceWorkflow MaintenanceWorkflow
 @inject NodeCanvasSurfaceFactory NodeCanvasSurfaceFactory
 @inject NotificationService NotificationService
 

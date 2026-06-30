@@ -1,0 +1,19 @@
+﻿Command: historical proof transcript package-vulnerable-final-after-fixes.txt
+WorkingDirectory: C:\repositories\CanDoItAll.IPFS
+ExitCode: 0
+Invariant IDs: SB09-VALIDATION-001 SB09-PIN-001 SB09-DOCKER-001 SB09-BROWSER-001 SB09-HANDOFF-001
+--- original captured output follows ---
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+
+The following sources were used:
+   C:\repositories\CanDoItAll\ExternalPackages
+   https://api.nuget.org/v3/index.json
+   C:\Program Files (x86)\Microsoft SDKs\NuGetPackages\
+
+The given project `CanDoItAll.IPFS.Client` has no vulnerable packages given the current sources.
+The given project `CanDoItAll.IPFS.Engine` has no vulnerable packages given the current sources.
+The given project `CanDoItAll.IPFS.NodeControl.Abstractions` has no vulnerable packages given the current sources.
+The given project `CanDoItAll.IPFS.NodeControl` has no vulnerable packages given the current sources.
+The given project `CanDoItAll.IPFS.Tests` has no vulnerable packages given the current sources.
+
