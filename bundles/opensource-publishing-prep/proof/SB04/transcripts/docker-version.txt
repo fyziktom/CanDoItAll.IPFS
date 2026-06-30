@@ -1,7 +1,0 @@
-﻿Command: historical proof transcript docker-version.txt
-WorkingDirectory: C:\repositories\CanDoItAll.IPFS
-ExitCode: 0
-Invariant IDs: SB04-PERSISTENCE-001
---- original captured output follows ---
-Docker version 29.4.3, build 055a478
-

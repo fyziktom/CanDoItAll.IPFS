@@ -1,7 +1,0 @@
-﻿Command: rg -n 'EntityFrameworkCore|DbContext|DbSet|UseSqlite|UseSqlServer' src tests
-WorkingDirectory: C:\repositories\CanDoItAll.IPFS
-StartUtc: 2026-06-29T22:39:43.4806636Z
-
-
-ExitCode: 1
-EndUtc: 2026-06-29T22:39:43.9249291Z

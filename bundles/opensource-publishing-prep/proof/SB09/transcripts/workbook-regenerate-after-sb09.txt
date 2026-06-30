@@ -1,8 +1,0 @@
-﻿Command: node .\bundles\opensource-publishing-prep\tools\build-workbook.mjs
-WorkingDirectory: C:\repositories\CanDoItAll.IPFS
-ExitCode: 0
-Invariant IDs: SB09-HANDOFF-001
---- original captured output follows ---
-Inspect result written to file: C:\repositories\CanDoItAll.IPFS\bundles\opensource-publishing-prep\inventories\publishing-prep-checklists.xlsx.inspect.ndjson
-Wrote C:\repositories\CanDoItAll.IPFS\bundles\opensource-publishing-prep\inventories\publishing-prep-checklists.xlsx
-

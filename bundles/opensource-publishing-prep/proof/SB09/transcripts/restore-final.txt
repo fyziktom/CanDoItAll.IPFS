@@ -1,8 +1,0 @@
-﻿Command: historical proof transcript restore-final.txt
-WorkingDirectory: C:\repositories\CanDoItAll.IPFS
-ExitCode: 0
-Invariant IDs: SB09-VALIDATION-001 SB09-PIN-001 SB09-DOCKER-001 SB09-BROWSER-001 SB09-HANDOFF-001
---- original captured output follows ---
-  Determining projects to restore...
-  All projects are up-to-date for restore.
-

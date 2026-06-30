@@ -1,7 +1,0 @@
-﻿Command: historical proof transcript playwright-version.txt
-WorkingDirectory: C:\repositories\CanDoItAll.IPFS
-ExitCode: 0
-Invariant IDs: SB04-PERSISTENCE-001
---- original captured output follows ---
-Version 1.61.1
-

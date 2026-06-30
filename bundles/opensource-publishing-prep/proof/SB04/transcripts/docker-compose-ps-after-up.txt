@@ -1,9 +1,0 @@
-﻿Command: historical proof transcript docker-compose-ps-after-up.txt
-WorkingDirectory: C:\repositories\CanDoItAll.IPFS
-ExitCode: 0
-Invariant IDs: SB04-PERSISTENCE-001
---- original captured output follows ---
-NAME                                IMAGE                                COMMAND                  SERVICE        CREATED          STATUS                    PORTS
-candoitallipfssb04-ipfs-node-1      candoitall-ipfs-node:local           "dotnet CanDoItAll.I…"   ipfs-node      31 seconds ago   Up 48 seconds (healthy)   0.0.0.0:5001->5001/tcp, [::]:5001->5001/tcp
-candoitallipfssb04-node-control-1   candoitall-ipfs-node-control:local   "dotnet CanDoItAll.I…"   node-control   30 seconds ago   Up 32 seconds (healthy)   0.0.0.0:5093->8080/tcp, [::]:5093->8080/tcp
-

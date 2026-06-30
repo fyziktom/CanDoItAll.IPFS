@@ -1,9 +1,0 @@
-﻿Command: historical proof transcript playwright-dashboard-screenshot.txt
-WorkingDirectory: C:\repositories\CanDoItAll.IPFS
-ExitCode: 0
-Invariant IDs: SB04-PERSISTENCE-001
---- original captured output follows ---
-Navigating to http://127.0.0.1:5093/dashboard
-Waiting for timeout 3000...
-Capturing screenshot into bundles\opensource-publishing-prep\proof\SB04\nodecontrol-dashboard-compose-1920x1080.png
-
