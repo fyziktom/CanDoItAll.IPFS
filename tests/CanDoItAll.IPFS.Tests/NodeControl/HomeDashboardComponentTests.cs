@@ -37,9 +37,15 @@ public sealed class HomeDashboardComponentTests
         {
             StringAssert.Contains(cut.Markup, peer.Id.ToString()[..16]);
             StringAssert.Contains(cut.Markup, "Node identity");
-            StringAssert.Contains(cut.Markup, "Repository health");
-            StringAssert.Contains(cut.Markup, "Capability posture");
-            StringAssert.Contains(cut.Markup, "Single file upload");
+            StringAssert.Contains(cut.Markup, "Storage");
+            StringAssert.Contains(cut.Markup, "Network activity");
+            StringAssert.Contains(cut.Markup, "Data transfer");
+            StringAssert.Contains(cut.Markup, "Connected peers");
+            StringAssert.Contains(cut.Markup, "Pinned CIDs");
+            StringAssert.Contains(cut.Markup, "Active peers");
+            Assert.IsFalse(cut.Markup.Contains("Capability posture", StringComparison.Ordinal));
+            Assert.IsFalse(cut.Markup.Contains("Single file upload", StringComparison.Ordinal));
+            Assert.IsFalse(cut.Markup.Contains("Repo verify remains unavailable", StringComparison.Ordinal));
             Assert.IsFalse(cut.Markup.Contains("The IPFS API returned HTTP", StringComparison.Ordinal));
         }, TimeSpan.FromSeconds(10));
     }
@@ -60,8 +66,9 @@ public sealed class HomeDashboardComponentTests
 
         cut.WaitForAssertion(() =>
         {
-            StringAssert.Contains(cut.Markup, "The IPFS API returned HTTP 404");
-            Assert.IsFalse(cut.Markup.Contains("Repository health", StringComparison.Ordinal));
+            StringAssert.Contains(cut.Markup, "Unable to load the node dashboard. Check the selected endpoint and try again.");
+            Assert.IsFalse(cut.Markup.Contains("The IPFS API returned HTTP 404", StringComparison.Ordinal));
+            Assert.IsFalse(cut.Markup.Contains("Storage", StringComparison.Ordinal));
         }, TimeSpan.FromSeconds(10));
     }
 
