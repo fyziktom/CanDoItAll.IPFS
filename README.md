@@ -63,6 +63,7 @@ Default endpoints:
 
 - NodeControl UI: `http://127.0.0.1:5093`
 - IPFS node API: `http://127.0.0.1:5001`
+- IPFS read-only gateway: `http://127.0.0.1:5001/ipfs/{cid}`
 
 Optional port overrides:
 
