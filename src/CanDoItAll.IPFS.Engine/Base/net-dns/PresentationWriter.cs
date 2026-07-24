@@ -170,7 +170,7 @@ namespace Makaretu.Dns
         /// </param>
         public void WriteBase16String(byte[] value, bool appendSpace = true)
         {
-            WriteString(Base16.EncodeLower(value), appendSpace);
+            WriteString(Base16.LowerCase.Encode(value), appendSpace);
         }
 
         /// <summary>

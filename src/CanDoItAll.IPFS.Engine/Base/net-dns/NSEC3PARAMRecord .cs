@@ -78,7 +78,7 @@ namespace Makaretu.Dns
 
             var salt = reader.ReadString();
             if (salt != "-")
-                Salt = Base16.Decode(salt);
+                Salt = Base16.UpperCase.Decode(salt).ToArray();
         }
 
         /// <inheritdoc />

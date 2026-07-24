@@ -106,6 +106,7 @@ public sealed class PinRequestComponentsTests
     private static Bunit.TestContext CreateContext()
     {
         var context = new Bunit.TestContext();
+        context.JSInterop.Mode = JSRuntimeMode.Loose;
         context.Services.AddCanDoItAllBaseLib();
         return context;
     }

@@ -3,7 +3,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
-    <CanDoItAllComponentsPackageVersion>0.1.0</CanDoItAllComponentsPackageVersion>
+    <CanDoItAllComponentsPackageVersion>0.1.4</CanDoItAllComponentsPackageVersion>
     <DefaultItemExcludes>
       $(DefaultItemExcludes);
       .artifacts/**;

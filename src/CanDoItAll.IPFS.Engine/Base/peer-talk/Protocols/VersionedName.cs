@@ -95,7 +95,7 @@ namespace PeerTalk.Protocols
         public int CompareTo(VersionedName that)
         {
             if (that == null) return 1;
-            if (this.Name == that.Name) return this.Version.CompareTo(that.Version);
+            if (this.Name == that.Name) return this.Version.ComparePrecedenceTo(that.Version);
             return this.Name.CompareTo(that.Name);
         }
     }
