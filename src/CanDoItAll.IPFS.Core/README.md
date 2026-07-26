@@ -1,7 +1,7 @@
 # CanDoItAll.IPFS.Core
 
 `CanDoItAll.IPFS.Core` contains the protocol types shared by CanDoItAll IPFS
-implementations:
+implementations and targets .NET 10:
 
 - CID, multihash, multiaddress, DAG, peer, and key value types
 - multibase, multicodec, and hashing support

@@ -1,8 +1,8 @@
 # CanDoItAll.IPFS.Client
 
 `CanDoItAll.IPFS.Client` is a typed, asynchronous HTTP client for interacting
-with a CanDoItAll IPFS node. It targets .NET 8 and .NET 10 and does not bring
-the embedded IPFS engine or ASP.NET runtime into your application.
+with a CanDoItAll IPFS node. It targets .NET 10 and does not bring the embedded
+IPFS engine or ASP.NET runtime into your application.
 
 ## Install
 

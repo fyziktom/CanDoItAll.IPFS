@@ -127,6 +127,7 @@ $packageCopyright = (
     'Copyright (c) 2026 fyziktom. Portions copyright (c) 2018 Richard Schneider.'
 )
 $upstreamRepositoryUrl = 'https://github.com/richardschneider/'
+$expectedTargetFramework = 'net10.0'
 
 $packages = @(
     Get-ChildItem -LiteralPath $packagePath -File -Filter '*.nupkg' |
@@ -274,6 +275,25 @@ foreach ($package in $packages) {
             )
         }
 
+        $libTargetFrameworks = @(
+            $archive.Entries |
+                ForEach-Object {
+                    if ($_.FullName -match '^lib/([^/]+)/') {
+                        $Matches[1]
+                    }
+                } |
+                Sort-Object -Unique
+        )
+        if (
+            $libTargetFrameworks.Count -ne 1 -or
+            $libTargetFrameworks[0] -ne $expectedTargetFramework
+        ) {
+            throw (
+                "Package '$id' must contain only lib/$expectedTargetFramework assets; " +
+                "found: $($libTargetFrameworks -join ', ')."
+            )
+        }
+
         $iconNode = $metadata.SelectSingleNode("*[local-name()='icon']")
         if ($null -eq $iconNode -or $iconNode.InnerText -ne 'package-icon.png') {
             throw "Package '$id' must declare <icon>package-icon.png</icon>."
@@ -294,6 +314,7 @@ foreach ($package in $packages) {
         $results.Add([pscustomobject]@{
             PackageId = $id
             PackageVersion = $version
+            TargetFramework = $expectedTargetFramework
             Authors = $packageAuthors
             Copyright = $packageCopyright
             Archive = $package.Name
