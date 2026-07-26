@@ -47,6 +47,40 @@ function Get-Sha256 {
     }
 }
 
+function Get-PngDimensions {
+    param(
+        [Parameter(Mandatory = $true)]
+        [byte[]]$Bytes
+    )
+
+    if ($Bytes.Length -lt 24) {
+        throw 'PNG data is too short to contain an IHDR chunk.'
+    }
+
+    $signature = (
+        $Bytes[0..7] |
+            ForEach-Object { $_.ToString('X2') }
+    ) -join ''
+    if ($signature -ne '89504E470D0A1A0A') {
+        throw 'Package icon is not a valid PNG file.'
+    }
+
+    [pscustomobject]@{
+        Width = (
+            ([int]$Bytes[16] -shl 24) -bor
+            ([int]$Bytes[17] -shl 16) -bor
+            ([int]$Bytes[18] -shl 8) -bor
+            [int]$Bytes[19]
+        )
+        Height = (
+            ([int]$Bytes[20] -shl 24) -bor
+            ([int]$Bytes[21] -shl 16) -bor
+            ([int]$Bytes[22] -shl 8) -bor
+            [int]$Bytes[23]
+        )
+    }
+}
+
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -61,6 +95,31 @@ else {
 $repositoryLicensePath = Join-Path $repositoryRoot 'LICENSE'
 $repositoryLicenseBytes = [System.IO.File]::ReadAllBytes($repositoryLicensePath)
 $repositoryLicenseHash = Get-Sha256 -Bytes $repositoryLicenseBytes
+$repositoryIconPath = Join-Path $repositoryRoot 'docs\package-icon.png'
+$repositoryIconBytes = [System.IO.File]::ReadAllBytes($repositoryIconPath)
+$repositoryIconHash = Get-Sha256 -Bytes $repositoryIconBytes
+$expectedCorporateIconHash = (
+    '02B338424A63193ECE3E25BC7E15A1E8F382E3E64C6DF80D24279C0C0FDA130E'
+)
+if ($repositoryIconHash -ne $expectedCorporateIconHash) {
+    throw (
+        "Repository package icon '$repositoryIconPath' is not the approved " +
+        'CanDoItAll corporate favicon.'
+    )
+}
+if ($repositoryIconBytes.Length -gt 1MB) {
+    throw "Repository package icon '$repositoryIconPath' exceeds the NuGet 1 MB limit."
+}
+$repositoryIconDimensions = Get-PngDimensions -Bytes $repositoryIconBytes
+if (
+    $repositoryIconDimensions.Width -ne 256 -or
+    $repositoryIconDimensions.Height -ne 256
+) {
+    throw (
+        "Repository package icon must be 256x256, but is " +
+        "$($repositoryIconDimensions.Width)x$($repositoryIconDimensions.Height)."
+    )
+}
 $repositoryUrl = 'https://github.com/fyziktom/CanDoItAll.IPFS'
 $projectUrl = 'https://aicandoitall.com'
 
@@ -186,10 +245,28 @@ foreach ($package in $packages) {
             throw "Package '$id' does not contain a package-root README.md."
         }
 
+        $iconNode = $metadata.SelectSingleNode("*[local-name()='icon']")
+        if ($null -eq $iconNode -or $iconNode.InnerText -ne 'package-icon.png') {
+            throw "Package '$id' must declare <icon>package-icon.png</icon>."
+        }
+
+        $iconEntries = @(
+            $archive.Entries |
+                Where-Object { $_.FullName.TrimStart('/') -eq 'package-icon.png' }
+        )
+        if ($iconEntries.Count -ne 1) {
+            throw "Package '$id' must contain exactly one package-root package-icon.png."
+        }
+        $packageIconBytes = Get-ZipEntryBytes -Entry $iconEntries[0]
+        if ((Get-Sha256 -Bytes $packageIconBytes) -ne $repositoryIconHash) {
+            throw "Package '$id' does not contain the approved repository package icon."
+        }
+
         $results.Add([pscustomobject]@{
             PackageId = $id
             PackageVersion = $version
             Archive = $package.Name
+            Icon = 'package-icon.png (256x256 corporate favicon)'
             License = 'Repository file'
             ProjectUrl = $projectUrl
             RepositoryUrl = $repositoryUrl
