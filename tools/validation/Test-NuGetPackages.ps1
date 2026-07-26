@@ -122,6 +122,11 @@ if (
 }
 $repositoryUrl = 'https://github.com/fyziktom/CanDoItAll.IPFS'
 $projectUrl = 'https://aicandoitall.com'
+$packageAuthors = 'fyziktom'
+$packageCopyright = (
+    'Copyright (c) 2026 fyziktom. Portions copyright (c) 2018 Richard Schneider.'
+)
+$upstreamRepositoryUrl = 'https://github.com/richardschneider/'
 
 $packages = @(
     Get-ChildItem -LiteralPath $packagePath -File -Filter '*.nupkg' |
@@ -191,6 +196,19 @@ foreach ($package in $packages) {
             )
         }
 
+        $authorsNode = $metadata.SelectSingleNode("*[local-name()='authors']")
+        if ($null -eq $authorsNode -or $authorsNode.InnerText -ne $packageAuthors) {
+            throw "Package '$id' authors must be '$packageAuthors'."
+        }
+
+        $copyrightNode = $metadata.SelectSingleNode("*[local-name()='copyright']")
+        if (
+            $null -eq $copyrightNode -or
+            $copyrightNode.InnerText -ne $packageCopyright
+        ) {
+            throw "Package '$id' copyright metadata must be '$packageCopyright'."
+        }
+
         $licenseNode = $metadata.SelectSingleNode("*[local-name()='license']")
         if (
             $null -eq $licenseNode -or
@@ -244,6 +262,17 @@ foreach ($package in $packages) {
         if ($null -eq $readmeEntry) {
             throw "Package '$id' does not contain a package-root README.md."
         }
+        $packageReadmeBytes = Get-ZipEntryBytes -Entry $readmeEntry
+        $packageReadmeText = [System.Text.Encoding]::UTF8.GetString($packageReadmeBytes)
+        if (
+            $packageReadmeText -notmatch [regex]::Escape($upstreamRepositoryUrl) -or
+            $packageReadmeText -notmatch 'Many thanks to\s+Richard Schneider'
+        ) {
+            throw (
+                "Package '$id' README must thank Richard Schneider and link to an " +
+                'original upstream repository.'
+            )
+        }
 
         $iconNode = $metadata.SelectSingleNode("*[local-name()='icon']")
         if ($null -eq $iconNode -or $iconNode.InnerText -ne 'package-icon.png') {
@@ -265,6 +294,8 @@ foreach ($package in $packages) {
         $results.Add([pscustomobject]@{
             PackageId = $id
             PackageVersion = $version
+            Authors = $packageAuthors
+            Copyright = $packageCopyright
             Archive = $package.Name
             Icon = 'package-icon.png (256x256 corporate favicon)'
             License = 'Repository file'

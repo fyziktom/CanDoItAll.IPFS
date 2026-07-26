@@ -28,3 +28,11 @@ more CanDoItAll projects are available at
 [aicandoitall.com](https://aicandoitall.com).
 The project is licensed under the
 [CanDoItAll IPFS license](https://github.com/fyziktom/CanDoItAll.IPFS/blob/main/LICENSE).
+
+## Acknowledgements
+
+This package is developed and maintained by
+[`fyziktom`](https://github.com/fyziktom). It builds on Richard Schneider's original
+[`net-ipfs-core`](https://github.com/richardschneider/net-ipfs-core). Many thanks to
+Richard Schneider and the upstream contributors for providing the foundation that this
+substantially extended CanDoItAll implementation continues from.

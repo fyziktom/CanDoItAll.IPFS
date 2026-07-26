@@ -145,6 +145,21 @@ Build standalone NodeControl/engine release bundles with:
 .\tools\deployment\Build-Release.ps1
 ```
 
+## Acknowledgements
+
+`CanDoItAll.IPFS` is developed and maintained by
+[`fyziktom`](https://github.com/fyziktom). It builds on Richard Schneider's original
+[`net-ipfs-engine`](https://github.com/richardschneider/net-ipfs-engine),
+[`net-ipfs-core`](https://github.com/richardschneider/net-ipfs-core), and
+[`net-ipfs-http-client`](https://github.com/richardschneider/net-ipfs-http-client)
+projects. Many thanks to Richard Schneider and the upstream contributors for making that
+foundation available.
+
+Since that foundation, this repository has been substantially extended and modernized
+across the protocol libraries, embedded engine, typed HTTP client, NodeControl UI,
+security, tests, packaging, and container deployment. Development continues here as the
+independently maintained CanDoItAll IPFS implementation.
+
 ## License And Contributions
 
 This repository uses the
@@ -152,7 +167,8 @@ This repository uses the
 of the software or a substantial portion of it in source or binary form must include at
 least one link to [aicandoitall.com](https://aicandoitall.com). One such link satisfies
 the added condition for a distribution containing multiple covered CanDoItAll
-libraries. The upstream 2018 Richard Schneider copyright notice is retained.
+libraries. The current work is copyright (c) 2026 `fyziktom`; Richard Schneider's
+original 2018 copyright notice is retained for the upstream foundation.
 
 Code contributions are limited to partners explicitly approved by the maintainer.
 Unsolicited pull requests are not accepted. See [CONTRIBUTING.md](CONTRIBUTING.md) and

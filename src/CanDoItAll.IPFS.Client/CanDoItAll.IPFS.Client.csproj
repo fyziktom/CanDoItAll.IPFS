@@ -15,14 +15,14 @@
     <Version>0.42.0</Version>
 
     <PackageId>CanDoItAll.IPFS.Client</PackageId>
-    <Authors>Richard Schneider; CanDoItAll contributors</Authors>
+    <Authors>fyziktom</Authors>
     <Title>CanDoItAll IPFS Client</Title>
     <Description>A typed HTTP client for communicating with a CanDoItAll IPFS node.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>package-icon.png</PackageIcon>
     <PackageReleaseNotes>https://github.com/fyziktom/CanDoItAll.IPFS/releases</PackageReleaseNotes>
-    <Copyright>Copyright (c) 2018 Richard Schneider and CanDoItAll contributors</Copyright>
+    <Copyright>Copyright (c) 2026 fyziktom. Portions copyright (c) 2018 Richard Schneider.</Copyright>
     <PackageTags>ipfs peer-to-peer p2p distributed file-system web http client</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <RepositoryUrl>https://github.com/fyziktom/CanDoItAll.IPFS</RepositoryUrl>

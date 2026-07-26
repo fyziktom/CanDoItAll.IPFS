@@ -17,14 +17,14 @@
 
 		<!-- Nuget specs -->
 		<PackageId>CanDoItAll.IPFS.Engine</PackageId>
-		<Authors>Richard Schneider; CanDoItAll contributors</Authors>
+		<Authors>fyziktom</Authors>
 		<Title>CanDoItAll IPFS Engine</Title>
 		<Description>An embedded IPFS engine for CanDoItAll applications.</Description>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageIcon>package-icon.png</PackageIcon>
 		<PackageReleaseNotes>https://github.com/fyziktom/CanDoItAll.IPFS/releases</PackageReleaseNotes>
-		<Copyright>Copyright (c) 2018 Richard Schneider and CanDoItAll contributors</Copyright>
+		<Copyright>Copyright (c) 2026 fyziktom. Portions copyright (c) 2018 Richard Schneider.</Copyright>
 		<PackageTags>ipfs peer-to-peer p2p distributed file-system web</PackageTags>
 		<IncludeSymbols>True</IncludeSymbols>
 		<RepositoryUrl>https://github.com/fyziktom/CanDoItAll.IPFS</RepositoryUrl>
