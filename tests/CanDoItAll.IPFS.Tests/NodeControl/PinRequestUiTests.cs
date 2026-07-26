@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Bunit;
 using CanDoItAll.Components.BaseLib;
@@ -15,6 +16,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.JSInterop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CanDoItAll.IPFS.Tests.NodeControl;
@@ -118,6 +120,7 @@ public sealed class PinRequestUiTests
         try
         {
             using var context = CreateContext(host.BaseAddress, tempRoot);
+            context.Services.AddSingleton<IJSRuntime>(new SideMenuTestJsRuntime());
             var workflow = context.Services.GetRequiredService<RemotePinRequestWorkflowService>();
             workflow.Enqueue(CreateEnvelope("Quarterly archive", "Keep a second copy on the backup receiver."));
 
@@ -126,14 +129,133 @@ public sealed class PinRequestUiTests
 
             cut.WaitForAssertion(() =>
             {
-                StringAssert.Contains(cut.Markup, "Pin requests (1)");
+                var navigationItem = cut.Find(
+                    "[data-testid='side-menu-ipfs-node-control-primary-navigation-item-pin-requests']");
+                StringAssert.Contains(navigationItem.TextContent, "Pin requests");
+                StringAssert.Contains(navigationItem.TextContent, "1");
                 StringAssert.Contains(cut.Markup, "IPFS Node Control");
             }, TimeSpan.FromSeconds(10));
+
+            Assert.AreEqual(
+                0,
+                context.Services.GetRequiredService<TestNodeHostController>().StartAttempts,
+                "Rendering the layout must not start an external node process in a component test.");
         }
         finally
         {
             TryDelete(tempRoot);
         }
+    }
+
+    private sealed class SideMenuTestJsRuntime : IJSRuntime
+    {
+        private const string SideMenuModulePath =
+            "./_content/CanDoItAll.Components.BaseLib/Components/Navigation/SideMenu.razor.js";
+
+        private readonly SideMenuTestJsModule module = new();
+
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+            => InvokeAsync<TValue>(identifier, CancellationToken.None, args);
+
+        public ValueTask<TValue> InvokeAsync<TValue>(
+            string identifier,
+            CancellationToken cancellationToken,
+            object?[]? args)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!string.Equals(identifier, "import", StringComparison.Ordinal))
+            {
+                return ValueTask.FromResult(default(TValue)!);
+            }
+
+            if (args is not [string modulePath]
+                || !string.Equals(modulePath, SideMenuModulePath, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("The layout imported an unexpected JavaScript module.");
+            }
+
+            return ValueTask.FromResult((TValue)(object)module);
+        }
+    }
+
+    private sealed class SideMenuTestJsModule : IJSObjectReference
+    {
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+            => InvokeAsync<TValue>(identifier, CancellationToken.None, args);
+
+        public ValueTask<TValue> InvokeAsync<TValue>(
+            string identifier,
+            CancellationToken cancellationToken,
+            object?[]? args)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!string.Equals(identifier, "initialize", StringComparison.Ordinal))
+            {
+                return ValueTask.FromResult(default(TValue)!);
+            }
+
+            var initialization = Activator.CreateInstance(typeof(TValue), nonPublic: true)
+                ?? throw new InvalidOperationException("SideMenu initialization could not be created.");
+            return ValueTask.FromResult((TValue)initialization);
+        }
+
+        public ValueTask DisposeAsync()
+            => ValueTask.CompletedTask;
+    }
+
+    private sealed class TestNodeHostController : INodeHostController
+    {
+        public int StartAttempts { get; private set; }
+
+        public string? FindRepoRoot(string? startPath = null)
+            => null;
+
+        public bool IsLocalEndpoint(Uri endpoint)
+            => false;
+
+        public Task<bool> IsEndpointListeningAsync(
+            Uri endpoint,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult(false);
+
+        public Task<bool> IsEndpointHealthyAsync(
+            Uri endpoint,
+            string relativePath,
+            HttpMethod? method = null,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult(true);
+
+        public Task WaitForEndpointStateAsync(
+            Uri endpoint,
+            bool shouldBeListening,
+            TimeSpan timeout,
+            CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public bool TryStartLocalNodeHost(
+            string repoRoot,
+            Uri endpoint,
+            out int? processId)
+        {
+            StartAttempts++;
+            processId = null;
+            return false;
+        }
+
+        public bool TryStopLocalNodeHost(
+            string repoRoot,
+            Uri endpoint,
+            TimeSpan waitTimeout,
+            out int? processId)
+        {
+            processId = null;
+            return false;
+        }
+
+        public Task<bool> EnsureOwnedLocalNodeHostExitedAsync(
+            TimeSpan gracefulTimeout,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult(true);
     }
 
     private static Bunit.TestContext CreateContext(Uri baseAddress, string tempRoot)
@@ -166,7 +288,9 @@ public sealed class PinRequestUiTests
         context.Services.AddSingleton<ServerNodeSettingsStore>();
         context.Services.AddSingleton<IServerNodeSettingsStore>(serviceProvider => serviceProvider.GetRequiredService<ServerNodeSettingsStore>());
         context.Services.AddSingleton<CurrentNodeTargetRegistry>();
-        context.Services.AddSingleton<INodeHostController, DesktopNodeHostController>();
+        context.Services.AddSingleton<TestNodeHostController>();
+        context.Services.AddSingleton<INodeHostController>(
+            serviceProvider => serviceProvider.GetRequiredService<TestNodeHostController>());
         context.Services.AddSingleton<LocalNodeBootstrapService>();
         context.Services.AddSingleton<CurrentNodeLeaseFactory>();
         context.Services.AddSingleton<INodeConnectionLeaseFactory>(serviceProvider => serviceProvider.GetRequiredService<CurrentNodeLeaseFactory>());

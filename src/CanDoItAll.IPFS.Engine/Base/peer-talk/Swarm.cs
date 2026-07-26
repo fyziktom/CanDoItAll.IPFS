@@ -266,6 +266,17 @@ namespace PeerTalk
         /// </exception>
         public Peer RegisterPeer(Peer peer)
         {
+            var registeredPeer = RegisterPeerCore(peer, out var isNew);
+            if (isNew)
+            {
+                PublishPeerDiscovered(registeredPeer);
+            }
+
+            return registeredPeer;
+        }
+
+        private Peer RegisterPeerCore(Peer peer, out bool isNew)
+        {
             if (peer.Id == null)
             {
                 throw new ArgumentNullException("peer.ID");
@@ -279,11 +290,11 @@ namespace PeerTalk
                 throw new Exception($"Communication with '{peer}' is not allowed.");
             }
 
-            var isNew = false;
+            var added = false;
             var p = otherPeers.AddOrUpdate(peer.Id.ToBase58(),
                 (id) =>
                 {
-                    isNew = true;
+                    added = true;
                     return peer;
                 },
                 (id, existing) =>
@@ -302,16 +313,18 @@ namespace PeerTalk
                     return existing;
                 });
 
-            if (isNew)
+            isNew = added;
+            return p;
+        }
+
+        private void PublishPeerDiscovered(Peer peer)
+        {
+            if (log.IsDebugEnabled)
             {
-                if (log.IsDebugEnabled)
-                {
-                    log.Debug($"New peer registerd {p}");
-                }
-                PeerDiscovered?.Invoke(this, p);
+                log.Debug($"New peer registerd {peer}");
             }
 
-            return p;
+            PeerDiscovered?.Invoke(this, peer);
         }
 
         /// <summary>
@@ -937,14 +950,32 @@ namespace PeerTalk
                 {
                     identify = protocols.OfType<Identify1>().First();
                 }
-                connection.RemotePeer = await identify.GetRemotePeerAsync(connection, default(CancellationToken)).ConfigureAwait(false);
-
-                connection.RemotePeer = RegisterPeer(connection.RemotePeer);
+                var identifiedPeer = await identify.GetRemotePeerAsync(connection, default(CancellationToken)).ConfigureAwait(false);
+                var registeredPeer = RegisterPeerCore(identifiedPeer, out var isNew);
+                connection.RemotePeer = registeredPeer;
                 connection.RemoteAddress = new MultiAddress($"{remote}/ipfs/{connection.RemotePeer.Id}");
+
+                // Publish peer discovery only after the accepted connection is visible.
+                // AutoDialer subscribes to PeerDiscovered and otherwise races this
+                // incoming connection by opening duplicate reverse connections.
                 var actual = Manager.Add(connection);
-                if (actual == connection)
+                registeredPeer.ConnectedAddress ??= connection.RemoteAddress;
+                try
                 {
-                    ConnectionEstablished?.Invoke(this, connection);
+                    if (isNew)
+                    {
+                        PublishPeerDiscovered(registeredPeer);
+                    }
+
+                    if (actual == connection)
+                    {
+                        ConnectionEstablished?.Invoke(this, connection);
+                    }
+                }
+                catch
+                {
+                    Manager.Remove(connection);
+                    throw;
                 }
             }
             catch (Exception e)

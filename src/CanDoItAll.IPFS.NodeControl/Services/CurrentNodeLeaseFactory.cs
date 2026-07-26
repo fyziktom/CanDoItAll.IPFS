@@ -100,7 +100,7 @@ public sealed class CurrentNodeLeaseFactory : INodeConnectionLeaseFactory, INode
 
             activity?.SetStatus(ActivityStatusCode.Ok);
             NodeControlTelemetry.RecordOperation("node", "create-lease", "success", Stopwatch.GetElapsedTime(start), tags);
-            return new IpfsClientLease(httpClient, new IpfsEngineClient(httpClient, options), normalized);
+            return new IpfsClientLease(httpClient, new IpfsNodeClient(httpClient, options), normalized);
         }
         catch (Exception ex)
         {

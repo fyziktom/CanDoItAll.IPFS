@@ -195,7 +195,8 @@ namespace Ipfs.Engine.ClientTests
             CollectionAssert.Contains(published.Topics.ToArray(), topic);
 
             cts.Cancel();
-            await subscription.ConfigureAwait(false);
+            await Assert.ThrowsAsync<OperationCanceledException>(
+                async () => await subscription.ConfigureAwait(false));
         }
 
         [TestMethod]

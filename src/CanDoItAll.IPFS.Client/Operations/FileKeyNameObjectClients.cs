@@ -13,11 +13,13 @@ using Ipfs.Engine.Client.Transport;
 
 namespace Ipfs.Engine.Client.Operations
 {
-    public sealed class FileSystemClient : ApiClientBase, IFileSystemApi
+    public sealed class FileSystemClient : IFileSystemApi
     {
-        internal FileSystemClient(IpfsHttpTransport transport)
-            : base(transport)
+        private readonly IIpfsApiTransport transport;
+
+        internal FileSystemClient(IIpfsApiTransport transport)
         {
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
         public async Task<IFileSystemNode> AddAsync(Stream stream, string name, AddFileOptions? options = null, CancellationToken cancel = default)
@@ -34,11 +36,11 @@ namespace Ipfs.Engine.Client.Operations
             if (options.Progress == null)
             {
                 QueryStringBuilder.Add(query, "progress", false);
-                finalNode = await Transport.PostMultipartJsonAsync<FileSystemNodeDto>("add", query, stream, string.IsNullOrWhiteSpace(name) ? "file.bin" : name, "application/octet-stream", cancel).ConfigureAwait(false);
+                finalNode = await transport.PostMultipartJsonAsync<FileSystemNodeDto>("add", query, stream, string.IsNullOrWhiteSpace(name) ? "file.bin" : name, "application/octet-stream", cancel).ConfigureAwait(false);
             }
             else
             {
-                await Transport.ReadNdjsonAsync<FileSystemNodeDto>("add", query, dto =>
+                await transport.ReadNdjsonAsync<FileSystemNodeDto>("add", query, dto =>
                 {
                     if (!string.IsNullOrWhiteSpace(dto.Hash))
                     {
@@ -90,23 +92,25 @@ namespace Ipfs.Engine.Client.Operations
             }
         }
 
-        public Task<IFileSystemNode> AddTextAsync(string text, AddFileOptions? options = null, CancellationToken cancel = default)
+        public async Task<IFileSystemNode> AddTextAsync(string text, AddFileOptions? options = null, CancellationToken cancel = default)
         {
             var bytes = Encoding.UTF8.GetBytes(text ?? string.Empty);
-            var stream = new MemoryStream(bytes, writable: false);
-            return AddAsync(stream, "text.txt", options, cancel);
+            using (var stream = new MemoryStream(bytes, writable: false))
+            {
+                return await AddAsync(stream, "text.txt", options, cancel).ConfigureAwait(false);
+            }
         }
 
         public Task<Stream> GetAsync(string path, bool compress = false, CancellationToken cancel = default)
         {
             var query = BuildArgQuery(path);
             QueryStringBuilder.Add(query, "compress", compress);
-            return Transport.PostStreamAsync("get", query, cancel);
+            return transport.PostStreamAsync("get", query, cancel);
         }
 
         public async Task<IFileSystemNode> ListFileAsync(string path, CancellationToken cancel = default)
         {
-            var dto = await Transport.PostJsonAsync<FileSystemDetailsDto>("file/ls", BuildArgQuery(path), cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<FileSystemDetailsDto>("file/ls", BuildArgQuery(path), cancel).ConfigureAwait(false);
             if (dto.Arguments == null || dto.Objects == null)
             {
                 throw new IpfsSerializationException("file/ls", "The file listing response was missing its object map.");
@@ -128,13 +132,13 @@ namespace Ipfs.Engine.Client.Operations
             using (var stream = await ReadFileAsync(path, cancel).ConfigureAwait(false))
             using (var reader = new StreamReader(stream, Encoding.UTF8))
             {
-                return await reader.ReadToEndAsync().ConfigureAwait(false);
+                return await reader.ReadToEndAsync(cancel).ConfigureAwait(false);
             }
         }
 
         public Task<Stream> ReadFileAsync(string path, CancellationToken cancel = default)
         {
-            return Transport.PostStreamAsync("cat", BuildArgQuery(path), cancel);
+            return transport.PostStreamAsync("cat", BuildArgQuery(path), cancel);
         }
 
         public Task<Stream> ReadFileAsync(string path, long offset, long count, CancellationToken cancel = default)
@@ -142,7 +146,7 @@ namespace Ipfs.Engine.Client.Operations
             var query = BuildArgQuery(path);
             QueryStringBuilder.Add(query, "offset", offset);
             QueryStringBuilder.Add(query, "length", count);
-            return Transport.PostStreamAsync("cat", query, cancel);
+            return transport.PostStreamAsync("cat", query, cancel);
         }
 
         private static List<KeyValuePair<string, string>> BuildArgQuery(string value)
@@ -222,7 +226,7 @@ namespace Ipfs.Engine.Client.Operations
 
                 var query = BuildAddQuery(options);
                 using var content = MultipartRequestFactory.CreateFiles(fileParts, formValues);
-                var finalNode = await Transport.PostMultipartFormJsonAsync<FileSystemNodeDto>("add", query, content, cancel).ConfigureAwait(false);
+                var finalNode = await transport.PostMultipartFormJsonAsync<FileSystemNodeDto>("add", query, content, cancel).ConfigureAwait(false);
                 if (finalNode == null || string.IsNullOrWhiteSpace(finalNode.Hash))
                 {
                     throw new IpfsSerializationException("add", "The add route completed without returning a final CID.");
@@ -274,11 +278,13 @@ namespace Ipfs.Engine.Client.Operations
         }
     }
 
-    public sealed class KeyClient : ApiClientBase, IKeyApi
+    public sealed class KeyClient : IKeyApi
     {
-        internal KeyClient(IpfsHttpTransport transport)
-            : base(transport)
+        private readonly IIpfsApiTransport transport;
+
+        internal KeyClient(IIpfsApiTransport transport)
         {
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
         public async Task<IKey> CreateAsync(string name, string keyType = "rsa", int size = 2048, CancellationToken cancel = default)
@@ -287,29 +293,29 @@ namespace Ipfs.Engine.Client.Operations
             QueryStringBuilder.Add(query, "arg", name);
             QueryStringBuilder.Add(query, "type", keyType);
             QueryStringBuilder.Add(query, "size", size);
-            var dto = await Transport.PostJsonAsync<CryptoKeyDto>("key/gen", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<CryptoKeyDto>("key/gen", query, cancel).ConfigureAwait(false);
             return DtoMapper.ToKey(dto);
         }
 
         public Task<string> ExportAsync(string name, char[] password, CancellationToken cancel = default)
         {
-            throw MissingServerCapability(nameof(ExportAsync), "The server does not expose key export.");
+            throw ApiClientErrors.MissingServerCapability(nameof(ExportAsync), "The server does not expose key export.");
         }
 
         public Task<IKey> ImportAsync(string name, string pem, char[] password, CancellationToken cancel = default)
         {
-            throw MissingServerCapability(nameof(ImportAsync), "The server does not expose key import.");
+            throw ApiClientErrors.MissingServerCapability(nameof(ImportAsync), "The server does not expose key import.");
         }
 
         public async Task<IEnumerable<IKey>> ListAsync(CancellationToken cancel = default)
         {
-            var dto = await Transport.PostJsonAsync<CryptoKeysDto>("key/list", query: null, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<CryptoKeysDto>("key/list", query: null, cancel).ConfigureAwait(false);
             return (dto.Keys ?? Array.Empty<CryptoKeyDto>()).Select(DtoMapper.ToKey).Cast<IKey>().ToArray();
         }
 
         public async Task<IKey?> RemoveAsync(string name, CancellationToken cancel = default)
         {
-            var dto = await Transport.PostJsonAsync<CryptoKeysDto>("key/rm", BuildArgQuery(name), cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<CryptoKeysDto>("key/rm", BuildArgQuery(name), cancel).ConfigureAwait(false);
             var key = dto.Keys?.FirstOrDefault();
             return key == null ? null : DtoMapper.ToKey(key);
         }
@@ -318,7 +324,7 @@ namespace Ipfs.Engine.Client.Operations
         {
             var query = new List<KeyValuePair<string, string>>();
             QueryStringBuilder.AddRepeated(query, "arg", new[] { oldName, newName });
-            var dto = await Transport.PostJsonAsync<CryptoKeyRenameDto>("key/rename", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<CryptoKeyRenameDto>("key/rename", query, cancel).ConfigureAwait(false);
             return new ClientKey(dto.Now ?? newName, dto.Id ?? string.Empty);
         }
 
@@ -330,11 +336,13 @@ namespace Ipfs.Engine.Client.Operations
         }
     }
 
-    public sealed class NameClient : ApiClientBase, INameApi
+    public sealed class NameClient : INameApi
     {
-        internal NameClient(IpfsHttpTransport transport)
-            : base(transport)
+        private readonly IIpfsApiTransport transport;
+
+        internal NameClient(IIpfsApiTransport transport)
         {
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
         public async Task<NamedContent> PublishAsync(string path, bool resolve = true, string key = "self", TimeSpan? lifetime = null, CancellationToken cancel = default)
@@ -344,7 +352,7 @@ namespace Ipfs.Engine.Client.Operations
             QueryStringBuilder.Add(query, "resolve", resolve);
             QueryStringBuilder.Add(query, "key", key);
             QueryStringBuilder.Add(query, "lifetime", lifetime ?? TimeSpan.FromHours(24));
-            var dto = await Transport.PostJsonAsync<NamedContentDto>("name/publish", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<NamedContentDto>("name/publish", query, cancel).ConfigureAwait(false);
             return DtoMapper.ToNamedContent(dto);
         }
 
@@ -359,34 +367,36 @@ namespace Ipfs.Engine.Client.Operations
             QueryStringBuilder.Add(query, "arg", name);
             QueryStringBuilder.Add(query, "recursive", recursive);
             QueryStringBuilder.Add(query, "nocache", nocache);
-            var dto = await Transport.PostJsonAsync<PathDto>("name/resolve", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<PathDto>("name/resolve", query, cancel).ConfigureAwait(false);
             return dto.Path ?? string.Empty;
         }
     }
 
-    public sealed class ObjectClient : ApiClientBase, IObjectApi
+    public sealed class ObjectClient : IObjectApi
     {
-        internal ObjectClient(IpfsHttpTransport transport)
-            : base(transport)
+        private readonly IIpfsApiTransport transport;
+
+        internal ObjectClient(IIpfsApiTransport transport)
         {
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
         public Task<Stream> DataAsync(Cid id, CancellationToken cancel = default)
         {
-            return Transport.PostStreamAsync("object/data", BuildArgQuery(id.ToString()), cancel);
+            return transport.PostStreamAsync("object/data", BuildArgQuery(id.ToString()), cancel);
         }
 
         public async Task<DagNode> GetAsync(Cid id, CancellationToken cancel = default)
         {
             var query = BuildArgQuery(id.ToString());
             QueryStringBuilder.Add(query, "data-encoding", "base64");
-            var dto = await Transport.PostJsonAsync<ObjectDataDetailDto>("object/get", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<ObjectDataDetailDto>("object/get", query, cancel).ConfigureAwait(false);
             return DtoMapper.ToDagNode(dto, dataIsBase64: true);
         }
 
         public async Task<IEnumerable<IMerkleLink>> LinksAsync(Cid id, CancellationToken cancel = default)
         {
-            var dto = await Transport.PostJsonAsync<ObjectLinkDetailDto>("object/links", BuildArgQuery(id.ToString()), cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<ObjectLinkDetailDto>("object/links", BuildArgQuery(id.ToString()), cancel).ConfigureAwait(false);
             return DtoMapper.ToMerkleLinks(dto.Links);
         }
 
@@ -398,7 +408,7 @@ namespace Ipfs.Engine.Client.Operations
                 query = BuildArgQuery(template);
             }
 
-            var dto = await Transport.PostJsonAsync<ObjectLinkDetailDto>("object/new", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<ObjectLinkDetailDto>("object/new", query, cancel).ConfigureAwait(false);
             return await GetAsync(Cid.Decode(dto.Hash!), cancel).ConfigureAwait(false);
         }
 
@@ -422,7 +432,7 @@ namespace Ipfs.Engine.Client.Operations
 
             using (var stream = new MemoryStream(node.ToArray(), writable: false))
             {
-                var dto = await Transport.PostMultipartJsonAsync<ObjectLinkDetailDto>("object/put", query, stream, "object.bin", "application/octet-stream", cancel).ConfigureAwait(false);
+                var dto = await transport.PostMultipartJsonAsync<ObjectLinkDetailDto>("object/put", query, stream, "object.bin", "application/octet-stream", cancel).ConfigureAwait(false);
                 node.Id = Cid.Decode(dto.Hash!);
                 return node;
             }
@@ -430,7 +440,7 @@ namespace Ipfs.Engine.Client.Operations
 
         public async Task<ObjectStat> StatAsync(Cid id, CancellationToken cancel = default)
         {
-            var dto = await Transport.PostJsonAsync<ObjectStatDto>("object/stat", BuildArgQuery(id.ToString()), cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<ObjectStatDto>("object/stat", BuildArgQuery(id.ToString()), cancel).ConfigureAwait(false);
             return DtoMapper.ToObjectStat(dto);
         }
 

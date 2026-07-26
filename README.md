@@ -1,110 +1,150 @@
 # CanDoItAll.IPFS
 
-`CanDoItAll.IPFS` contains an embedded IPFS engine, a typed .NET client, and a Blazor node-control app for inspecting, uploading, pinning, and managing a local or remote IPFS-style node.
+[![Validation](https://github.com/fyziktom/CanDoItAll.IPFS/actions/workflows/validation.yml/badge.svg?branch=main&event=push)](https://github.com/fyziktom/CanDoItAll.IPFS/actions/workflows/validation.yml)
+[![Client version](https://img.shields.io/nuget/v/CanDoItAll.IPFS.Client.svg?logo=nuget&label=Client)](https://www.nuget.org/packages/CanDoItAll.IPFS.Client)
+[![Client downloads](https://img.shields.io/nuget/dt/CanDoItAll.IPFS.Client.svg?logo=nuget&label=Client%20downloads)](https://www.nuget.org/packages/CanDoItAll.IPFS.Client)
+[![Engine version](https://img.shields.io/nuget/v/CanDoItAll.IPFS.Engine.svg?logo=nuget&label=Engine)](https://www.nuget.org/packages/CanDoItAll.IPFS.Engine)
+[![Engine downloads](https://img.shields.io/nuget/dt/CanDoItAll.IPFS.Engine.svg?logo=nuget&label=Engine%20downloads)](https://www.nuget.org/packages/CanDoItAll.IPFS.Engine)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/download/dotnet/10.0)
+[![License](https://img.shields.io/badge/license-MIT--derived%20with%20website%20link-blue.svg)](LICENSE)
 
-## Projects
+`CanDoItAll.IPFS` provides an embedded IPFS engine, reusable IPFS contracts, a typed
+.NET client, and a Blazor node-control application for operating a local or remote node.
 
-- `src/CanDoItAll.IPFS.Engine` hosts the embedded node and HTTP API.
-- `src/CanDoItAll.IPFS.Client` provides typed HTTP client operations.
-- `src/CanDoItAll.IPFS.NodeControl.Abstractions` contains UI-neutral NodeControl contracts and models for reusable node workflows.
-- `src/CanDoItAll.IPFS.NodeControl` provides the large-screen desktop-oriented Blazor control app.
-- `tests/CanDoItAll.IPFS.Tests` contains unit, integration, and UI-facing tests.
+## Ownership
+
+This repository owns:
+
+- the reusable `CanDoItAll.IPFS.Client`, `CanDoItAll.IPFS.Core`, and
+  `CanDoItAll.IPFS.Engine` packages;
+- the maintained embedded IPFS engine and its HTTP API;
+- the NodeControl application and its repository-specific Docker and release tooling.
+
+This repository does not own:
+
+- the IPFS protocol specification or public IPFS network;
+- the `CanDoItAll.Components.*` packages, which are consumed from nuget.org;
+- cross-repository standards and orchestration, which are maintained in
+  `CanDoItAll.SharedInfo`.
+
+## Projects And Packages
+
+| Project or package | Purpose |
+|---|---|
+| `src/CanDoItAll.IPFS.Client` | Consumer-facing typed HTTP client for an IPFS node |
+| `src/CanDoItAll.IPFS.Core` | Shared IPFS contracts and value types |
+| `src/CanDoItAll.IPFS.Engine` | Embedded IPFS node and HTTP API |
+| `src/CanDoItAll.IPFS.NodeControl.Abstractions` | UI-neutral NodeControl contracts and models |
+| `src/CanDoItAll.IPFS.NodeControl` | Desktop-oriented Blazor node-control application |
+| `tests/CanDoItAll.IPFS.Client.Tests` | Isolated Client/Core transport and contract tests |
+| `tests/CanDoItAll.IPFS.Tests` | Unit, integration, contract, and UI-facing tests |
+
+Install the public packages directly from nuget.org:
+
+```powershell
+dotnet add package CanDoItAll.IPFS.Client
+dotnet add package CanDoItAll.IPFS.Core
+dotnet add package CanDoItAll.IPFS.Engine
+```
 
 ## Requirements
 
-- .NET SDK `10.0.200` or later compatible patch version.
-- A package source for `CanDoItAll.Components.*` packages. They are currently resolved by `NuGet.config` from the local `CanDoItAllExternalPackages` source and are not available on nuget.org yet.
-- Docker Desktop or a compatible Docker engine for the compose and multi-node validation flows.
+- .NET SDK `10.0.200`, with compatible patch roll-forward as pinned by `global.json`.
+- Access to [nuget.org](https://www.nuget.org/) for package restore.
+- Docker Desktop or a compatible Docker Engine for container validation and local
+  container workflows.
 
-## Restore And Build
+## Build And Test
+
+Run from the repository root:
 
 ```powershell
-dotnet restore .\CanDoItAll.IPFS.slnx
-dotnet build .\CanDoItAll.IPFS.slnx --no-restore
+dotnet restore .\CanDoItAll.IPFS.slnx --configfile .\NuGet.config
+dotnet build .\CanDoItAll.IPFS.slnx --configuration Release --no-restore
+dotnet test .\CanDoItAll.IPFS.slnx --configuration Release --no-build
 ```
 
-The test project uses VSTest with MSTest.
+## Run NodeControl
+
+Set a development passphrase and node repository path in the shell that starts the app:
 
 ```powershell
-dotnet test .\tests\CanDoItAll.IPFS.Tests\CanDoItAll.IPFS.Tests.csproj --no-build
-```
-
-## Running NodeControl Locally
-
-Set a passphrase and node repository path in the same shell that starts the app:
-
-```powershell
-$env:IPFS_PASS = "Choose-A-Strong-Passphrase"
+$env:IPFS_PASS = "Choose-A-Strong-Local-Passphrase"
 $env:IPFS_PATH = "C:\ipfs-data\local-node"
-dotnet run --project .\src\CanDoItAll.IPFS.NodeControl\CanDoItAll.IPFS.NodeControl.csproj
+dotnet run --project .\src\CanDoItAll.IPFS.NodeControl\CanDoItAll.IPFS.NodeControl.csproj --framework net10.0
 ```
 
-The control app connects to the configured node endpoint and can auto-start the local engine when the target URL resolves to the current machine and no node is listening.
+The control app can connect to a configured remote endpoint or start the local engine
+when the configured target resolves to this machine and no node is listening.
+On Windows, use `--framework net10.0-windows` to run the desktop/tray variant.
 
-## Configuration
+Important configuration:
 
-- `IPFS_PASS` is required by the engine host for protected node repository access.
+- `IPFS_PASS` unlocks the local engine repository.
 - `IPFS_PATH` selects the local node repository path.
-- `IPFS_NODE_API_URL` can override the API bind URL for the engine host.
-- `src/CanDoItAll.IPFS.NodeControl/appsettings.json` contains the default NodeControl endpoint and mode settings.
+- `IPFS_NODE_API_URL` overrides the engine API bind URL.
+- `src/CanDoItAll.IPFS.NodeControl/appsettings.json` contains NodeControl defaults.
 
-## Docker
+## Containers
 
-The root `docker-compose.yml` starts an IPFS node API container and the NodeControl UI container. The compose stack uses named volumes so node repo data and NodeControl app data survive container restart and image rebuild.
-
-Until the private `CanDoItAll.Components.*` packages are published to a shared feed, copy the required component packages into `docker/local-packages` before building the NodeControl image. The directory contains a README with the expected package pattern.
+The canonical Compose model is a loopback-only local development stack:
 
 ```powershell
-$env:IPFS_PASS = "Choose-A-Strong-Passphrase"
-docker compose up --build -d
+Copy-Item .env.example .env
+# Replace the placeholder IPFS_PASS in the ignored .env file.
+docker compose --env-file .env config --quiet
+docker compose --env-file .env up -d --build --wait --wait-timeout 120
+docker compose --env-file .env down
 ```
 
 Default endpoints:
 
 - NodeControl UI: `http://127.0.0.1:5093`
 - IPFS node API: `http://127.0.0.1:5001`
-- IPFS read-only gateway: `http://127.0.0.1:5001/ipfs/{cid}`
+- IPFS gateway: `http://127.0.0.1:5001/ipfs/{cid}`
 
-Optional port overrides:
+Normal teardown preserves named volumes. Destructive volume reset is intentionally not
+part of the normal workflow. See [container operations](docs/operations/containers.md)
+and [backup and restore](docs/operations/backup-and-restore.md).
 
-```powershell
-$env:NODE_CONTROL_PORT = "6093"
-$env:IPFS_NODE_API_PORT = "6001"
-docker compose up --build -d
-```
+## Documentation
 
-Durable container paths:
+- [Architecture and ownership](docs/architecture.md)
+- [Container operations](docs/operations/containers.md)
+- [Backup and restore](docs/operations/backup-and-restore.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security](SECURITY.md)
 
-- IPFS repository and pinned file blocks: `/data/ipfs`
-- NodeControl settings JSON: `/data/node-control/settings/current-node-settings.json`
-- Remote pin request JSON: `/data/node-control/remote-pin/remote-pin-requests.json`
-- Explorer SQLite index: `/data/node-control/explorer-index/explorer.db`
-- Application logs: `/data/node-control/logs/application.log`
+## Packaging And Releases
 
-`docker compose down` stops the stack and preserves named volumes. `docker compose down --volumes` deletes the persisted data.
-
-## Packages
-
-`CanDoItAll.IPFS.Engine` and `CanDoItAll.IPFS.Client` are configured as NuGet packages with MIT license metadata, source-link metadata, package readme metadata, and a local package icon.
+Preview or produce all public NuGet packages through the repository-owned entry point:
 
 ```powershell
-dotnet pack .\src\CanDoItAll.IPFS.Engine\CanDoItAll.IPFS.Engine.csproj --configuration Release
-dotnet pack .\src\CanDoItAll.IPFS.Client\CanDoItAll.IPFS.Client.csproj --configuration Release
+.\tools\deployment\nugets\Build-NuGets.ps1 -WhatIf
+.\tools\deployment\nugets\Build-NuGets.ps1 `
+    -Configuration Release `
+    -OutputDirectory .\artifacts\packages
 ```
 
-## Security
+The command restores, builds, tests, and packs without publishing. Publishing to a
+package source is a separate, explicitly authorized operation.
 
-Do not commit node passphrases, access keys, private repositories, generated node data, or docker volume contents. Report security-sensitive issues privately until a disclosure process is published for the repository.
+Build standalone NodeControl/engine release bundles with:
 
-## License And Lineage
+```powershell
+.\tools\deployment\Build-Release.ps1 -WhatIf
+.\tools\deployment\Build-Release.ps1
+```
 
-This repository is MIT licensed. The original `net-ipfs-engine` copyright notice is retained in `LICENSE`; package metadata also identifies CanDoItAll contributors for this maintained fork.
+## License And Contributions
 
-## Contributing
+This repository uses the
+[MIT-Derived License with CanDoItAll Website Link Requirement](LICENSE). Redistributions
+of the software or a substantial portion of it in source or binary form must include at
+least one link to [aicandoitall.com](https://aicandoitall.com). One such link satisfies
+the added condition for a distribution containing multiple covered CanDoItAll
+libraries. The upstream 2018 Richard Schneider copyright notice is retained.
 
-Before submitting changes:
-
-1. Run `dotnet build .\CanDoItAll.IPFS.slnx --no-restore`.
-2. Run the relevant `dotnet test` command for touched areas.
-3. For UI changes, capture large-screen evidence for the affected NodeControl routes.
-4. For persistence or docker changes, prove data survives restart and rebuild.
+Code contributions are limited to partners explicitly approved by the maintainer.
+Unsolicited pull requests are not accepted. See [CONTRIBUTING.md](CONTRIBUTING.md) and
+contact the `fyziktom` account on LinkedIn before preparing or opening a pull request.

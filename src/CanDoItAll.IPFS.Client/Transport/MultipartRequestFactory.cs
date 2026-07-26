@@ -29,7 +29,7 @@ namespace Ipfs.Engine.Client.Transport
         public static MultipartFormDataContent CreateFile(Stream stream, string formFieldName, string fileName, string? contentType = null)
         {
             var content = new MultipartFormDataContent();
-            var fileContent = new StreamContent(stream);
+            var fileContent = new StreamContent(new NonOwningStream(stream));
             if (!string.IsNullOrWhiteSpace(contentType))
             {
                 fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
@@ -53,7 +53,7 @@ namespace Ipfs.Engine.Client.Transport
 
             foreach (var file in files)
             {
-                var fileContent = new StreamContent(file.Stream);
+                var fileContent = new StreamContent(new NonOwningStream(file.Stream));
                 if (!string.IsNullOrWhiteSpace(file.ContentType))
                 {
                     fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);

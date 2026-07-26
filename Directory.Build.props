@@ -2,12 +2,16 @@
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
-    <CanDoItAllComponentsPackageVersion>0.1.4</CanDoItAllComponentsPackageVersion>
+    <CanDoItAllComponentsPackageVersion>0.1.15</CanDoItAllComponentsPackageVersion>
+    <PackageProjectUrl Condition="'$(PackageProjectUrl)' == ''">https://aicandoitall.com</PackageProjectUrl>
     <DefaultItemExcludes>
       $(DefaultItemExcludes);
       .artifacts/**;
       .mcp-state/**;
+      output/**;
       playwright-report/**;
       test-results/**;
       TestResults/**;

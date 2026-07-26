@@ -1,4 +1,11 @@
-## Build outputs
+# IDE and user state
+.vs/
+.vscode/*.user
+*.suo
+*.user
+*.userosscache
+
+# Build and package output
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -12,19 +19,17 @@ x86/
 [Ww][Ii][Nn]32/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
-
-## .NET and tooling
 artifacts/
 .artifacts/
-.vs/
+output/
+outputs/
 project.lock.json
 project.fragment.lock.json
 *.nupkg
 *.snupkg
 *.binlog
-*.user
 
-## Test output
+# Test and coverage output
 [Tt]est[Rr]esult*/
 test-results/
 playwright-report/
@@ -32,12 +37,45 @@ coverage/
 CodeCoverage/
 screenshots/
 
-## Temp and local tooling
+# Node and Python caches
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Codex, MCP, and browser transient state
+.codex/live-targets/
+.codex/live-runner/
+.codex/runlogs/
+.codex/run-logs/
+.codex/long-runs/
+.codex/tmp/
+.codex/temp/
+.codex-artifacts/
+.codex-tmp/
+.codex-temp/
+.codex-obj/
+.mcp-state/
+.playwright/
+.playwright-cli/
+.playwright-mcp/
+
+# Logs, secrets, local overrides, and container data
+*.log
+*.local.json
+.env
+.env.*
+!.env.example
+compose.override.yaml
+compose.override.yml
+docker-compose.override.yaml
+docker-compose.override.yml
+.secrets/
+.docker-data/
+docker/local-packages/
+
+# Editor and OS noise
 ~$*
 *~
-node_modules/
-output/
-.mcp-state/
-.playwright
-.playwright-cli
-.codex-obj/
+.DS_Store
+Thumbs.db

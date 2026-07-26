@@ -41,18 +41,18 @@
                              Body="Use tabs to switch between endpoint settings, direct config edits, and maintenance actions without keeping all of them on screen at once."
                              Tip="Settings are stored locally in the browser and applied to the scoped node session.">
                     <PanelContent>
-                        <div class="space-y-3">
-                            <div class="space-y-2">
+                        <Stack GapScale="LayoutGap.Medium">
+                            <Stack GapScale="LayoutGap.Small">
                                 <StatusBadge Text="Local storage" Tone="info" />
                                 <p>Saving updates both the live session state and the browser copy loaded during startup.</p>
-                            </div>
+                            </Stack>
 
-                            <div class="space-y-2">
+                            <Stack GapScale="LayoutGap.Small">
                                 <StatusBadge Text="@maintenanceCapability.Status" Tone="@maintenanceCapability.Tone" />
                                 <p>@maintenanceCapability.Detail</p>
                                 <p>Shutdown terminates the current node process exposed by the API endpoint.</p>
-                            </div>
-                        </div>
+                            </Stack>
+                        </Stack>
                     </PanelContent>
                 </HelpPopover>
             </Actions>
@@ -77,7 +77,6 @@
               Tone="@(TabsTone.Secondary)"
               OverflowMode="@(TabsOverflowMode.Scroll)"
               PanelOverflowMode="@(TabsPanelOverflowMode.Auto)"
-              Class="w-full min-w-0"
               AriaLabel="Settings tabs">
             <TabItems>
                 <TabsItem Text="Endpoint"
@@ -85,7 +84,8 @@
                     <Grid Gap="LayoutGap.Medium"
                           ColumnTemplateXl="minmax(0,1.45fr) minmax(24rem,0.7fr)">
                             <FormSection Title="Node endpoint" Description="Change the target node and save the values for future sessions.">
-                                <div class="node-page-grid">
+                                <Grid Gap="LayoutGap.Medium"
+                                      ColumnTemplate="repeat(auto-fit,minmax(min(100%,18rem),1fr))">
                                     <FormField Text="Label">
                                         <TextBox Value="@editModel.Label"
                                                  ValueChanged="HandleLabelChanged"
@@ -116,15 +116,15 @@
                                                  Step="5"
                                                  Disabled="@isBusy" />
                                     </FormField>
-                                </div>
+                                </Grid>
 
-                                <div class="node-action-row">
+                                <InlineActions>
                                     <Button Text="Reset local copy"
                                             ButtonStyle="@(ButtonStyle.Light)"
                                             Variant="@(Variant.Outlined)"
                                             Click="ResetSettingsAsync"
                                             Disabled="@isBusy" />
-                                </div>
+                                </InlineActions>
                             </FormSection>
 
                             <Stack Gap="1rem">
@@ -162,8 +162,8 @@
                 <TabsItem Text="Config"
                           Icon="tune">
                     <SectionCard Title="Config read and write" Description="Inspect the full config, query individual keys, or set values directly through config routes.">
-                        <div class="space-y-4">
-                            <div class="node-inline-fields">
+                        <FormStack>
+                            <FormRow Split="true">
                                 <FormField Text="Config key">
                                     <TextBox Value="@configKey"
                                              ValueChanged="HandleConfigKeyChanged"
@@ -172,12 +172,12 @@
                                 </FormField>
 
                                 <FormField Text="JSON mode">
-                                    <div class="node-toggle-card">
-                                        <CheckBox TValue="bool" Value="@configTreatValueAsJson" ValueChanged="HandleConfigTreatValueAsJsonChanged" />
+                                    <SettingsSwitchRow>
                                         <TextBlock TextStyle="@(TextStyle.Caption)" Value="Parse the value as JSON before writing it back to the node." />
-                                    </div>
+                                        <CheckBox TValue="bool" Value="@configTreatValueAsJson" ValueChanged="HandleConfigTreatValueAsJsonChanged" />
+                                    </SettingsSwitchRow>
                                 </FormField>
-                            </div>
+                            </FormRow>
 
                             <FormField Text="Config value">
                                 <TextArea Value="@configValue"
@@ -187,7 +187,7 @@
                                           Disabled="@isBusy" />
                             </FormField>
 
-                            <div class="node-action-row">
+                            <InlineActions>
                                 <Button Text="Get key" Click="LoadConfigValueAsync" Disabled="@isBusy" />
                                 <Button Text="Set key"
                                         ButtonStyle="@(ButtonStyle.Light)"
@@ -199,20 +199,20 @@
                                         Variant="@(Variant.Outlined)"
                                         Click="LoadFullConfigAsync"
                                         Disabled="@isBusy" />
-                            </div>
+                            </InlineActions>
 
                             @if (!string.IsNullOrWhiteSpace(fullConfig))
                             {
                                 <pre class="node-code-block">@fullConfig</pre>
                             }
-                        </div>
+                        </FormStack>
                     </SectionCard>
                 </TabsItem>
 
                 <TabsItem Text="Maintenance"
                           Icon="build_circle">
                     <SectionCard Title="Repo and node maintenance" Description="Operational actions that change node state.">
-                        <div class="space-y-4">
+                        <FormStack>
                             <Cluster Gap="LayoutGap.Small">
                                 <StatusBadge Text="@maintenanceCapability.Status" Tone="@maintenanceCapability.Tone" />
                                 <StatusBadge Text="Shutdown node" Tone="danger" />
@@ -220,7 +220,7 @@
 
                             <TextBlock TextStyle="@(TextStyle.Body2)" Value="@maintenanceCapability.Detail" />
 
-                            <div class="node-action-row">
+                            <InlineActions>
                                 <Button Text="Repo version" Click="LoadRepoVersionAsync" Disabled="@isBusy" />
                                 <Button Text="Run repo gc"
                                         ButtonStyle="@(ButtonStyle.Light)"
@@ -232,7 +232,7 @@
                                         Variant="@(Variant.Text)"
                                         Click="ShutdownNodeAsync"
                                         Disabled="@isBusy" />
-                            </div>
+                            </InlineActions>
 
                             <Alert AlertStyle="@(AlertStyle.Info)">
                                 Repo verify is intentionally omitted here because the current engine HTTP surface still returns HTTP 501 for verify requests.
@@ -242,7 +242,7 @@
                             {
                                 <Alert AlertStyle="@(AlertStyle.Info)">Repository version: @repoVersion</Alert>
                             }
-                        </div>
+                        </FormStack>
                     </SectionCard>
                 </TabsItem>
             </TabItems>

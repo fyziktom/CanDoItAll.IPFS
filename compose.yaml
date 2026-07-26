@@ -1,36 +1,54 @@
-name: candoitall-ipfs
+name: ${COMPOSE_PROJECT_NAME:-candoitall-ipfs}
+
+x-bounded-logging: &bounded-logging
+  driver: local
+  options:
+    max-size: "10m"
+    max-file: "3"
 
 services:
   ipfs-node:
+    image: ${IPFS_NODE_IMAGE:-candoitall-ipfs-node:dev}
     build:
       context: .
       dockerfile: docker/Dockerfile.ipfs-node
-    image: candoitall-ipfs-node:local
     environment:
       ASPNETCORE_ENVIRONMENT: Container
       IPFS_NODE_API_URL: http://0.0.0.0:5001
       IPFS_PATH: /data/ipfs
-      IPFS_PASS: ${IPFS_PASS:?Set IPFS_PASS before running docker compose.}
+      IPFS_PASS: ${IPFS_PASS:?Set IPFS_PASS in an ignored .env file or the current shell.}
       IpfsHttpHost__Mode: Light
       IpfsHttpHost__RequireAuthentication: "false"
       IpfsHttpHost__AllowAnyOrigin: "true"
     ports:
-      - "${IPFS_NODE_API_PORT:-5001}:5001"
+      - "${CDA_BIND_ADDRESS:-127.0.0.1}:${IPFS_NODE_API_PORT:-5001}:5001"
     volumes:
       - ipfs-node-data:/data/ipfs
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS -X POST http://127.0.0.1:5001/api/v0/id >/dev/null || exit 1"]
+      test:
+        - CMD-SHELL
+        - curl -fsS -X POST http://127.0.0.1:5001/api/v0/id >/dev/null || exit 1
+      start_period: 15s
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 15s
-    restart: unless-stopped
+    init: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: ${IPFS_NODE_MEMORY_LIMIT:-1g}
+    cpus: ${IPFS_NODE_CPU_LIMIT:-2.0}
+    pids_limit: ${IPFS_NODE_PID_LIMIT:-512}
+    stop_grace_period: 60s
+    restart: "no"
+    logging: *bounded-logging
 
   node-control:
+    image: ${NODE_CONTROL_IMAGE:-candoitall-ipfs-node-control:dev}
     build:
       context: .
       dockerfile: docker/Dockerfile.node-control
-    image: candoitall-ipfs-node-control:local
     depends_on:
       ipfs-node:
         condition: service_healthy
@@ -44,16 +62,28 @@ services:
       ApplicationLogStore__FilePath: /data/node-control/logs/application.log
       ExplorerIndexStore__FilePath: /data/node-control/explorer-index/explorer.db
     ports:
-      - "${NODE_CONTROL_PORT:-5093}:8080"
+      - "${CDA_BIND_ADDRESS:-127.0.0.1}:${NODE_CONTROL_PORT:-5093}:8080"
     volumes:
       - node-control-data:/data/node-control
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/health/live >/dev/null || exit 1"]
+      test:
+        - CMD-SHELL
+        - curl -fsS http://127.0.0.1:8080/health/live >/dev/null || exit 1
+      start_period: 15s
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 15s
-    restart: unless-stopped
+    init: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: ${NODE_CONTROL_MEMORY_LIMIT:-768m}
+    cpus: ${NODE_CONTROL_CPU_LIMIT:-1.5}
+    pids_limit: ${NODE_CONTROL_PID_LIMIT:-256}
+    stop_grace_period: 30s
+    restart: "no"
+    logging: *bounded-logging
 
 volumes:
   ipfs-node-data:

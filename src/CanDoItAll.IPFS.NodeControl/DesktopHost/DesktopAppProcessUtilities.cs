@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 
 namespace CanDoItAll.IPFS.DesktopHost;
 
@@ -52,9 +51,6 @@ internal static class DesktopAppProcessUtilities
 
         return null;
     }
-
-    public static string GetProjectPath(string repoRoot, RepoAppDescriptor descriptor)
-        => Path.Combine(repoRoot, descriptor.ProjectDirectoryName, descriptor.ProjectFileName);
 
     public static string GetProjectDirectory(string repoRoot, RepoAppDescriptor descriptor)
         => Path.Combine(repoRoot, descriptor.ProjectDirectoryName);
@@ -108,17 +104,7 @@ internal static class DesktopAppProcessUtilities
             return StartProcess("dotnet", workingDirectory, environmentVariables, [dllPath]);
         }
 
-        var projectPath = GetProjectPath(repoRoot, descriptor);
-        if (!File.Exists(projectPath))
-        {
-            return null;
-        }
-
-        return StartProcess(
-            "dotnet",
-            GetProjectDirectory(repoRoot, descriptor),
-            environmentVariables,
-            ["run", "--project", projectPath, "--no-launch-profile"]);
+        return null;
     }
 
     public static Process? StartCurrentProcessClone(IReadOnlyDictionary<string, string?>? environmentVariables = null)
@@ -224,14 +210,21 @@ internal static class DesktopAppProcessUtilities
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutCts.CancelAfter(timeout);
 
-        while (!timeoutCts.IsCancellationRequested)
+        try
         {
-            if (await IsTcpEndpointListeningAsync(endpoint, timeoutCts.Token).ConfigureAwait(false) == shouldBeListening)
+            while (!timeoutCts.IsCancellationRequested)
             {
-                return;
-            }
+                if (await IsTcpEndpointListeningAsync(endpoint, timeoutCts.Token).ConfigureAwait(false) == shouldBeListening)
+                {
+                    return;
+                }
 
-            await Task.Delay(TimeSpan.FromMilliseconds(500), timeoutCts.Token).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromMilliseconds(500), timeoutCts.Token).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            // Report the operation's deadline below rather than caller cancellation.
         }
 
         throw new TimeoutException(
@@ -268,50 +261,6 @@ internal static class DesktopAppProcessUtilities
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             return false;
-        }
-    }
-
-    public static bool TryStopRepoAppProcess(
-        string repoRoot,
-        RepoAppDescriptor descriptor,
-        Uri endpoint,
-        TimeSpan waitTimeout,
-        out int? processId)
-    {
-        processId = null;
-
-        var process = FindRepoAppProcess(repoRoot, descriptor);
-        if (process is null)
-        {
-            return false;
-        }
-
-        processId = process.Id;
-        try
-        {
-            if (!IsProcessListeningOnEndpoint(process.Id, endpoint))
-            {
-                return false;
-            }
-
-            if (!process.HasExited)
-            {
-                process.Kill(entireProcessTree: true);
-                if (!process.WaitForExit((int)waitTimeout.TotalMilliseconds))
-                {
-                    return false;
-                }
-            }
-
-            return process.HasExited;
-        }
-        catch
-        {
-            return false;
-        }
-        finally
-        {
-            process.Dispose();
         }
     }
 
@@ -407,38 +356,6 @@ internal static class DesktopAppProcessUtilities
         }
     }
 
-    private static Process? FindRepoAppProcess(string repoRoot, RepoAppDescriptor descriptor)
-    {
-        var executableCandidates = EnumeratePublishedExecutableCandidates(repoRoot, descriptor)
-            .Concat(EnumerateExecutableCandidates(repoRoot, descriptor))
-            .Select(Path.GetFullPath)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var process in Process.GetProcessesByName(descriptor.AssemblyBaseName))
-        {
-            try
-            {
-                var fileName = process.MainModule?.FileName;
-                if (string.IsNullOrWhiteSpace(fileName))
-                {
-                    continue;
-                }
-
-                if (executableCandidates.Contains(Path.GetFullPath(fileName)))
-                {
-                    return process;
-                }
-            }
-            catch
-            {
-            }
-
-            process.Dispose();
-        }
-
-        return null;
-    }
-
     private static bool ContainsPublishedApp(string root, RepoAppDescriptor descriptor)
         => EnumeratePublishedExecutableCandidates(root, descriptor).Any(File.Exists)
             || EnumeratePublishedDllCandidates(root, descriptor).Any(File.Exists);
@@ -462,54 +379,6 @@ internal static class DesktopAppProcessUtilities
         {
             yield return current;
             current = current.Parent;
-        }
-    }
-
-    private static bool IsProcessListeningOnEndpoint(int processId, Uri endpoint)
-    {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return false;
-        }
-
-        try
-        {
-            using var queryProcess = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "powershell",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
-
-            queryProcess.StartInfo.ArgumentList.Add("-NoProfile");
-            queryProcess.StartInfo.ArgumentList.Add("-Command");
-            queryProcess.StartInfo.ArgumentList.Add(
-                $"$pids = Get-NetTCPConnection -State Listen -LocalPort {endpoint.Port} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($pids) {{ $pids -join ',' }}");
-
-            if (!queryProcess.Start())
-            {
-                return false;
-            }
-
-            var output = queryProcess.StandardOutput.ReadToEnd().Trim();
-            queryProcess.WaitForExit(3000);
-            if (string.IsNullOrWhiteSpace(output))
-            {
-                return false;
-            }
-
-            return output
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Any(value => int.TryParse(value, out var listeningPid) && listeningPid == processId);
-        }
-        catch
-        {
-            return false;
         }
     }
 

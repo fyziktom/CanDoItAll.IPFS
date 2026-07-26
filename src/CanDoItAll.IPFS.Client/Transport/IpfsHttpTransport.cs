@@ -9,13 +9,11 @@ using Newtonsoft.Json;
 
 namespace Ipfs.Engine.Client.Transport
 {
-    internal sealed class IpfsHttpTransport
+    internal sealed class IpfsHttpTransport : IIpfsApiTransport
     {
         private readonly HttpClient httpClient;
         private readonly Uri baseAddress;
         private readonly string apiPath;
-        private readonly JsonSerializer serializer = JsonSerializer.CreateDefault();
-
         public IpfsHttpTransport(HttpClient httpClient, IpfsNodeClientOptions options)
         {
             this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
@@ -24,8 +22,9 @@ namespace Ipfs.Engine.Client.Transport
                 throw new ArgumentNullException(nameof(options));
             }
 
-            baseAddress = options.BaseAddress ?? httpClient.BaseAddress ?? throw new ArgumentException("Either IpfsNodeClientOptions.BaseAddress or HttpClient.BaseAddress must be specified.", nameof(options));
-            apiPath = (options.ApiPath ?? string.Empty).Trim('/');
+            var normalizedOptions = options.Normalize(httpClient.BaseAddress);
+            baseAddress = normalizedOptions.BaseAddress!;
+            apiPath = normalizedOptions.ApiPath;
         }
 
         public Task<T> PostJsonAsync<T>(string route, IEnumerable<KeyValuePair<string, string>>? query, CancellationToken cancellationToken)
@@ -46,8 +45,40 @@ namespace Ipfs.Engine.Client.Transport
         public async Task<Stream> PostStreamAsync(string route, IEnumerable<KeyValuePair<string, string>>? query, CancellationToken cancellationToken)
         {
             var response = await SendCoreAsync(HttpMethod.Post, route, query, content: null, responseHeadersRead: true, cancellationToken).ConfigureAwait(false);
-            var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-            return new ResponseStream(stream, response);
+            try
+            {
+                var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+                return new ResponseStream(stream, response);
+            }
+            catch (Exception ex)
+            {
+                response.Dispose();
+
+                if (ex is OperationCanceledException && cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+
+                if (cancellationToken.IsCancellationRequested && IsExpectedCancellation(ex))
+                {
+                    throw new OperationCanceledException(
+                        "The response stream was canceled by the caller.",
+                        ex,
+                        cancellationToken);
+                }
+
+                if (ex is OperationCanceledException)
+                {
+                    throw new IpfsTransportException(route, "The response stream timed out.", ex);
+                }
+
+                if (ex is HttpRequestException)
+                {
+                    throw new IpfsTransportException(route, "Unable to open the response stream.", ex);
+                }
+
+                throw;
+            }
         }
 
         public Task<T> PostMultipartJsonAsync<T>(string route, IEnumerable<KeyValuePair<string, string>>? query, Stream body, string fileName, string? contentType, CancellationToken cancellationToken)
@@ -80,10 +111,11 @@ namespace Ipfs.Engine.Client.Transport
                 throw new ArgumentNullException(nameof(onItem));
             }
 
+            Exception? callbackException = null;
             try
             {
                 using (var response = await SendCoreAsync(HttpMethod.Post, route, query, content: null, responseHeadersRead: true, cancellationToken).ConfigureAwait(false))
-                using (var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                using (var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false))
                 {
                     await NdjsonReader.ReadAsync(stream, async line =>
                     {
@@ -97,13 +129,61 @@ namespace Ipfs.Engine.Client.Transport
                             throw new IpfsSerializationException(route, "Unable to parse line-delimited JSON returned by the IPFS API.", line, ex);
                         }
 
-                        await onItem(item).ConfigureAwait(false);
+                        if (item is null)
+                        {
+                            throw new IpfsSerializationException(
+                                route,
+                                "The IPFS API returned null where a line-delimited JSON item was expected.",
+                                line);
+                        }
+
+                        try
+                        {
+                            await onItem(item).ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            callbackException = ex;
+                            throw;
+                        }
                     }, cancellationToken).ConfigureAwait(false);
                 }
             }
+            catch (Exception ex) when (ReferenceEquals(ex, callbackException))
+            {
+                throw;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex) when (cancellationToken.IsCancellationRequested && IsExpectedCancellation(ex))
             {
-                return;
+                throw new OperationCanceledException(
+                    "The line-delimited response was canceled by the caller.",
+                    ex,
+                    cancellationToken);
+            }
+            catch (OperationCanceledException ex)
+            {
+                throw new IpfsTransportException(
+                    route,
+                    $"The line-delimited IPFS API response for route '{route}' timed out.",
+                    ex);
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new IpfsTransportException(
+                    route,
+                    $"Unable to read the line-delimited IPFS API response for route '{route}'.",
+                    ex);
+            }
+            catch (IOException ex)
+            {
+                throw new IpfsTransportException(
+                    route,
+                    $"Unable to read the line-delimited IPFS API response for route '{route}'.",
+                    ex);
             }
         }
 
@@ -111,7 +191,7 @@ namespace Ipfs.Engine.Client.Transport
         {
             using (var response = await SendCoreAsync(method, route, query, content, responseHeadersRead: false, cancellationToken).ConfigureAwait(false))
             {
-                var payload = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var payload = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                 if (string.IsNullOrWhiteSpace(payload))
                 {
                     if (allowEmptyBody)
@@ -122,27 +202,37 @@ namespace Ipfs.Engine.Client.Transport
                     throw new IpfsSerializationException(route, "The IPFS API returned an empty response where JSON was expected.");
                 }
 
+                T result;
                 try
                 {
-                    using (var stringReader = new StringReader(payload))
-                    using (var jsonReader = new JsonTextReader(stringReader))
-                    {
-                        return serializer.Deserialize<T>(jsonReader)!;
-                    }
+                    result = JsonConvert.DeserializeObject<T>(payload)!;
                 }
                 catch (Exception ex)
                 {
                     throw new IpfsSerializationException(route, "Unable to parse JSON returned by the IPFS API.", payload, ex);
                 }
+
+                if (result is null)
+                {
+                    throw new IpfsSerializationException(
+                        route,
+                        "The IPFS API returned null where a JSON result was expected.",
+                        payload);
+                }
+
+                return result;
             }
         }
 
         private async Task SendNoContentAsync(HttpMethod method, string route, IEnumerable<KeyValuePair<string, string>>? query, HttpContent? content, CancellationToken cancellationToken)
         {
-            using (var response = await SendCoreAsync(method, route, query, content, responseHeadersRead: false, cancellationToken).ConfigureAwait(false))
-            {
-                await response.Content.LoadIntoBufferAsync().ConfigureAwait(false);
-            }
+            using var response = await SendCoreAsync(
+                method,
+                route,
+                query,
+                content,
+                responseHeadersRead: false,
+                cancellationToken).ConfigureAwait(false);
         }
 
         private async Task<HttpResponseMessage> SendCoreAsync(HttpMethod method, string route, IEnumerable<KeyValuePair<string, string>>? query, HttpContent? content, bool responseHeadersRead, CancellationToken cancellationToken)
@@ -161,8 +251,11 @@ namespace Ipfs.Engine.Client.Transport
                         return response;
                     }
 
-                    await ThrowApiExceptionAsync(route, response).ConfigureAwait(false);
-                    throw new InvalidOperationException("The API exception thrower returned unexpectedly.");
+                    using (response)
+                    {
+                        await ThrowApiExceptionAsync(route, response, cancellationToken).ConfigureAwait(false);
+                        throw new InvalidOperationException("The API exception thrower returned unexpectedly.");
+                    }
                 }
                 catch (IpfsApiException)
                 {
@@ -170,7 +263,17 @@ namespace Ipfs.Engine.Client.Transport
                 }
                 catch (HttpRequestException ex)
                 {
-                    throw new IpfsTransportException(route, $"Unable to send request to '{requestUri}'.", ex);
+                    throw new IpfsTransportException(
+                        route,
+                        $"Unable to send the IPFS API request for route '{route}'.",
+                        ex);
+                }
+                catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+                {
+                    throw new IpfsTransportException(
+                        route,
+                        $"The IPFS API request for route '{route}' timed out.",
+                        ex);
                 }
             }
         }
@@ -179,18 +282,24 @@ namespace Ipfs.Engine.Client.Transport
         {
             var trimmedRoute = (route ?? string.Empty).Trim('/');
             var path = string.IsNullOrWhiteSpace(apiPath) ? trimmedRoute : $"{apiPath}/{trimmedRoute}";
-            var builder = new UriBuilder(new Uri(baseAddress, path))
+            var target = new Uri(baseAddress, path);
+            var builder = new UriBuilder(target)
             {
                 Query = QueryStringBuilder.Build(query)
             };
+            if (target.IsDefaultPort)
+            {
+                builder.Port = -1;
+            }
+
             return builder.Uri;
         }
 
-        private static async Task ThrowApiExceptionAsync(string route, HttpResponseMessage response)
+        private static async Task ThrowApiExceptionAsync(string route, HttpResponseMessage response, CancellationToken cancellationToken)
         {
             var body = response.Content == null
                 ? null
-                : await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                : await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
             if (!string.IsNullOrWhiteSpace(body))
             {

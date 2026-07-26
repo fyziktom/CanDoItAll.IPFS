@@ -181,7 +181,7 @@ public sealed class FilesExplorerUiTests
         context.Services.AddSingleton<IExplorerIndexStore>(serviceProvider => serviceProvider.GetRequiredService<ExplorerIndexStore>());
         context.Services.AddSingleton<CurrentNodeTargetRegistry>();
         context.Services.AddSingleton<HostedUrlRegistry>();
-        context.Services.AddSingleton<INodeHostController, DesktopNodeHostController>();
+        context.Services.AddSingleton<INodeHostController, NonStartingNodeHostController>();
         context.Services.AddSingleton<LocalNodeBootstrapService>();
         context.Services.AddSingleton<CurrentNodeLeaseFactory>();
         context.Services.AddSingleton<INodeConnectionLeaseFactory>(serviceProvider => serviceProvider.GetRequiredService<CurrentNodeLeaseFactory>());

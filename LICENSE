@@ -1,6 +1,7 @@
-MIT License
+MIT-Derived License with CanDoItAll Website Link Requirement
 
 Copyright (c) 2018 Richard Schneider
+Copyright (c) 2026 CanDoItAll contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -9,8 +10,17 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. The above copyright notices and this permission notice shall be included in
+   all copies or substantial portions of the Software.
+
+2. Any redistribution of the Software or a substantial portion of it, in
+   source or binary form, must include at least one link to the main
+   CanDoItAll website:
+
+   https://aicandoitall.com
+
+   One such link satisfies this condition for a redistribution that includes
+   multiple CanDoItAll libraries covered by this license.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,

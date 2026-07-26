@@ -25,4 +25,8 @@ public interface INodeHostController
     bool TryStartLocalNodeHost(string repoRoot, Uri endpoint, out int? processId);
 
     bool TryStopLocalNodeHost(string repoRoot, Uri endpoint, TimeSpan waitTimeout, out int? processId);
+
+    Task<bool> EnsureOwnedLocalNodeHostExitedAsync(
+        TimeSpan gracefulTimeout,
+        CancellationToken cancellationToken = default);
 }

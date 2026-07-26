@@ -24,7 +24,7 @@ namespace Ipfs.Engine.ClientTests
         private readonly TempNode node;
         private readonly object? priorIpfsEngine;
 
-        private RealStartupIpfsHttpHost(TempNode node, object? priorIpfsEngine, IHost host, HttpClient httpClient, IpfsEngineClient client, Uri baseAddress)
+        private RealStartupIpfsHttpHost(TempNode node, object? priorIpfsEngine, IHost host, HttpClient httpClient, IpfsNodeClient client, Uri baseAddress)
         {
             this.node = node;
             this.priorIpfsEngine = priorIpfsEngine;
@@ -38,7 +38,7 @@ namespace Ipfs.Engine.ClientTests
 
         public HttpClient HttpClient { get; }
 
-        public IpfsEngineClient Client { get; }
+        public IpfsNodeClient Client { get; }
 
         public Uri BaseAddress { get; }
 
@@ -91,7 +91,7 @@ namespace Ipfs.Engine.ClientTests
                     httpClient.DefaultRequestHeaders.Add(name, value);
                 }
 
-                var client = new IpfsEngineClient(httpClient);
+                var client = new IpfsNodeClient(httpClient);
                 return new RealStartupIpfsHttpHost(node, priorIpfsEngine, host, httpClient, client, baseAddress);
             }
             catch

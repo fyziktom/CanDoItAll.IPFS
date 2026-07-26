@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup Condition="'$(IsPackable)' == 'true' and '$(PackageLicenseExpression)' == '' and '$(PackageLicenseFile)' == ''">
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <_UseRepositoryPackageLicense>true</_UseRepositoryPackageLicense>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(_UseRepositoryPackageLicense)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)LICENSE"
+          Pack="true"
+          PackagePath="\"
+          Link="LICENSE" />
+  </ItemGroup>
+</Project>

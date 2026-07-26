@@ -7,21 +7,21 @@ using Ipfs.Engine.Client.Transport;
 namespace Ipfs.Engine.Client
 {
     /// <summary>
-    ///   A typed HTTP client for an <c>Ipfs.Engine</c> node.
+    ///   A typed HTTP client for a CanDoItAll IPFS node.
     /// </summary>
-    public sealed class IpfsEngineClient : ICoreApi
+    public class IpfsNodeClient : ICoreApi
     {
         /// <summary>
         ///   Creates a new client for the configured node.
         /// </summary>
-        public IpfsEngineClient(HttpClient httpClient, IpfsNodeClientOptions? options = null)
+        public IpfsNodeClient(HttpClient httpClient, IpfsNodeClientOptions? options = null)
         {
             if (httpClient == null)
             {
                 throw new ArgumentNullException(nameof(httpClient));
             }
 
-            Options = options ?? new IpfsNodeClientOptions();
+            Options = (options ?? new IpfsNodeClientOptions()).Normalize(httpClient.BaseAddress);
             Transport = new IpfsHttpTransport(httpClient, Options);
 
             Generic = new GenericClient(Transport);
@@ -45,7 +45,7 @@ namespace Ipfs.Engine.Client
 
         public IpfsNodeClientOptions Options { get; }
 
-        internal IpfsHttpTransport Transport { get; }
+        internal IIpfsApiTransport Transport { get; }
 
         public GenericClient Generic { get; }
         public BitswapClient Bitswap { get; }
@@ -82,5 +82,20 @@ namespace Ipfs.Engine.Client
         IPubSubApi ICoreApi.PubSub => PubSub;
         IStatsApi ICoreApi.Stats => Stats;
         ISwarmApi ICoreApi.Swarm => Swarm;
+    }
+
+    /// <summary>
+    ///   Compatibility name for <see cref="IpfsNodeClient"/>.
+    /// </summary>
+    [Obsolete("Use IpfsNodeClient. This compatibility type will be removed in a future release.")]
+    public sealed class IpfsEngineClient : IpfsNodeClient
+    {
+        /// <summary>
+        ///   Creates a new client for the configured node.
+        /// </summary>
+        public IpfsEngineClient(HttpClient httpClient, IpfsNodeClientOptions? options = null)
+            : base(httpClient, options)
+        {
+        }
     }
 }

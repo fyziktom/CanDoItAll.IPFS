@@ -9,6 +9,7 @@ public sealed class LocalNodeBootstrapService
     private const string ManagedApiPath = "api/v0";
     private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(45);
     private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(20);
+    private static readonly TimeSpan ProcessExitTimeout = TimeSpan.FromSeconds(5);
 
     private readonly CurrentNodeTargetRegistry targetRegistry;
     private readonly INodeHostController nodeHostController;
@@ -194,14 +195,16 @@ public sealed class LocalNodeBootstrapService
         var settings = targetRegistry.Current;
         settings.Normalize();
 
-        if (!nodeHostController.IsLocalEndpoint(settings.BuildBaseAddress()))
+        var endpoint = settings.BuildBaseAddress();
+        if (!nodeHostController.IsLocalEndpoint(endpoint))
         {
-            throw new InvalidOperationException("The current node target is not a local endpoint, so the local node host cannot be stopped from this tray menu.");
+            await EnsureOwnedNodeHostExitedAsync(endpoint, cancellationToken).ConfigureAwait(false);
+            return;
         }
 
-        var endpoint = settings.BuildBaseAddress();
         if (!await nodeHostController.IsEndpointListeningAsync(endpoint, cancellationToken).ConfigureAwait(false))
         {
+            await EnsureOwnedNodeHostExitedAsync(endpoint, cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -235,6 +238,7 @@ public sealed class LocalNodeBootstrapService
         }
 
         await nodeHostController.WaitForEndpointStateAsync(endpoint, shouldBeListening: false, StopTimeout, cancellationToken).ConfigureAwait(false);
+        await EnsureOwnedNodeHostExitedAsync(endpoint, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task RestartLocalNodeAsync(CancellationToken cancellationToken = default)
@@ -268,8 +272,7 @@ public sealed class LocalNodeBootstrapService
 
             if (await nodeHostController.IsEndpointListeningAsync(endpoint, cancellationToken).ConfigureAwait(false))
             {
-                await RecoverUnhealthyLocalNodeAsync(endpoint, cancellationToken).ConfigureAwait(false);
-                return;
+                await StopUnhealthyLocalNodeAsync(endpoint, cancellationToken).ConfigureAwait(false);
             }
 
             var applicationRoot = nodeHostController.FindRepoRoot();
@@ -280,6 +283,7 @@ public sealed class LocalNodeBootstrapService
 
             logger.LogInformation("Starting local node host from application root {ApplicationRoot} for endpoint {Endpoint}.", applicationRoot, endpoint);
 
+            await EnsureOwnedNodeHostExitedAsync(endpoint, cancellationToken).ConfigureAwait(false);
             if (!nodeHostController.TryStartLocalNodeHost(applicationRoot, endpoint, out var processId))
             {
                 throw new InvalidOperationException("Could not start the local IPFS host from the current repository or published deployment layout.");
@@ -290,8 +294,29 @@ public sealed class LocalNodeBootstrapService
                 processId,
                 endpoint);
 
-            await nodeHostController.WaitForEndpointStateAsync(endpoint, shouldBeListening: true, StartTimeout, cancellationToken).ConfigureAwait(false);
-            await WaitForHealthyEndpointAsync(endpoint, StartTimeout, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await nodeHostController.WaitForEndpointStateAsync(endpoint, shouldBeListening: true, StartTimeout, cancellationToken).ConfigureAwait(false);
+                await WaitForHealthyEndpointAsync(endpoint, StartTimeout, cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                if (!nodeHostController.TryStopLocalNodeHost(applicationRoot, endpoint, StopTimeout, out var stoppedProcessId))
+                {
+                    logger.LogWarning(
+                        "The local node host for endpoint {Endpoint} failed during startup, and its owned process could not be stopped automatically.",
+                        endpoint);
+                }
+                else
+                {
+                    logger.LogInformation(
+                        "Stopped local node host process {ProcessId} after startup failed for endpoint {Endpoint}.",
+                        stoppedProcessId,
+                        endpoint);
+                }
+
+                throw;
+            }
         }
         finally
         {
@@ -335,6 +360,17 @@ public sealed class LocalNodeBootstrapService
 
         logger.LogWarning("Stopped unhealthy local node host process {ProcessId} for endpoint {Endpoint}.", processId, endpoint);
         await nodeHostController.WaitForEndpointStateAsync(endpoint, shouldBeListening: false, StopTimeout, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task EnsureOwnedNodeHostExitedAsync(Uri endpoint, CancellationToken cancellationToken)
+    {
+        if (!await nodeHostController
+                .EnsureOwnedLocalNodeHostExitedAsync(ProcessExitTimeout, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            throw new InvalidOperationException(
+                $"An owned local node host process did not exit within the allowed timeout while handling target {endpoint}.");
+        }
     }
 
     private async Task WaitForHealthyEndpointAsync(Uri endpoint, TimeSpan timeout, CancellationToken cancellationToken)

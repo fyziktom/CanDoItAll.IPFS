@@ -141,7 +141,8 @@ public sealed class NodeOperatorNetworkWorkflowTests
 
         localCts.Cancel();
         remoteCts.Cancel();
-        await localSubscription.ConfigureAwait(false);
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            async () => await localSubscription.ConfigureAwait(false));
         await remoteSubscription.ConfigureAwait(false);
     }
 
@@ -169,6 +170,50 @@ public sealed class NodeOperatorNetworkWorkflowTests
         var inspected = await service.InspectFileSystemAsync(remoteCid, CancellationToken.None).ConfigureAwait(false);
         Assert.AreEqual(remoteCid, inspected.ResolvedId);
         Assert.IsFalse(inspected.IsDirectory);
+    }
+
+    [TestMethod]
+    public async Task IncomingPeerDiscovery_DoesNotCreateReverseDuplicateConnections()
+    {
+        await using var host = await TestIpfsHttpHost.StartAsync().ConfigureAwait(false);
+        var service = NodeOperatorTestHarness.CreateService(host.BaseAddress);
+        using var remote = await StartIsolatedNodeAsync().ConfigureAwait(false);
+
+        var remoteSwarm = await remote.SwarmService.ConfigureAwait(false);
+        var connectedWhenDiscovered = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        void RecordConnectionState(object? _, Peer peer)
+        {
+            var isCanonicalConnectedPeer =
+                remoteSwarm.Manager.TryGet(peer, out var acceptedConnection) &&
+                ReferenceEquals(peer, acceptedConnection.RemotePeer) &&
+                Equals(peer.ConnectedAddress, acceptedConnection.RemoteAddress);
+            connectedWhenDiscovered.TrySetResult(isCanonicalConnectedPeer);
+        }
+        remoteSwarm.PeerDiscovered += RecordConnectionState;
+
+        var remoteAddress = (await TestIpfsHttpHost.GetDialAddressAsync(remote).ConfigureAwait(false)).ToString();
+        bool wasConnectedWhenDiscovered;
+        try
+        {
+            await service.ConnectAsync(remoteAddress, CancellationToken.None).ConfigureAwait(false);
+            wasConnectedWhenDiscovered = await connectedWhenDiscovered.Task
+                .WaitAsync(TimeSpan.FromSeconds(5))
+                .ConfigureAwait(false);
+        }
+        finally
+        {
+            remoteSwarm.PeerDiscovered -= RecordConnectionState;
+        }
+
+        var localSwarm = await host.Node.SwarmService.ConfigureAwait(false);
+        Assert.IsTrue(
+            wasConnectedWhenDiscovered,
+            "The accepted connection must be registered before incoming peer discovery is published.");
+        await Task.Delay(TimeSpan.FromMilliseconds(500)).ConfigureAwait(false);
+
+        Assert.AreEqual(1, localSwarm.Manager.Connections.Count());
+        Assert.AreEqual(1, remoteSwarm.Manager.Connections.Count());
     }
 
     [TestMethod]

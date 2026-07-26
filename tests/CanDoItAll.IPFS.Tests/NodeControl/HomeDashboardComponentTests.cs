@@ -88,7 +88,7 @@ public sealed class HomeDashboardComponentTests
         context.Services.AddSingleton<ExplorerIndexStore>();
         context.Services.AddSingleton<IExplorerIndexStore>(serviceProvider => serviceProvider.GetRequiredService<ExplorerIndexStore>());
         context.Services.AddSingleton<CurrentNodeTargetRegistry>();
-        context.Services.AddSingleton<INodeHostController, DesktopNodeHostController>();
+        context.Services.AddSingleton<INodeHostController, NonStartingNodeHostController>();
         context.Services.AddSingleton<LocalNodeBootstrapService>();
         context.Services.AddSingleton<CurrentNodeLeaseFactory>();
         context.Services.AddSingleton<INodeConnectionLeaseFactory>(serviceProvider => serviceProvider.GetRequiredService<CurrentNodeLeaseFactory>());

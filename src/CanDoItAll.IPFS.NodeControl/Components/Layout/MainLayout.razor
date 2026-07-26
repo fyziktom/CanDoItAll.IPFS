@@ -1,6 +1,7 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject NavigationManager NavigationManager
+@inject SideMenuService SideMenus
 @inject NotificationService NotificationService
 @inject LocalNodeBootstrapService LocalNodeBootstrapService
 @inject NodeSessionState NodeSessionState
@@ -10,91 +11,106 @@
 @inject Microsoft.Extensions.Options.IOptions<NodeConnectionSettings> DefaultNodeSettingsOptions
 @inject ILogger<MainLayout> Logger
 
-<Layout FitViewport="true"
-        LockOverflow="true"
-        class="node-shell">
-    <Grid Gap="LayoutGap.Medium"
-          FillHeight="true"
-          RowTemplate="auto minmax(0,1fr)"
-          Class="node-shell__viewport">
-        <header class="node-shell__topbar">
-            <div class="node-shell__brand">
-                <div class="node-shell__brand-row">
-                    <TextBlock TextStyle="TextStyle.Subtitle1" Value="IPFS Node Control" />
-                    <HelpPopover AriaLabel="Show workspace help"
-                                 PanelClass="pf-help-popover__panel pf-help-popover__panel--below-start"
-                                 Heading="Workspace"
-                                 Body="Dashboard, files, content, network, and settings all stay bound to the current node target."
-                                 Tip="Use the left rail to change task surfaces without losing the active connection context." />
-                </div>
+<ThemeHost ThemeKey="@CadThemes.Light">
+    <Layout FitViewport="true"
+            LockOverflow="true">
+        <SideMenu MenuId="@MenuId"
+                  Title="IPFS Node Control"
+                  Subtitle="@NodeSessionState.CurrentSettings.Label"
+                  Icon="hub"
+                  AriaLabel="IPFS node navigation"
+                  FillHeight="true"
+                  Items="@NavigationItems"
+                  BottomItems="@BottomNavigationItems"
+                  ItemSelected="HandleMenuSelectionAsync" />
 
-                <TextBlock TextStyle="TextStyle.Caption"
-                           Value="A focused shell for node health, files, content workflows, and network operations." />
-            </div>
+        <Body FillHeight="true"
+              Scrollable="true">
+            @Body
+        </Body>
+    </Layout>
 
-            <Stack Orientation="Orientation.Horizontal"
-                   Wrap="FlexWrap.Wrap"
-                   AlignItems="AlignItems.Center"
-                   JustifyContent="JustifyContent.End"
-                   Gap="0.75rem"
-                   class="node-shell__target">
-                <div class="node-shell__target-pill">
-                    <span class="node-shell__target-label">Target</span>
-                    <strong>@NodeSessionState.CurrentSettings.Label</strong>
-                </div>
-                <div class="node-shell__target-pill node-shell__target-pill--muted">
-                    @NodeSessionState.CurrentSettings.BaseUrl
-                </div>
-            </Stack>
-        </header>
-
-        <Grid Gap="LayoutGap.Medium"
-              FillHeight="true"
-              RowTemplate="minmax(0,1fr)"
-              ColumnTemplateXl="13.5rem minmax(0,1fr)"
-              Class="node-shell__workspace">
-            <Sidebar Expanded="true"
-                     FillHeight="true"
-                     Scrollable="true"
-                     class="node-shell__sidebar">
-                <Stack Gap="1rem"
-                       class="node-shell__nav-stack">
-                    <div class="node-shell__sidebar-copy">
-                        <p class="node-shell__eyebrow">Workspace</p>
-                        <TextBlock TextStyle="TextStyle.Subtitle1" Value="Node surfaces" />
-                        <TextBlock TextStyle="TextStyle.Body2"
-                                   Value="Keep the active node context while switching between dashboards, explorer tools, diagnostics, and maintenance." />
-                    </div>
-
-                    @foreach (var item in GetNavigationItems())
-                    {
-                        <Button Text="@item.Label"
-                                Icon="@item.Icon"
-                                ButtonStyle="@(IsActive(item.Route) ? ButtonStyle.Primary : ButtonStyle.Light)"
-                                Variant="@(IsActive(item.Route) ? Variant.Filled : Variant.Text)"
-                                Click="@(() => Navigate(item.Route))"
-                                class="node-shell__nav-button" />
-                    }
-                </Stack>
-            </Sidebar>
-
-            <Body FillHeight="true"
-                  Scrollable="true"
-                  class="node-shell__body">
-                <div class="node-shell__body-inner">
-                    <Notification />
-                    @Body
-                </div>
-            </Body>
-        </Grid>
-    </Grid>
-</Layout>
+    <DialogHost />
+    <Tooltip />
+    <Notification Position="NotificationPosition.TopRight" />
+</ThemeHost>
 
 @code {
+    internal const string MenuId = "ipfs-node-control-primary-navigation";
+
     private int pendingRequestCount;
+
+    private IReadOnlyList<ISideMenuItem> NavigationItems =>
+    [
+        new SideMenuItemDefinition
+        {
+            Id = "dashboard",
+            Text = "Dashboard",
+            Icon = "dashboard",
+            Description = "Node health and the current connection.",
+            Payload = "/dashboard",
+            OverflowBehavior = SideMenuOverflowBehavior.PreferVisible
+        },
+        new SideMenuItemDefinition
+        {
+            Id = "files",
+            Text = "Files",
+            Icon = "folder",
+            Description = "Browse and manage content on the current node.",
+            Payload = "/files/explorer",
+            OverflowBehavior = SideMenuOverflowBehavior.PreferVisible
+        },
+        new SideMenuItemDefinition
+        {
+            Id = "pin-requests",
+            Text = "Pin requests",
+            Icon = "move_to_inbox",
+            Description = "Review incoming remote pin requests.",
+            BadgeText = pendingRequestCount > 0 ? pendingRequestCount.ToString() : string.Empty,
+            Payload = "/pin-requests",
+            OverflowBehavior = SideMenuOverflowBehavior.PreferVisible
+        },
+        new SideMenuItemDefinition
+        {
+            Id = "logs",
+            Text = "Logs",
+            Icon = "notes",
+            Description = "Inspect node and control-plane events.",
+            Payload = "/logs"
+        },
+        new SideMenuItemDefinition
+        {
+            Id = "content",
+            Text = "Content",
+            Icon = "data_object",
+            Description = "Run focused content workflows.",
+            Payload = "/content"
+        },
+        new SideMenuItemDefinition
+        {
+            Id = "network",
+            Text = "Network",
+            Icon = "hub",
+            Description = "Inspect peers, topology, and network state.",
+            Payload = "/network"
+        }
+    ];
+
+    private static readonly IReadOnlyList<ISideMenuItem> BottomNavigationItems =
+    [
+        new SideMenuItemDefinition
+        {
+            Id = "settings",
+            Text = "Settings",
+            Icon = "tune",
+            Description = "Configure the current node connection.",
+            Payload = "/settings"
+        }
+    ];
 
     protected override void OnInitialized()
     {
+        NavigationManager.LocationChanged += HandleLocationChanged;
         NodeSessionState.Changed += HandleNodeStateChanged;
         RemotePinRequestStore.RequestChanged += HandleRemotePinRequestChanged;
         pendingRequestCount = CountPendingRequests();
@@ -106,6 +122,8 @@
         {
             return;
         }
+
+        await SynchronizeMenuSelectionAsync();
 
         Logger.LogInformation("Main layout first render started bootstrap preparation for target {BaseUrl}.", NodeSessionState.CurrentSettings.BaseUrl);
 
@@ -149,67 +167,129 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private void Navigate(string route)
-        => NavigationManager.NavigateTo(route);
+    private Task HandleMenuSelectionAsync(SideMenuSelection selection)
+    {
+        if (selection.Source == SideMenuSelectionSource.External
+            || selection.Item.Payload is not string route
+            || IsActive(route))
+        {
+            return Task.CompletedTask;
+        }
+
+        NavigationManager.NavigateTo(route);
+        return Task.CompletedTask;
+    }
+
+    private async Task SynchronizeMenuSelectionAsync()
+    {
+        var itemId = ResolveCurrentItemId();
+        if (itemId == null
+            || string.Equals(
+                SideMenus.GetSnapshot(MenuId).SelectedItemId,
+                itemId,
+                StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        await SideMenus.SelectAsync(MenuId, itemId, SideMenuSelectionSource.External);
+    }
+
+    private string? ResolveCurrentItemId()
+    {
+        var current = NormalizeLocation(NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
+        if (string.IsNullOrEmpty(current) || IsRouteMatch(current, "dashboard"))
+        {
+            return "dashboard";
+        }
+
+        if (IsRouteMatch(current, "files") || IsRouteMatch(current, "files/explorer"))
+        {
+            return "files";
+        }
+
+        foreach (var item in NavigationItems.Concat(BottomNavigationItems))
+        {
+            if (item.Payload is string route && IsRouteMatch(current, route.Trim('/')))
+            {
+                return item.Id;
+            }
+        }
+
+        return null;
+    }
 
     private bool IsActive(string route)
     {
-        var current = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        if (string.IsNullOrWhiteSpace(current))
-        {
-            current = "dashboard";
-        }
-
-        var normalizedRoute = route.Trim('/').ToLowerInvariant();
+        var current = NormalizeLocation(NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
+        var normalizedRoute = route.Trim('/');
         if (string.Equals(normalizedRoute, "files/explorer", StringComparison.OrdinalIgnoreCase)
-            && string.Equals(current, "files", StringComparison.OrdinalIgnoreCase))
+            && IsRouteMatch(current, "files"))
         {
             return true;
         }
 
-        return string.Equals(current, normalizedRoute, StringComparison.OrdinalIgnoreCase)
-            || current.StartsWith($"{normalizedRoute}/", StringComparison.OrdinalIgnoreCase);
+        return IsRouteMatch(current, normalizedRoute);
     }
 
-    private void HandleNodeStateChanged()
-        => InvokeAsync(StateHasChanged);
-
-    private void HandleRemotePinRequestChanged(StoredRemotePinRequest request)
-        => _ = InvokeAsync(() =>
-        {
-            pendingRequestCount = CountPendingRequests();
-            if (request.State == RemotePinRequestState.Pending)
-            {
-                NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Info,
-                    Summary = "Pin request received",
-                    Detail = request.Request.Content.DisplayName
-                });
-            }
-
-            StateHasChanged();
-        });
-
-    private IReadOnlyList<NavigationItem> GetNavigationItems()
+    private static string NormalizeLocation(string location)
     {
-        var pinRequestsLabel = pendingRequestCount > 0
-            ? $"Pin requests ({pendingRequestCount})"
-            : "Pin requests";
+        var queryIndex = location.IndexOfAny(['?', '#']);
+        return (queryIndex >= 0 ? location[..queryIndex] : location).Trim('/');
+    }
 
-        return new List<NavigationItem>
+    private static bool IsRouteMatch(string current, string route)
+        => string.Equals(current, route, StringComparison.OrdinalIgnoreCase)
+            || current.StartsWith($"{route}/", StringComparison.OrdinalIgnoreCase);
+
+    private async void HandleLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        try
         {
-            new("Dashboard", "/dashboard", "dashboard"),
-            new("Files", "/files/explorer", "folder"),
-            new("Pin requests", "/pin-requests", "move_to_inbox"),
-            new("Logs", "/logs", "notes"),
-            new("Content", "/content", "data_object"),
-            new("Network", "/network", "hub"),
-            new("Settings", "/settings", "tune")
-        }.Select(item => item.Label == "Pin requests"
-                ? item with { Label = pinRequestsLabel }
-                : item)
-            .ToList();
+            await InvokeAsync(SynchronizeMenuSelectionAsync);
+        }
+        catch (Exception ex)
+        {
+            await DispatchExceptionAsync(ex);
+        }
+    }
+
+    private async void HandleNodeStateChanged()
+    {
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            await DispatchExceptionAsync(ex);
+        }
+    }
+
+    private async void HandleRemotePinRequestChanged(StoredRemotePinRequest request)
+    {
+        try
+        {
+            await InvokeAsync(() =>
+            {
+                pendingRequestCount = CountPendingRequests();
+                if (request.State == RemotePinRequestState.Pending)
+                {
+                    NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Info,
+                        Summary = "Pin request received",
+                        Detail = request.Request.Content.DisplayName
+                    });
+                }
+
+                StateHasChanged();
+            });
+        }
+        catch (Exception ex)
+        {
+            await DispatchExceptionAsync(ex);
+        }
     }
 
     private int CountPendingRequests()
@@ -268,9 +348,8 @@
 
     public void Dispose()
     {
+        NavigationManager.LocationChanged -= HandleLocationChanged;
         NodeSessionState.Changed -= HandleNodeStateChanged;
         RemotePinRequestStore.RequestChanged -= HandleRemotePinRequestChanged;
     }
-
-    private sealed record NavigationItem(string Label, string Route, string Icon);
 }

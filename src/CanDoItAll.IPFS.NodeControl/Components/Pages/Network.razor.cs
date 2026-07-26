@@ -268,8 +268,11 @@ public partial class Network
 
         await StopSubscriptionAsync();
         subscriptionMessages.Clear();
-        subscriptionLease = IpfsClientFactory.CreateLease();
-        subscriptionCts = new CancellationTokenSource();
+        var lease = IpfsClientFactory.CreateLease();
+        var cancellationSource = new CancellationTokenSource();
+        var cancellationToken = cancellationSource.Token;
+        subscriptionLease = lease;
+        subscriptionCts = cancellationSource;
         isSubscribed = true;
 
         var topic = subscriptionTopic.Trim();
@@ -277,7 +280,7 @@ public partial class Network
         {
             try
             {
-                await subscriptionLease.Client.PubSub.SubscribeAsync(topic, message =>
+                await lease.Client.PubSub.SubscribeAsync(topic, message =>
                 {
                     var payload = System.Text.Encoding.UTF8.GetString(message.DataBytes);
                     _ = InvokeAsync(() =>
@@ -290,9 +293,9 @@ public partial class Network
 
                         StateHasChanged();
                     });
-                }, subscriptionCts.Token);
+                }, cancellationToken);
             }
-            catch (Exception) when (subscriptionCts?.IsCancellationRequested == true)
+            catch (Exception) when (cancellationToken.IsCancellationRequested)
             {
             }
             catch (Exception ex)

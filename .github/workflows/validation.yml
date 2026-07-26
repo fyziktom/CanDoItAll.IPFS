@@ -1,0 +1,71 @@
+name: Validation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dotnet:
+    name: .NET and packages
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        shell: pwsh
+        run: dotnet restore .\CanDoItAll.IPFS.slnx --configfile .\NuGet.config
+
+      - name: Build, test, and pack public packages
+        shell: pwsh
+        run: >
+          .\tools\deployment\nugets\Build-NuGets.ps1
+          -Configuration Release
+          -OutputDirectory .\artifacts\packages
+          -NoRestore
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: nuget-packages
+          path: |
+            artifacts/packages/*.nupkg
+            artifacts/packages/*.snupkg
+          if-no-files-found: error
+
+  containers:
+    name: Containers
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Validate and smoke-test containers
+        shell: pwsh
+        run: >
+          ./tools/validation/Test-Docker.ps1
+          -EnvFile .env.example
+          -RunBuildChecks
+          -Smoke

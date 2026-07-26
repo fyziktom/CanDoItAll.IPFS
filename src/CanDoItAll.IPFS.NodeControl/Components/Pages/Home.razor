@@ -98,16 +98,18 @@
 
                             @if (summary.Addresses.Count > 0)
                             {
-                                <div class="node-chip-flow">
+                                <BadgesGroup PillStack="true">
                                     @foreach (var address in summary.Addresses.Take(4))
                                     {
-                                        <StatusBadge Text="@Shorten(address, 42)" Tone="neutral" />
+                                        <StatusBadge @key="address"
+                                                     Text="@Shorten(address, 42)"
+                                                     Tone="neutral" />
                                     }
                                     @if (summary.Addresses.Count > 4)
                                     {
                                         <StatusBadge Text="@($"{summary.Addresses.Count - 4:n0} more")" Tone="info" />
                                     }
-                                </div>
+                                </BadgesGroup>
                             }
                         </Stack>
                     </SectionCard>
@@ -212,10 +214,11 @@
                         else
                         {
                             <Stack Gap="0.75rem">
-                                <div class="node-list">
+                                <ListGroup>
                                     @foreach (var peer in summary.ConnectedPeers.Take(6))
                                     {
-                                        <SelectionListItem Title="@Shorten(peer.Id, 34)"
+                                        <SelectionListItem @key="peer.Id"
+                                                           Title="@Shorten(peer.Id, 34)"
                                                            Eyebrow="Connected peer"
                                                            Meta="@peer.Latency"
                                                            Summary="@peer.ConnectedAddress">
@@ -224,7 +227,7 @@
                                             </Status>
                                         </SelectionListItem>
                                     }
-                                </div>
+                                </ListGroup>
 
                                 @if (summary.ConnectedPeers.Count > 6)
                                 {

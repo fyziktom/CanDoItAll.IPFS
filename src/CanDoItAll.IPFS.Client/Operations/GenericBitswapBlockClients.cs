@@ -10,29 +10,31 @@ using Ipfs.Engine.Client.Transport;
 
 namespace Ipfs.Engine.Client.Operations
 {
-    public sealed class GenericClient : ApiClientBase, IGenericApi
+    public sealed class GenericClient : IGenericApi
     {
-        internal GenericClient(IpfsHttpTransport transport)
-            : base(transport)
+        private readonly IIpfsApiTransport transport;
+
+        internal GenericClient(IIpfsApiTransport transport)
         {
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
         public async Task<Peer> IdAsync(MultiHash? peer = null, CancellationToken cancel = default)
         {
             var query = new List<KeyValuePair<string, string>>();
             QueryStringBuilder.Add(query, "arg", peer?.ToString());
-            var dto = await Transport.PostJsonAsync<PeerInfoDto>("id", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<PeerInfoDto>("id", query, cancel).ConfigureAwait(false);
             return DtoMapper.ToPeer(dto);
         }
 
         public Task<IEnumerable<PingResult>> PingAsync(MultiHash peer, int count = 10, CancellationToken cancel = default)
         {
-            throw MissingServerCapability(nameof(PingAsync), "The server does not expose a ping route yet.");
+            throw ApiClientErrors.MissingServerCapability(nameof(PingAsync), "The server does not expose a ping route yet.");
         }
 
         public Task<IEnumerable<PingResult>> PingAsync(MultiAddress address, int count = 10, CancellationToken cancel = default)
         {
-            throw MissingServerCapability(nameof(PingAsync), "The server does not expose a ping route yet.");
+            throw ApiClientErrors.MissingServerCapability(nameof(PingAsync), "The server does not expose a ping route yet.");
         }
 
         public async Task<string> ResolveAsync(string name, bool recursive = false, CancellationToken cancel = default)
@@ -40,38 +42,40 @@ namespace Ipfs.Engine.Client.Operations
             var query = new List<KeyValuePair<string, string>>();
             QueryStringBuilder.Add(query, "arg", name);
             QueryStringBuilder.Add(query, "recursive", recursive);
-            var dto = await Transport.PostJsonAsync<PathDto>("resolve", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<PathDto>("resolve", query, cancel).ConfigureAwait(false);
             return dto.Path ?? string.Empty;
         }
 
         public Task ShutdownAsync()
         {
-            return Transport.SendAsync("shutdown", query: null, CancellationToken.None);
+            return transport.SendAsync("shutdown", query: null, CancellationToken.None);
         }
 
         public Task<Dictionary<string, string>> VersionAsync(CancellationToken cancel = default)
         {
-            return Transport.PostJsonAsync<Dictionary<string, string>>("version", query: null, cancel);
+            return transport.PostJsonAsync<Dictionary<string, string>>("version", query: null, cancel);
         }
     }
 
-    public sealed class BitswapClient : ApiClientBase, IBitswapApi
+    public sealed class BitswapClient : IBitswapApi
     {
-        internal BitswapClient(IpfsHttpTransport transport)
-            : base(transport)
+        private readonly IIpfsApiTransport transport;
+
+        internal BitswapClient(IIpfsApiTransport transport)
         {
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
         public Task<IDataBlock> GetAsync(Cid id, CancellationToken cancel = default)
         {
-            throw MissingServerCapability(nameof(GetAsync), "The server does not expose remote bitswap fetch.");
+            throw ApiClientErrors.MissingServerCapability(nameof(GetAsync), "The server does not expose remote bitswap fetch.");
         }
 
         public async Task<BitswapLedger> LedgerAsync(Peer peer, CancellationToken cancel = default)
         {
             var query = new List<KeyValuePair<string, string>>();
             QueryStringBuilder.Add(query, "arg", peer?.Id?.ToString());
-            var dto = await Transport.PostJsonAsync<BitswapLedgerDto>("bitswap/ledger", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<BitswapLedgerDto>("bitswap/ledger", query, cancel).ConfigureAwait(false);
             return DtoMapper.ToBitswapLedger(dto);
         }
 
@@ -79,14 +83,14 @@ namespace Ipfs.Engine.Client.Operations
         {
             var query = new List<KeyValuePair<string, string>>();
             QueryStringBuilder.Add(query, "arg", id.ToString());
-            return Transport.SendAsync("bitswap/unwant", query, cancel);
+            return transport.SendAsync("bitswap/unwant", query, cancel);
         }
 
         public async Task<IEnumerable<Cid>> WantsAsync(MultiHash? peer = null, CancellationToken cancel = default)
         {
             var query = new List<KeyValuePair<string, string>>();
             QueryStringBuilder.Add(query, "arg", peer?.ToString());
-            var dto = await Transport.PostJsonAsync<BitswapWantsDto>("bitswap/wantlist", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<BitswapWantsDto>("bitswap/wantlist", query, cancel).ConfigureAwait(false);
             var links = dto.Keys ?? new List<BitswapLinkDto>();
             var cids = new List<Cid>();
             foreach (var link in links)
@@ -100,21 +104,23 @@ namespace Ipfs.Engine.Client.Operations
         }
     }
 
-    public sealed class BlockClient : ApiClientBase, IBlockApi
+    public sealed class BlockClient : IBlockApi
     {
-        internal BlockClient(IpfsHttpTransport transport)
-            : base(transport)
+        private readonly IIpfsApiTransport transport;
+
+        internal BlockClient(IIpfsApiTransport transport)
         {
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
         public async Task<IDataBlock> GetAsync(Cid id, CancellationToken cancel = default)
         {
             var query = new List<KeyValuePair<string, string>>();
             QueryStringBuilder.Add(query, "arg", id.ToString());
-            using (var stream = await Transport.PostStreamAsync("block/get", query, cancel).ConfigureAwait(false))
+            using (var stream = await transport.PostStreamAsync("block/get", query, cancel).ConfigureAwait(false))
             using (var memory = new MemoryStream())
             {
-                await stream.CopyToAsync(memory).ConfigureAwait(false);
+                await stream.CopyToAsync(memory, 81920, cancel).ConfigureAwait(false);
                 return new ClientDataBlock(id, memory.ToArray());
             }
         }
@@ -134,12 +140,12 @@ namespace Ipfs.Engine.Client.Operations
             QueryStringBuilder.Add(query, "mhtype", multiHash);
             QueryStringBuilder.Add(query, "cid-base", encoding);
 
-            var dto = await Transport.PostMultipartJsonAsync<KeyDto>("block/put", query, data, "block.bin", "application/octet-stream", cancel).ConfigureAwait(false);
+            var dto = await transport.PostMultipartJsonAsync<KeyDto>("block/put", query, data, "block.bin", "application/octet-stream", cancel).ConfigureAwait(false);
             var cid = Cid.Decode(dto.Key!);
 
             if (pin)
             {
-                await new PinClient(Transport).AddAsync(cid.ToString(), recursive: false, cancel).ConfigureAwait(false);
+                await new PinClient(transport).AddAsync(cid.ToString(), recursive: false, cancel).ConfigureAwait(false);
             }
 
             return cid;
@@ -151,7 +157,7 @@ namespace Ipfs.Engine.Client.Operations
             QueryStringBuilder.Add(query, "arg", id.ToString());
             QueryStringBuilder.Add(query, "force", ignoreNonexistent);
 
-            var dto = await Transport.PostJsonOrDefaultAsync<HashDto>("block/rm", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonOrDefaultAsync<HashDto>("block/rm", query, cancel).ConfigureAwait(false);
             if (dto == null || string.IsNullOrWhiteSpace(dto.Hash))
             {
                 return null;
@@ -174,52 +180,56 @@ namespace Ipfs.Engine.Client.Operations
         {
             var query = new List<KeyValuePair<string, string>>();
             QueryStringBuilder.Add(query, "arg", id.ToString());
-            var dto = await Transport.PostJsonAsync<BlockStatsDto>("block/stat", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<BlockStatsDto>("block/stat", query, cancel).ConfigureAwait(false);
             return new ClientDataBlock(Cid.Decode(dto.Key!), dataBytes: null, size: dto.Size);
         }
     }
 
-    public sealed class BlockRepositoryClient : ApiClientBase, IBlockRepositoryApi
+    public sealed class BlockRepositoryClient : IBlockRepositoryApi
     {
-        internal BlockRepositoryClient(IpfsHttpTransport transport)
-            : base(transport)
+        private readonly IIpfsApiTransport transport;
+
+        internal BlockRepositoryClient(IIpfsApiTransport transport)
         {
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
         public Task RemoveGarbageAsync(CancellationToken cancel = default)
         {
-            return Transport.SendAsync("repo/gc", query: null, cancel);
+            return transport.SendAsync("repo/gc", query: null, cancel);
         }
 
         public Task<RepositoryData> StatisticsAsync(CancellationToken cancel = default)
         {
-            return Transport.PostJsonAsync<RepositoryData>("repo/stat", query: null, cancel);
+            return transport.PostJsonAsync<RepositoryData>("repo/stat", query: null, cancel);
         }
 
         public Task VerifyAsync(CancellationToken cancel = default)
         {
-            return Transport.SendAsync("repo/verify", query: null, cancel);
+            return transport.SendAsync("repo/verify", query: null, cancel);
         }
 
         public async Task<string> VersionAsync(CancellationToken cancel = default)
         {
-            var dto = await Transport.PostJsonAsync<VersionBlockRepositoryDto>("repo/version", query: null, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<VersionBlockRepositoryDto>("repo/version", query: null, cancel).ConfigureAwait(false);
             return dto.Version ?? string.Empty;
         }
     }
 
-    public sealed class BootstrapClient : ApiClientBase, IBootstrapApi
+    public sealed class BootstrapClient : IBootstrapApi
     {
-        internal BootstrapClient(IpfsHttpTransport transport)
-            : base(transport)
+        private readonly IIpfsApiTransport transport;
+
+        internal BootstrapClient(IIpfsApiTransport transport)
         {
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
         public async Task<MultiAddress?> AddAsync(MultiAddress address, CancellationToken cancel = default)
         {
             var query = new List<KeyValuePair<string, string>>();
             QueryStringBuilder.Add(query, "arg", address.ToString());
-            var dto = await Transport.PostJsonAsync<BootstrapPeersDto>("bootstrap/add", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<BootstrapPeersDto>("bootstrap/add", query, cancel).ConfigureAwait(false);
             foreach (var peer in dto.Peers ?? Array.Empty<string>())
             {
                 return peer;
@@ -230,7 +240,7 @@ namespace Ipfs.Engine.Client.Operations
 
         public async Task<IEnumerable<MultiAddress>> AddDefaultsAsync(CancellationToken cancel = default)
         {
-            var dto = await Transport.PostJsonAsync<BootstrapPeersDto>("bootstrap/add/default", query: null, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<BootstrapPeersDto>("bootstrap/add/default", query: null, cancel).ConfigureAwait(false);
             var peers = new List<MultiAddress>();
             foreach (var peer in dto.Peers ?? Array.Empty<string>())
             {
@@ -241,7 +251,7 @@ namespace Ipfs.Engine.Client.Operations
 
         public async Task<IEnumerable<MultiAddress>> ListAsync(CancellationToken cancel = default)
         {
-            var dto = await Transport.PostJsonAsync<BootstrapPeersDto>("bootstrap/list", query: null, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<BootstrapPeersDto>("bootstrap/list", query: null, cancel).ConfigureAwait(false);
             var peers = new List<MultiAddress>();
             foreach (var peer in dto.Peers ?? Array.Empty<string>())
             {
@@ -252,14 +262,14 @@ namespace Ipfs.Engine.Client.Operations
 
         public Task RemoveAllAsync(CancellationToken cancel = default)
         {
-            return Transport.SendAsync("bootstrap/rm/all", query: null, cancel);
+            return transport.SendAsync("bootstrap/rm/all", query: null, cancel);
         }
 
         public async Task<MultiAddress?> RemoveAsync(MultiAddress address, CancellationToken cancel = default)
         {
             var query = new List<KeyValuePair<string, string>>();
             QueryStringBuilder.Add(query, "arg", address.ToString());
-            var dto = await Transport.PostJsonAsync<BootstrapPeersDto>("bootstrap/rm", query, cancel).ConfigureAwait(false);
+            var dto = await transport.PostJsonAsync<BootstrapPeersDto>("bootstrap/rm", query, cancel).ConfigureAwait(false);
             foreach (var peer in dto.Peers ?? Array.Empty<string>())
             {
                 return peer;

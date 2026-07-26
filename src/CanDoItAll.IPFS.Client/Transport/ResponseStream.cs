@@ -70,12 +70,27 @@ namespace Ipfs.Engine.Client.Transport
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
+            if (!disposing)
+            {
+                base.Dispose(disposing);
+                return;
+            }
+
+            try
             {
                 inner.Dispose();
-                response.Dispose();
             }
-            base.Dispose(disposing);
+            finally
+            {
+                try
+                {
+                    response.Dispose();
+                }
+                finally
+                {
+                    base.Dispose(disposing);
+                }
+            }
         }
     }
 }

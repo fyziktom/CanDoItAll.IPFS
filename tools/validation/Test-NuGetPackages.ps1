@@ -1,0 +1,201 @@
+[CmdletBinding()]
+param(
+    [string]$PackageDirectory = 'artifacts\packages',
+
+    [string[]]$ExpectedPackageId = @(
+        'CanDoItAll.IPFS.Client',
+        'CanDoItAll.IPFS.Core',
+        'CanDoItAll.IPFS.Engine'
+    )
+)
+
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+function Get-ZipEntryBytes {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$Entry
+    )
+
+    $entryStream = $Entry.Open()
+    $memoryStream = [System.IO.MemoryStream]::new()
+    try {
+        $entryStream.CopyTo($memoryStream)
+        return ,$memoryStream.ToArray()
+    }
+    finally {
+        $entryStream.Dispose()
+        $memoryStream.Dispose()
+    }
+}
+
+function Get-Sha256 {
+    param(
+        [Parameter(Mandatory = $true)]
+        [byte[]]$Bytes
+    )
+
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return [System.BitConverter]::ToString($sha256.ComputeHash($Bytes)).Replace('-', '')
+    }
+    finally {
+        $sha256.Dispose()
+    }
+}
+
+Add-Type -AssemblyName System.IO.Compression
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+$repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+$packagePath = if ([System.IO.Path]::IsPathRooted($PackageDirectory)) {
+    (Resolve-Path -LiteralPath $PackageDirectory).Path
+}
+else {
+    (Resolve-Path -LiteralPath (Join-Path $repositoryRoot $PackageDirectory)).Path
+}
+
+$repositoryLicensePath = Join-Path $repositoryRoot 'LICENSE'
+$repositoryLicenseBytes = [System.IO.File]::ReadAllBytes($repositoryLicensePath)
+$repositoryLicenseHash = Get-Sha256 -Bytes $repositoryLicenseBytes
+$repositoryUrl = 'https://github.com/fyziktom/CanDoItAll.IPFS'
+$projectUrl = 'https://aicandoitall.com'
+
+$packages = @(
+    Get-ChildItem -LiteralPath $packagePath -File -Filter '*.nupkg' |
+        Where-Object { $_.Name -notlike '*.symbols.nupkg' } |
+        Sort-Object Name
+)
+if ($packages.Count -eq 0) {
+    throw "No NuGet packages were found in '$packagePath'."
+}
+
+$validatedIds = [System.Collections.Generic.HashSet[string]]::new(
+    [System.StringComparer]::Ordinal
+)
+$results = [System.Collections.Generic.List[object]]::new()
+
+foreach ($package in $packages) {
+    try {
+        $archive = [System.IO.Compression.ZipFile]::OpenRead($package.FullName)
+    }
+    catch {
+        throw "Package '$($package.Name)' is not a readable NuGet ZIP archive: $($_.Exception.Message)"
+    }
+    try {
+        $nuspecEntries = @(
+            $archive.Entries |
+                Where-Object {
+                    $_.FullName -notmatch '/' -and
+                    $_.FullName.EndsWith('.nuspec', [System.StringComparison]::OrdinalIgnoreCase)
+                }
+        )
+        if ($nuspecEntries.Count -ne 1) {
+            throw "Package '$($package.Name)' must contain exactly one root .nuspec."
+        }
+
+        $nuspecBytes = Get-ZipEntryBytes -Entry $nuspecEntries[0]
+        $nuspecText = [System.Text.Encoding]::UTF8.GetString($nuspecBytes)
+        if ($nuspecText.Length -gt 0 -and $nuspecText[0] -eq [char]0xFEFF) {
+            $nuspecText = $nuspecText.Substring(1)
+        }
+        [xml]$nuspec = $nuspecText
+        $metadata = $nuspec.SelectSingleNode(
+            "/*[local-name()='package']/*[local-name()='metadata']"
+        )
+        if ($null -eq $metadata) {
+            throw "Package '$($package.Name)' has no NuGet metadata node."
+        }
+
+        $id = $metadata.SelectSingleNode("*[local-name()='id']").InnerText
+        if ($ExpectedPackageId -notcontains $id) {
+            throw "Unexpected package '$id' was produced in '$packagePath'."
+        }
+        if (-not $validatedIds.Add($id)) {
+            throw (
+                "Package directory '$packagePath' contains more than one archive for '$id'. " +
+                'Use a clean package output directory.'
+            )
+        }
+
+        $licenseNode = $metadata.SelectSingleNode("*[local-name()='license']")
+        if (
+            $null -eq $licenseNode -or
+            $licenseNode.GetAttribute('type') -ne 'file' -or
+            $licenseNode.InnerText -ne 'LICENSE'
+        ) {
+            throw "Package '$id' must declare <license type=`"file`">LICENSE</license>."
+        }
+
+        $projectUrlNode = $metadata.SelectSingleNode("*[local-name()='projectUrl']")
+        if (
+            $null -eq $projectUrlNode -or
+            $projectUrlNode.InnerText.TrimEnd('/') -ne $projectUrl
+        ) {
+            throw "Package '$id' projectUrl must be '$projectUrl'."
+        }
+
+        $repositoryNode = $metadata.SelectSingleNode("*[local-name()='repository']")
+        if (
+            $null -eq $repositoryNode -or
+            $repositoryNode.GetAttribute('type') -ne 'git' -or
+            $repositoryNode.GetAttribute('url') -ne $repositoryUrl
+        ) {
+            throw "Package '$id' repository metadata must identify '$repositoryUrl' as git."
+        }
+
+        $readmeNode = $metadata.SelectSingleNode("*[local-name()='readme']")
+        if ($null -eq $readmeNode -or $readmeNode.InnerText -ne 'README.md') {
+            throw "Package '$id' must declare README.md as its package readme."
+        }
+
+        $licenseEntry = $archive.Entries |
+            Where-Object { $_.FullName.TrimStart('/') -eq 'LICENSE' } |
+            Select-Object -First 1
+        if ($null -eq $licenseEntry) {
+            throw "Package '$id' does not contain a package-root LICENSE."
+        }
+        $packageLicenseBytes = Get-ZipEntryBytes -Entry $licenseEntry
+        if ((Get-Sha256 -Bytes $packageLicenseBytes) -ne $repositoryLicenseHash) {
+            throw "Package '$id' LICENSE is not byte-identical to the repository LICENSE."
+        }
+
+        $licenseText = [System.Text.Encoding]::UTF8.GetString($packageLicenseBytes)
+        if ($licenseText -notmatch 'https://aicandoitall\.com') {
+            throw "Package '$id' LICENSE does not contain the fixed CanDoItAll website link."
+        }
+
+        $readmeEntry = $archive.Entries |
+            Where-Object { $_.FullName.TrimStart('/') -eq 'README.md' } |
+            Select-Object -First 1
+        if ($null -eq $readmeEntry) {
+            throw "Package '$id' does not contain a package-root README.md."
+        }
+
+        $results.Add([pscustomobject]@{
+            PackageId = $id
+            Archive = $package.Name
+            License = 'Repository file'
+            ProjectUrl = $projectUrl
+            RepositoryUrl = $repositoryUrl
+            Status = 'Valid'
+        }) | Out-Null
+    }
+    finally {
+        $archive.Dispose()
+    }
+}
+
+$missingIds = @($ExpectedPackageId | Where-Object { -not $validatedIds.Contains($_) })
+if ($missingIds.Count -gt 0) {
+    throw "Expected package(s) were not produced: $($missingIds -join ', ')."
+}
+if ($packages.Count -ne $ExpectedPackageId.Count) {
+    throw (
+        "Expected exactly $($ExpectedPackageId.Count) package archives, " +
+        "but found $($packages.Count) in '$packagePath'."
+    )
+}
+
+$results

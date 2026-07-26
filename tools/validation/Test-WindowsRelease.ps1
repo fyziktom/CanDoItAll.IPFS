@@ -1,10 +1,16 @@
-[CmdletBinding()]
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
 param(
     [Parameter(Mandatory = $true)]
     [string]$PackageRoot,
+
     [string]$ControlUrl = 'http://127.0.0.1:5192',
+
     [string]$NodeUrl = 'http://127.0.0.1:5101/',
-    [string]$Passphrase = 'Codex-Release-Test-2026',
+
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$Passphrase,
+
     [switch]$StopAfterProbe
 )
 
@@ -40,7 +46,27 @@ if (-not (Test-Path -LiteralPath $controlExecutable)) {
     throw "Could not find $controlExecutable."
 }
 
-$testDataRoot = Join-Path $packageRoot 'data\release-smoke'
+$testDataRoot = [System.IO.Path]::GetFullPath(
+    (Join-Path $packageRoot 'data\release-smoke')
+)
+$packagePrefix = $packageRoot.TrimEnd(
+    [System.IO.Path]::DirectorySeparatorChar,
+    [System.IO.Path]::AltDirectorySeparatorChar
+) + [System.IO.Path]::DirectorySeparatorChar
+if (-not $testDataRoot.StartsWith(
+        $packagePrefix,
+        [System.StringComparison]::OrdinalIgnoreCase
+    )) {
+    throw "Refusing to reset '$testDataRoot' because it is outside '$packageRoot'."
+}
+
+if (-not $PSCmdlet.ShouldProcess(
+        $testDataRoot,
+        'Reset release smoke data and start the packaged NodeControl application'
+    )) {
+    return
+}
+
 if (Test-Path -LiteralPath $testDataRoot) {
     Remove-Item -LiteralPath $testDataRoot -Recurse -Force
 }

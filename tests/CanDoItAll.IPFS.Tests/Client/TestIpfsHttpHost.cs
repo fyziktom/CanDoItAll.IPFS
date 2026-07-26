@@ -22,7 +22,7 @@ namespace Ipfs.Engine.ClientTests
 {
     internal sealed class TestIpfsHttpHost : IAsyncDisposable
     {
-        private TestIpfsHttpHost(TempNode node, IHost host, HttpClient httpClient, IpfsEngineClient client, Uri baseAddress)
+        private TestIpfsHttpHost(TempNode node, IHost host, HttpClient httpClient, IpfsNodeClient client, Uri baseAddress)
         {
             Node = node;
             Host = host;
@@ -37,7 +37,7 @@ namespace Ipfs.Engine.ClientTests
 
         public HttpClient HttpClient { get; }
 
-        public IpfsEngineClient Client { get; }
+        public IpfsNodeClient Client { get; }
 
         public Uri BaseAddress { get; }
 
@@ -94,7 +94,7 @@ namespace Ipfs.Engine.ClientTests
                 httpClient.DefaultRequestHeaders.Add(name, value);
             }
 
-            var client = new IpfsEngineClient(httpClient);
+            var client = new IpfsNodeClient(httpClient);
             return new TestIpfsHttpHost(node, host, httpClient, client, baseAddress);
         }
 

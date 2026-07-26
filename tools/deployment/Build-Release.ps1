@@ -1,14 +1,39 @@
-[CmdletBinding()]
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
 param(
     [string[]]$Target = @('win-x64', 'linux-x64', 'linux-arm'),
+
+    [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Release',
+
     [string]$OutputRoot = '',
+
     [switch]$SkipArchive,
+
     [switch]$KeepCompressedStaticAssets
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+function Assert-PathUnderRoot {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Root
+    )
+
+    $fullPath = [System.IO.Path]::GetFullPath($Path)
+    $fullRoot = [System.IO.Path]::GetFullPath($Root).TrimEnd(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar
+    )
+    $rootPrefix = $fullRoot + [System.IO.Path]::DirectorySeparatorChar
+    if (-not $fullPath.StartsWith($rootPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Refusing to modify '$fullPath' because it is not below '$fullRoot'."
+    }
+}
 
 function Get-TargetDefinitions {
     @{
@@ -156,6 +181,7 @@ function Copy-WindowsFrameworkAssets {
     )
 
     $assetPublishRoot = Join-Path $ReleaseRoot "framework-assets\$RuntimeIdentifier"
+    Assert-PathUnderRoot -Path $assetPublishRoot -Root $ReleaseRoot
     if (Test-Path $assetPublishRoot) {
         Remove-Item -LiteralPath $assetPublishRoot -Recurse -Force
     }
@@ -169,6 +195,7 @@ function Copy-WindowsFrameworkAssets {
 
     $frameworkSource = Join-Path $assetPublishRoot 'wwwroot\_framework'
     $frameworkDestination = Join-Path $BundleRoot 'wwwroot\_framework'
+    Assert-PathUnderRoot -Path $frameworkDestination -Root $BundleRoot
     if (-not (Test-Path $frameworkSource)) {
         throw "Could not locate $frameworkSource after the helper publish."
     }
@@ -211,18 +238,35 @@ if ($unknownTargets.Count -gt 0) {
     throw "Unknown target(s): $($unknownTargets -join ', '). Valid targets: $($targetDefinitions.Keys -join ', ')."
 }
 
-$repoRoot = Split-Path -Path $PSScriptRoot -Parent
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $nodeControlProject = Join-Path $repoRoot 'src\CanDoItAll.IPFS.NodeControl\CanDoItAll.IPFS.NodeControl.csproj'
 $engineProject = Join-Path $repoRoot 'src\CanDoItAll.IPFS.Engine\CanDoItAll.IPFS.Engine.csproj'
 
 if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
     $OutputRoot = Join-Path $repoRoot '.artifacts\releases'
 }
+elseif (-not [System.IO.Path]::IsPathRooted($OutputRoot)) {
+    $OutputRoot = Join-Path $repoRoot $OutputRoot
+}
+$OutputRoot = [System.IO.Path]::GetFullPath($OutputRoot)
 
 $releaseStamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $releaseRoot = Join-Path $OutputRoot $releaseStamp
 $publishRoot = Join-Path $releaseRoot 'publish'
 $packagesRoot = Join-Path $releaseRoot 'packages'
+
+if (-not $PSCmdlet.ShouldProcess(
+        $releaseRoot,
+        "Build release bundles for targets: $($Target -join ', ')"
+    )) {
+    [pscustomobject]@{
+        Configuration = $Configuration
+        OutputRoot = $releaseRoot
+        Targets = $Target
+        Status = 'Preview'
+    }
+    return
+}
 
 New-Item -ItemType Directory -Path $publishRoot -Force | Out-Null
 New-Item -ItemType Directory -Path $packagesRoot -Force | Out-Null
@@ -233,6 +277,7 @@ foreach ($targetName in $Target) {
     $bundleName = "CanDoItAll.IPFS-$targetName"
     $bundleRoot = Join-Path $publishRoot $bundleName
     $enginePublishRoot = Join-Path $bundleRoot 'node'
+    Assert-PathUnderRoot -Path $bundleRoot -Root $publishRoot
 
     if (Test-Path $bundleRoot) {
         Remove-Item -LiteralPath $bundleRoot -Recurse -Force
@@ -269,6 +314,7 @@ foreach ($targetName in $Target) {
     New-StartupScripts -BundleRoot $bundleRoot -Platform $definition.Platform
 
     $archivePath = Join-Path $packagesRoot ($bundleName + $definition.ArchiveExtension)
+    Assert-PathUnderRoot -Path $archivePath -Root $packagesRoot
     if (-not $SkipArchive) {
         New-TargetArchive -BundleRoot $bundleRoot -ArchivePath $archivePath -ArchiveExtension $definition.ArchiveExtension
     }

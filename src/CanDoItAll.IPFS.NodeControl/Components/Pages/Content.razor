@@ -36,17 +36,17 @@
                              Body="Open one tool family at a time instead of keeping every block, DAG, IPNS, and key surface visible in a single scroll stack."
                              Tip="Capability gaps stay available here without taking a permanent rail.">
                     <PanelContent>
-                        <div class="space-y-3">
-                            <div class="space-y-2">
+                        <Stack GapScale="LayoutGap.Medium">
+                            <Stack GapScale="LayoutGap.Small">
                                 <StatusBadge Text="Key import/export unavailable" Tone="warning" />
                                 <p>The server only exposes create, list, rename, and remove for keys. PEM import and export remain unavailable until the HTTP API grows those routes.</p>
-                            </div>
+                            </Stack>
 
-                            <div class="space-y-2">
+                            <Stack GapScale="LayoutGap.Small">
                                 <StatusBadge Text="DHT provide/value store unavailable" Tone="warning" />
                                 <p>The repo currently supports DHT peer and provider lookup, but not value storage or explicit provider announcements.</p>
-                            </div>
-                        </div>
+                            </Stack>
+                        </Stack>
                     </PanelContent>
                 </HelpPopover>
             </Actions>
@@ -65,14 +65,14 @@
               Tone="@(TabsTone.Warning)"
               OverflowMode="@(TabsOverflowMode.Scroll)"
               PanelOverflowMode="@(TabsPanelOverflowMode.Auto)"
-              Class="w-full min-w-0"
               AriaLabel="Content tool tabs">
             <TabItems>
                 <TabsItem Text="Blocks + objects"
                           Icon="inventory_2">
-                    <div class="node-page-grid">
+                    <Grid Gap="LayoutGap.Medium"
+                          ColumnTemplate="repeat(auto-fit,minmax(min(100%,18rem),1fr))">
             <SectionCard Title="Block store" Description="Write UTF-8 text as a raw block, inspect a block by CID, or remove it.">
-                <div class="space-y-4">
+                <FormStack>
                     <FormField Text="Block text">
                         <TextArea Value="@blockText"
                                   ValueChanged="HandleBlockTextChanged"
@@ -81,7 +81,7 @@
                                   Disabled="@isBusy" />
                     </FormField>
 
-                    <div class="node-inline-fields">
+                    <FormRow Split="true">
                         <FormField Text="Inspect CID">
                             <TextBox Value="@blockCid"
                                      ValueChanged="HandleBlockCidChanged"
@@ -90,14 +90,14 @@
                         </FormField>
 
                         <FormField Text="Pin new block">
-                            <div class="node-toggle-card">
-                                <CheckBox TValue="bool" Value="@pinNewBlock" ValueChanged="HandlePinNewBlockChanged" />
+                            <SettingsSwitchRow>
                                 <TextBlock TextStyle="@(TextStyle.Caption)" Value="Pin the new block immediately after writing it." />
-                            </div>
+                                <CheckBox TValue="bool" Value="@pinNewBlock" ValueChanged="HandlePinNewBlockChanged" />
+                            </SettingsSwitchRow>
                         </FormField>
-                    </div>
+                    </FormRow>
 
-                    <div class="node-action-row">
+                    <InlineActions>
                         <Button Text="Put block" Click="PutBlockAsync" Disabled="@isBusy" />
                         <Button Text="Get block"
                                 ButtonStyle="@(ButtonStyle.Light)"
@@ -109,22 +109,22 @@
                                 Variant="@(Variant.Text)"
                                 Click="RemoveBlockAsync"
                                 Disabled="@isBusy" />
-                    </div>
+                    </InlineActions>
 
                     @if (blockSnapshot is not null)
                     {
-                        <div class="space-y-3">
+                        <Stack GapScale="LayoutGap.Medium">
                             <TextBlock TextStyle="@(TextStyle.Subtitle2)" Value="@blockSnapshot.Cid" />
                             <TextBlock TextStyle="@(TextStyle.Body2)" Value="@($"{blockSnapshot.Size:n0} bytes")" />
                             <pre class="node-code-block">@blockSnapshot.Utf8Preview</pre>
-                        </div>
+                        </Stack>
                     }
-                </div>
+                </FormStack>
             </SectionCard>
 
             <SectionCard Title="Object tools" Description="Inspect DAG-PB object stats and create empty UnixFS directory roots.">
-                <div class="space-y-4">
-                    <div class="node-inline-fields">
+                <FormStack>
+                    <FormRow Split="true">
                         <FormField Text="Object CID">
                             <TextBox Value="@objectCid"
                                      ValueChanged="HandleObjectCidChanged"
@@ -138,20 +138,21 @@
                                      Placeholder="Created CID appears here"
                                      Disabled="true" />
                         </FormField>
-                    </div>
+                    </FormRow>
 
-                    <div class="node-action-row">
+                    <InlineActions>
                         <Button Text="Inspect object" Click="LoadObjectAsync" Disabled="@isBusy" />
                         <Button Text="Create empty directory"
                                 ButtonStyle="@(ButtonStyle.Light)"
                                 Variant="@(Variant.Outlined)"
                                 Click="CreateEmptyDirectoryAsync"
                                 Disabled="@isBusy" />
-                    </div>
+                    </InlineActions>
 
                     @if (objectSnapshot is not null)
                     {
-                        <div class="node-page-grid">
+                        <Grid Gap="LayoutGap.Medium"
+                              ColumnTemplate="repeat(auto-fit,minmax(min(100%,18rem),1fr))">
                             <CompactStatStrip>
                                 <CompactStat Label="links"
                                              Value="@objectSnapshot.LinkCount.ToString("n0")"
@@ -171,13 +172,13 @@
                                              Tone="neutral" />
                             </CompactStatStrip>
 
-                            <div class="space-y-3">
+                            <Stack GapScale="LayoutGap.Medium">
                                 <TextBlock TextStyle="@(TextStyle.Subtitle2)" Value="Data preview" />
                                 <pre class="node-code-block">@objectSnapshot.DataPreview</pre>
-                            </div>
-                        </div>
+                            </Stack>
+                        </Grid>
                     }
-                </div>
+                </FormStack>
             </SectionCard>
 
             <SectionCard Title="Working set" Description="Current content-tool state and the next likely action.">
@@ -196,7 +197,7 @@
                                      Tone="warning" />
                     </CompactStatStrip>
 
-                    <div class="node-list">
+                    <ListGroup>
                         <SelectionListItem Title="Block lifecycle"
                                            Eyebrow="Content"
                                            Meta="Put, get, remove"
@@ -213,17 +214,17 @@
                                 <StatusBadge Text="Object" Tone="info" />
                             </Status>
                         </SelectionListItem>
-                    </div>
+                    </ListGroup>
                 </Stack>
             </SectionCard>
-                    </div>
+                    </Grid>
                 </TabsItem>
 
                 <TabsItem Text="DAG JSON"
                           Icon="data_object">
                     <SectionCard Title="DAG JSON" Description="Inspect any dag/get target and push JSON payloads through dag/put.">
-            <div class="space-y-4">
-                <div class="node-inline-fields">
+            <FormStack>
+                <FormRow Split="true">
                     <FormField Text="DAG request">
                         <TextBox Value="@dagRequest"
                                  ValueChanged="HandleDagRequestChanged"
@@ -232,21 +233,21 @@
                     </FormField>
 
                     <FormField Text="Pin result">
-                        <div class="node-toggle-card">
-                            <CheckBox TValue="bool" Value="@pinDagWrites" ValueChanged="HandlePinDagWritesChanged" />
+                        <SettingsSwitchRow>
                             <TextBlock TextStyle="@(TextStyle.Caption)" Value="Pin the CID returned by dag/put." />
-                        </div>
+                            <CheckBox TValue="bool" Value="@pinDagWrites" ValueChanged="HandlePinDagWritesChanged" />
+                        </SettingsSwitchRow>
                     </FormField>
-                </div>
+                </FormRow>
 
-                <div class="node-action-row">
+                <InlineActions>
                     <Button Text="Load DAG" Click="LoadDagAsync" Disabled="@isBusy" />
                     <Button Text="Put DAG JSON"
                             ButtonStyle="@(ButtonStyle.Light)"
                             Variant="@(Variant.Outlined)"
                             Click="PutDagAsync"
                             Disabled="@isBusy" />
-                </div>
+                </InlineActions>
 
                 <FormField Text="DAG JSON input">
                     <TextArea Value="@dagInputJson"
@@ -260,7 +261,7 @@
                 {
                     <pre class="node-code-block">@dagSnapshot.Json</pre>
                 }
-            </div>
+            </FormStack>
                     </SectionCard>
                 </TabsItem>
 
@@ -274,10 +275,11 @@
                         }
                         else
                         {
-                            <div class="node-list">
+                            <ListGroup>
                                 @foreach (var key in keys)
                                 {
-                                    <SelectionListItem Title="@key.Name"
+                                    <SelectionListItem @key="key.Id"
+                                                       Title="@key.Name"
                                                        Eyebrow="Key"
                                                        Meta="@key.Id"
                                                        Summary="Use this name as the publish key for IPNS updates.">
@@ -286,14 +288,15 @@
                                         </Status>
                                     </SelectionListItem>
                                 }
-                            </div>
+                            </ListGroup>
                         }
                     </SectionCard>
 
-                    <div class="node-page-grid">
+                    <Grid Gap="LayoutGap.Medium"
+                          ColumnTemplate="repeat(auto-fit,minmax(min(100%,18rem),1fr))">
             <SectionCard Title="IPNS" Description="Resolve existing names and publish new content paths through the selected key.">
-                <div class="space-y-4">
-                    <div class="node-inline-fields">
+                <FormStack>
+                    <FormRow Split="true">
                         <FormField Text="Resolve name">
                             <TextBox Value="@resolveName"
                                      ValueChanged="HandleResolveNameChanged"
@@ -307,9 +310,9 @@
                                      Placeholder="/ipfs/bafy..."
                                      Disabled="@isBusy" />
                         </FormField>
-                    </div>
+                    </FormRow>
 
-                    <div class="node-inline-fields">
+                    <FormRow Split="true">
                         <FormField Text="Publish key">
                             <TextBox Value="@publishKey"
                                      ValueChanged="HandlePublishKeyChanged"
@@ -326,16 +329,16 @@
                                      Step="1"
                                      Disabled="@isBusy" />
                         </FormField>
-                    </div>
+                    </FormRow>
 
-                    <div class="node-action-row">
+                    <InlineActions>
                         <Button Text="Resolve name" Click="ResolveNameAsync" Disabled="@isBusy" />
                         <Button Text="Publish name"
                                 ButtonStyle="@(ButtonStyle.Light)"
                                 Variant="@(Variant.Outlined)"
                                 Click="PublishNameAsync"
                                 Disabled="@isBusy" />
-                    </div>
+                    </InlineActions>
 
                     @if (!string.IsNullOrWhiteSpace(resolvedPath))
                     {
@@ -355,12 +358,13 @@
                                          Tone="success" />
                         </CompactStatStrip>
                     }
-                </div>
+                </FormStack>
             </SectionCard>
 
             <SectionCard Title="Key management" Description="Create, rename, and remove named keys exposed by the current node.">
-                <div class="space-y-4">
-                    <div class="node-inline-fields">
+                <FormStack>
+                    <Grid Gap="LayoutGap.Medium"
+                          ColumnTemplate="repeat(auto-fit,minmax(min(100%,14rem),1fr))">
                         <FormField Text="New key name">
                             <TextBox Value="@newKeyName"
                                      ValueChanged="HandleNewKeyNameChanged"
@@ -388,9 +392,10 @@
                                      Step="256"
                                      Disabled="@isBusy" />
                         </FormField>
-                    </div>
+                    </Grid>
 
-                    <div class="node-inline-fields">
+                    <Grid Gap="LayoutGap.Medium"
+                          ColumnTemplate="repeat(auto-fit,minmax(min(100%,14rem),1fr))">
                         <FormField Text="Rename from">
                             <TextBox Value="@renameKeyFrom"
                                      ValueChanged="HandleRenameKeyFromChanged"
@@ -411,9 +416,9 @@
                                      Placeholder="key-name"
                                      Disabled="@isBusy" />
                         </FormField>
-                    </div>
+                    </Grid>
 
-                    <div class="node-action-row">
+                    <InlineActions>
                         <Button Text="Create key" Click="CreateKeyAsync" Disabled="@isBusy" />
                         <Button Text="Rename key"
                                 ButtonStyle="@(ButtonStyle.Light)"
@@ -425,10 +430,10 @@
                                 Variant="@(Variant.Text)"
                                 Click="RemoveKeyAsync"
                                 Disabled="@isBusy" />
-                    </div>
-                </div>
+                    </InlineActions>
+                </FormStack>
             </SectionCard>
-                    </div>
+                    </Grid>
                 </TabsItem>
             </TabItems>
         </Tabs>

@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Ipfs.Engine.ClientTests;
 using CanDoItAll.IPFS.NodeControl.Models;
@@ -56,18 +55,16 @@ public sealed class CurrentNodeLeaseFactoryTests
     [TestMethod]
     public async Task CreateLeaseWithMinimumTimeoutSeconds_Raises_The_Lease_Timeout_Without_Mutating_The_Registry()
     {
-        await WithIsolatedLocalHostEnvironmentAsync(async () =>
-        {
-            var targetRegistry = CreateRegistry("http://127.0.0.1:5001/", timeoutSeconds: 15);
-            var factory = CreateFactory(targetRegistry);
+        await using var host = await TestIpfsHttpHost.StartAsync().ConfigureAwait(false);
+        var targetRegistry = CreateRegistry(host.BaseAddress.ToString(), timeoutSeconds: 15);
+        var factory = CreateFactory(targetRegistry);
 
-            using var lease = await factory.CreateLeaseWithMinimumTimeoutSecondsAsync(
-                120,
-                NodeConnectionRequestCategory.ReadOnlyUi).ConfigureAwait(false);
+        using var lease = await factory.CreateLeaseWithMinimumTimeoutSecondsAsync(
+            120,
+            NodeConnectionRequestCategory.ReadOnlyUi).ConfigureAwait(false);
 
-            Assert.AreEqual(120, lease.Settings.TimeoutSeconds);
-            Assert.AreEqual(15, targetRegistry.Current.TimeoutSeconds);
-        }).ConfigureAwait(false);
+        Assert.AreEqual(120, lease.Settings.TimeoutSeconds);
+        Assert.AreEqual(15, targetRegistry.Current.TimeoutSeconds);
     }
 
     private static CurrentNodeTargetRegistry CreateRegistry(string baseUrl, int timeoutSeconds)
@@ -102,38 +99,5 @@ public sealed class CurrentNodeLeaseFactoryTests
 
         Assert.Fail($"Exception of type {typeof(T)} should be thrown.");
         return null!;
-    }
-
-    private static async Task WithIsolatedLocalHostEnvironmentAsync(Func<Task> action)
-    {
-        var originalPassphrase = Environment.GetEnvironmentVariable("IPFS_PASS");
-        var originalRepositoryPath = Environment.GetEnvironmentVariable("IPFS_PATH");
-        var repositoryPath = Path.Combine(Path.GetTempPath(), "ipfs-current-node-lease-tests", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(repositoryPath);
-
-        Environment.SetEnvironmentVariable("IPFS_PASS", Guid.NewGuid().ToString("N"));
-        Environment.SetEnvironmentVariable("IPFS_PATH", repositoryPath);
-
-        try
-        {
-            await action().ConfigureAwait(false);
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable("IPFS_PASS", originalPassphrase);
-            Environment.SetEnvironmentVariable("IPFS_PATH", originalRepositoryPath);
-
-            try
-            {
-                if (Directory.Exists(repositoryPath))
-                {
-                    Directory.Delete(repositoryPath, recursive: true);
-                }
-            }
-            catch
-            {
-                // Best-effort cleanup only.
-            }
-        }
     }
 }

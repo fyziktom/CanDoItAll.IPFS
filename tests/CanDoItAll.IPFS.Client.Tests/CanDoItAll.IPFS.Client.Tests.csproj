@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <Nullable>enable</Nullable>
+    <MSTestAnalysisMode>Recommended</MSTestAnalysisMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" PrivateAssets="all" />
+    <PackageReference Include="MSTest.TestAdapter" Version="4.3.2" PrivateAssets="all" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.3.2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CanDoItAll.IPFS.Client\CanDoItAll.IPFS.Client.csproj" />
+    <ProjectReference Include="..\..\src\CanDoItAll.IPFS.Core\CanDoItAll.IPFS.Core.csproj" />
+  </ItemGroup>
+
+</Project>
