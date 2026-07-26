@@ -107,6 +107,14 @@ Normal teardown preserves named volumes. Destructive volume reset is intentional
 part of the normal workflow. See [container operations](docs/operations/containers.md)
 and [backup and restore](docs/operations/backup-and-restore.md).
 
+After the .NET unit tests and container smoke validation pass, pushes to `main` publish
+commit-tagged Linux images to GitHub Container Registry:
+
+- `ghcr.io/fyziktom/candoitall-ipfs-node:sha-<commit>`
+- `ghcr.io/fyziktom/candoitall-ipfs-node-control:sha-<commit>`
+
+Tags named `v<version>` additionally publish the immutable semantic version tag.
+
 ## Documentation
 
 - [Architecture and ownership](docs/architecture.md)
@@ -123,6 +131,7 @@ Preview or produce all public NuGet packages through the repository-owned entry 
 .\tools\deployment\nugets\Build-NuGets.ps1 -WhatIf
 .\tools\deployment\nugets\Build-NuGets.ps1 `
     -Configuration Release `
+    -Version 0.1.15 `
     -OutputDirectory .\artifacts\packages
 ```
 

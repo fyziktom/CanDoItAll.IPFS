@@ -1,3 +1,25 @@
+<#
+.SYNOPSIS
+Builds, tests, packs, and validates the public IPFS NuGet packages.
+
+.PARAMETER Configuration
+Build configuration. The default is Release.
+
+.PARAMETER OutputDirectory
+Absolute or repository-relative package destination.
+
+.PARAMETER NoRestore
+Skips restore when the caller guarantees it has already completed.
+
+.PARAMETER NoBuild
+Skips build and tests when the caller guarantees both have already completed.
+
+.PARAMETER Version
+Overrides the package version without editing the project files.
+
+.EXAMPLE
+.\tools\deployment\nugets\Build-NuGets.ps1 -Version '0.1.15'
+#>
 [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
 param(
     [ValidateSet('Debug', 'Release')]
@@ -5,7 +27,11 @@ param(
 
     [string]$OutputDirectory,
 
-    [switch]$NoRestore
+    [switch]$NoRestore,
+
+    [switch]$NoBuild,
+
+    [string]$Version = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -41,6 +67,38 @@ foreach ($requiredPath in $requiredPaths) {
     }
 }
 
+$committedVersions = @(
+    @(
+        foreach ($packageProject in $packageProjects) {
+            [xml]$projectXml = Get-Content -LiteralPath $packageProject -Raw
+            $versionNode = $projectXml.SelectSingleNode('/Project/PropertyGroup/Version')
+            if ($null -eq $versionNode -or [string]::IsNullOrWhiteSpace($versionNode.InnerText)) {
+                throw "Package project '$packageProject' must define a non-empty Version."
+            }
+
+            $versionNode.InnerText.Trim()
+        }
+    ) | Select-Object -Unique
+)
+if ($committedVersions.Count -ne 1) {
+    throw (
+        'All public package projects must use the same committed Version. Found: ' +
+        ($committedVersions -join ', ')
+    )
+}
+
+$effectiveVersion = if ([string]::IsNullOrWhiteSpace($Version)) {
+    [string]$committedVersions[0]
+}
+else {
+    $Version.Trim()
+}
+$versionWasOverridden = -not [string]::IsNullOrWhiteSpace($Version)
+$msbuildProperties = @()
+if ($versionWasOverridden) {
+    $msbuildProperties += "-p:Version=$effectiveVersion"
+}
+
 if (-not $OutputDirectory) {
     $OutputDirectory = Join-Path $repositoryRoot 'artifacts\packages'
 }
@@ -49,17 +107,21 @@ elseif (-not [System.IO.Path]::IsPathRooted($OutputDirectory)) {
 }
 
 $OutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)
-$operation = if ($NoRestore) {
-    'Build, test, and pack the public NuGet packages without restore'
+$operationParts = [System.Collections.Generic.List[string]]::new()
+if (-not $NoRestore) {
+    $operationParts.Add('restore')
 }
-else {
-    'Restore, build, test, and pack the public NuGet packages'
+if (-not $NoBuild) {
+    $operationParts.Add('build and test')
 }
+$operationParts.Add("pack the public NuGet packages at version $effectiveVersion")
+$operation = $operationParts -join ', '
 
 if (-not $PSCmdlet.ShouldProcess($OutputDirectory, $operation)) {
     [pscustomobject]@{
         Repository = Split-Path $repositoryRoot -Leaf
         Configuration = $Configuration
+        PackageVersion = $effectiveVersion
         OutputDirectory = $OutputDirectory
         Packages = @(
             $packageProjects |
@@ -74,50 +136,66 @@ New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 
 if (-not $NoRestore) {
     Invoke-DotNetCommand `
-        -Arguments @('restore', $solutionPath, '--configfile', (Join-Path $repositoryRoot 'NuGet.config')) `
+        -Arguments (
+            @(
+                'restore',
+                $solutionPath,
+                '--configfile',
+                (Join-Path $repositoryRoot 'NuGet.config')
+            ) + $msbuildProperties
+        ) `
         -Description 'dotnet restore'
 }
 
-Invoke-DotNetCommand `
-    -Arguments @(
-        'build',
-        $solutionPath,
-        '--configuration', $Configuration,
-        '--no-restore',
-        '-p:ContinuousIntegrationBuild=true',
-        '-p:GeneratePackageOnBuild=false'
-    ) `
-    -Description 'dotnet build'
+if (-not $NoBuild) {
+    Invoke-DotNetCommand `
+        -Arguments (
+            @(
+                'build',
+                $solutionPath,
+                '--configuration', $Configuration,
+                '--no-restore',
+                '-p:ContinuousIntegrationBuild=true',
+                '-p:GeneratePackageOnBuild=false'
+            ) + $msbuildProperties
+        ) `
+        -Description 'dotnet build'
 
-Invoke-DotNetCommand `
-    -Arguments @(
-        'test',
-        $solutionPath,
-        '--configuration', $Configuration,
-        '--no-build',
-        '--no-restore'
-    ) `
-    -Description 'dotnet test'
+    Invoke-DotNetCommand `
+        -Arguments (
+            @(
+                'test',
+                $solutionPath,
+                '--configuration', $Configuration,
+                '--no-build',
+                '--no-restore'
+            ) + $msbuildProperties
+        ) `
+        -Description 'dotnet test'
+}
 
 foreach ($packageProject in $packageProjects) {
     Invoke-DotNetCommand `
-        -Arguments @(
-            'pack',
-            $packageProject,
-            '--configuration', $Configuration,
-            '--no-build',
-            '--no-restore',
-            '--output', $OutputDirectory,
-            '-p:ContinuousIntegrationBuild=true',
-            '-p:GeneratePackageOnBuild=false'
-    ) `
+        -Arguments (
+            @(
+                'pack',
+                $packageProject,
+                '--configuration', $Configuration,
+                '--no-build',
+                '--no-restore',
+                '--output', $OutputDirectory,
+                '-p:ContinuousIntegrationBuild=true',
+                '-p:GeneratePackageOnBuild=false'
+            ) + $msbuildProperties
+        ) `
         -Description (
             "dotnet pack for '$([System.IO.Path]::GetFileNameWithoutExtension($packageProject))'"
         )
 }
 
 & (Join-Path $repositoryRoot 'tools\validation\Test-NuGetPackages.ps1') `
-    -PackageDirectory $OutputDirectory
+    -PackageDirectory $OutputDirectory `
+    -ExpectedPackageVersion $effectiveVersion
 if ($LASTEXITCODE -ne 0) {
     throw "NuGet package validation failed with exit code $LASTEXITCODE."
 }
@@ -125,6 +203,7 @@ if ($LASTEXITCODE -ne 0) {
 [pscustomobject]@{
     Repository = Split-Path $repositoryRoot -Leaf
     Configuration = $Configuration
+    PackageVersion = $effectiveVersion
     OutputDirectory = $OutputDirectory
     Packages = @(
         $packageProjects |

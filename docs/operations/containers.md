@@ -95,10 +95,19 @@ read-only roots, and smoke-test shutdown and recovery.
 
 The service Dockerfiles remain under `docker/` because both builds use the repository
 root as a multi-project .NET build context and share repository-level restore inputs.
-They are local application images, not independently published container products. If
-the images become public release artifacts, move each Dockerfile beside its owning
-service or document the continuing exception, and add complete OCI source, revision,
-version, creation, vendor, license, and documentation labels.
+This remains an owned repository-layout exception now that CI publishes the images; moving
+either Dockerfile beside one project would obscure the shared root build context and the
+cross-project restore graph. The publish job supplies OCI source, revision, version,
+creation, vendor, license, and documentation labels.
+
+After the .NET unit-test job and disposable Compose smoke test pass, pushes to `main`
+publish both Linux images to GitHub Container Registry with immutable `sha-<commit>` tags.
+Tags named `v<version>` also produce a semantic version tag. The workflow deliberately
+does not publish `latest`; registry visibility and pull access remain controlled by the
+GitHub Container Registry package settings:
+
+- `ghcr.io/fyziktom/candoitall-ipfs-node`
+- `ghcr.io/fyziktom/candoitall-ipfs-node-control`
 
 Run these images through Compose so the Dockerfile `VOLUME` declarations resolve to the
 named volumes in `compose.yaml`. Standalone `docker run` without explicit named mounts

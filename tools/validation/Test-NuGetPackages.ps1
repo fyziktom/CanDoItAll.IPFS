@@ -6,7 +6,9 @@ param(
         'CanDoItAll.IPFS.Client',
         'CanDoItAll.IPFS.Core',
         'CanDoItAll.IPFS.Engine'
-    )
+    ),
+
+    [string]$ExpectedPackageVersion = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -119,6 +121,17 @@ foreach ($package in $packages) {
             )
         }
 
+        $version = $metadata.SelectSingleNode("*[local-name()='version']").InnerText
+        if (
+            -not [string]::IsNullOrWhiteSpace($ExpectedPackageVersion) -and
+            $version -ne $ExpectedPackageVersion
+        ) {
+            throw (
+                "Package '$id' has version '$version'; expected " +
+                "'$ExpectedPackageVersion'."
+            )
+        }
+
         $licenseNode = $metadata.SelectSingleNode("*[local-name()='license']")
         if (
             $null -eq $licenseNode -or
@@ -175,6 +188,7 @@ foreach ($package in $packages) {
 
         $results.Add([pscustomobject]@{
             PackageId = $id
+            PackageVersion = $version
             Archive = $package.Name
             License = 'Repository file'
             ProjectUrl = $projectUrl

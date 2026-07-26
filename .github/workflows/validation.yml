@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
   pull_request:
     branches:
       - main
@@ -14,7 +16,7 @@ permissions:
 
 jobs:
   dotnet:
-    name: .NET and packages
+    name: Build, unit tests, and packages
     runs-on: windows-latest
     timeout-minutes: 30
 
@@ -31,13 +33,31 @@ jobs:
         shell: pwsh
         run: dotnet restore .\CanDoItAll.IPFS.slnx --configfile .\NuGet.config
 
-      - name: Build, test, and pack public packages
+      - name: Build
+        shell: pwsh
+        run: >
+          dotnet build .\CanDoItAll.IPFS.slnx
+          --configuration Release
+          --no-restore
+          -p:ContinuousIntegrationBuild=true
+          -p:GeneratePackageOnBuild=false
+
+      - name: Run unit tests
+        shell: pwsh
+        run: >
+          dotnet test .\CanDoItAll.IPFS.slnx
+          --configuration Release
+          --no-build
+          --no-restore
+
+      - name: Pack and validate public packages
         shell: pwsh
         run: >
           .\tools\deployment\nugets\Build-NuGets.ps1
           -Configuration Release
           -OutputDirectory .\artifacts\packages
           -NoRestore
+          -NoBuild
 
       - name: Upload package artifacts
         uses: actions/upload-artifact@v7
@@ -49,7 +69,8 @@ jobs:
           if-no-files-found: error
 
   containers:
-    name: Containers
+    name: Validate containers
+    needs: dotnet
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -69,3 +90,70 @@ jobs:
           -EnvFile .env.example
           -RunBuildChecks
           -Smoke
+
+  publish-containers:
+    name: Publish ${{ matrix.name }}
+    needs:
+      - dotnet
+      - containers
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: IPFS node
+            image: candoitall-ipfs-node
+            dockerfile: docker/Dockerfile.ipfs-node
+            description: Embedded CanDoItAll IPFS node
+          - name: NodeControl UI
+            image: candoitall-ipfs-node-control
+            dockerfile: docker/Dockerfile.node-control
+            description: CanDoItAll IPFS NodeControl web UI
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate image tags and labels
+        id: metadata
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          tags: |
+            type=sha,prefix=sha-
+            type=semver,pattern={{version}}
+          labels: |
+            org.opencontainers.image.title=${{ matrix.name }}
+            org.opencontainers.image.description=${{ matrix.description }}
+            org.opencontainers.image.vendor=CanDoItAll
+            org.opencontainers.image.licenses=LicenseRef-CanDoItAll-MIT-Derived
+            org.opencontainers.image.documentation=https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/operations/containers.md
+
+      - name: Build and publish image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+          provenance: mode=max
+          sbom: true
