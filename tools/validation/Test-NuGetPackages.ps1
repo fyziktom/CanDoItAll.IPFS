@@ -92,9 +92,6 @@ else {
     (Resolve-Path -LiteralPath (Join-Path $repositoryRoot $PackageDirectory)).Path
 }
 
-$repositoryLicensePath = Join-Path $repositoryRoot 'LICENSE'
-$repositoryLicenseBytes = [System.IO.File]::ReadAllBytes($repositoryLicensePath)
-$repositoryLicenseHash = Get-Sha256 -Bytes $repositoryLicenseBytes
 $repositoryIconPath = Join-Path $repositoryRoot 'docs\package-icon.png'
 $repositoryIconBytes = [System.IO.File]::ReadAllBytes($repositoryIconPath)
 $repositoryIconHash = Get-Sha256 -Bytes $repositoryIconBytes
@@ -213,10 +210,10 @@ foreach ($package in $packages) {
         $licenseNode = $metadata.SelectSingleNode("*[local-name()='license']")
         if (
             $null -eq $licenseNode -or
-            $licenseNode.GetAttribute('type') -ne 'file' -or
-            $licenseNode.InnerText -ne 'LICENSE'
+            $licenseNode.GetAttribute('type') -ne 'expression' -or
+            $licenseNode.InnerText -ne 'MIT'
         ) {
-            throw "Package '$id' must declare <license type=`"file`">LICENSE</license>."
+            throw "Package '$id' must declare <license type=`"expression`">MIT</license>."
         }
 
         $projectUrlNode = $metadata.SelectSingleNode("*[local-name()='projectUrl']")
@@ -241,20 +238,17 @@ foreach ($package in $packages) {
             throw "Package '$id' must declare README.md as its package readme."
         }
 
-        $licenseEntry = $archive.Entries |
-            Where-Object { $_.FullName.TrimStart('/') -eq 'LICENSE' } |
+        $thirdPartyNoticeEntry = $archive.Entries |
+            Where-Object { $_.FullName.TrimStart('/') -eq 'THIRD-PARTY-NOTICES.md' } |
             Select-Object -First 1
-        if ($null -eq $licenseEntry) {
-            throw "Package '$id' does not contain a package-root LICENSE."
+        if ($null -eq $thirdPartyNoticeEntry) {
+            throw "Package '$id' does not contain THIRD-PARTY-NOTICES.md."
         }
-        $packageLicenseBytes = Get-ZipEntryBytes -Entry $licenseEntry
-        if ((Get-Sha256 -Bytes $packageLicenseBytes) -ne $repositoryLicenseHash) {
-            throw "Package '$id' LICENSE is not byte-identical to the repository LICENSE."
-        }
-
-        $licenseText = [System.Text.Encoding]::UTF8.GetString($packageLicenseBytes)
-        if ($licenseText -notmatch 'https://aicandoitall\.com') {
-            throw "Package '$id' LICENSE does not contain the fixed CanDoItAll website link."
+        $apacheLicenseEntry = $archive.Entries |
+            Where-Object { $_.FullName.TrimStart('/') -eq 'licenses/Apache-2.0.txt' } |
+            Select-Object -First 1
+        if ($null -eq $apacheLicenseEntry) {
+            throw "Package '$id' does not contain licenses/Apache-2.0.txt."
         }
 
         $readmeEntry = $archive.Entries |
@@ -319,7 +313,7 @@ foreach ($package in $packages) {
             Copyright = $packageCopyright
             Archive = $package.Name
             Icon = 'package-icon.png (256x256 corporate favicon)'
-            License = 'Repository file'
+            License = 'MIT expression'
             ProjectUrl = $projectUrl
             RepositoryUrl = $repositoryUrl
             Status = 'Valid'

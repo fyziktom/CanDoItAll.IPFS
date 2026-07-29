@@ -1,12 +1,35 @@
 <Project>
   <PropertyGroup Condition="'$(IsPackable)' == 'true' and '$(PackageLicenseExpression)' == '' and '$(PackageLicenseFile)' == ''">
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <_UseRepositoryPackageLicense>true</_UseRepositoryPackageLicense>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
-  <ItemGroup Condition="'$(_UseRepositoryPackageLicense)' == 'true'">
-    <None Include="$(MSBuildThisFileDirectory)LICENSE"
+
+  <PropertyGroup Condition="'$(IsPackable)' == 'true' and '$(PackageThirdPartyNoticesFile)' == '' and Exists('$(MSBuildThisFileDirectory)THIRD-PARTY-NOTICES.md')">
+    <PackageThirdPartyNoticesFile>THIRD-PARTY-NOTICES.md</PackageThirdPartyNoticesFile>
+    <_UseRepositoryThirdPartyNotices>true</_UseRepositoryThirdPartyNotices>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(_UseRepositoryThirdPartyNotices)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)THIRD-PARTY-NOTICES.md"
           Pack="true"
           PackagePath="\"
-          Link="LICENSE" />
+          Link="THIRD-PARTY-NOTICES.md" />
+    <None Include="$(MSBuildThisFileDirectory)Apache-2.0.txt"
+          Pack="true"
+          PackagePath="licenses\"
+          Link="Apache-2.0.txt" />
   </ItemGroup>
+
+  <Target Name="ValidateCanDoItAllPackageLegalAndIconMetadata"
+          BeforeTargets="Pack"
+          Condition="'$(IsPackable)' == 'true'">
+    <Error Condition="'$(PackageLicenseExpression)' != 'MIT'"
+           Text="CanDoItAll packages must use PackageLicenseExpression MIT." />
+    <Error Condition="'$(PackageLicenseFile)' != ''"
+           Text="CanDoItAll packages using pure MIT must not set PackageLicenseFile." />
+    <Error Condition="'$(PackageIcon)' != 'package-icon.png'"
+           Text="CanDoItAll packages must declare package-icon.png." />
+    <Error Condition="!Exists('$(MSBuildThisFileDirectory)docs\package-icon.png')"
+           Text="Copy the approved SharedInfo package icon to docs\package-icon.png before packing." />
+    <Error Condition="!Exists('$(MSBuildThisFileDirectory)Apache-2.0.txt')"
+           Text="Apache-2.0.txt is required for copied Apache-licensed source." />
+  </Target>
 </Project>

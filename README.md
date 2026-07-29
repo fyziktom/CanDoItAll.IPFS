@@ -6,7 +6,7 @@
 [![Engine version](https://img.shields.io/nuget/v/CanDoItAll.IPFS.Engine.svg?logo=nuget&label=Engine)](https://www.nuget.org/packages/CanDoItAll.IPFS.Engine)
 [![Engine downloads](https://img.shields.io/nuget/dt/CanDoItAll.IPFS.Engine.svg?logo=nuget&label=Engine%20downloads)](https://www.nuget.org/packages/CanDoItAll.IPFS.Engine)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/download/dotnet/10.0)
-[![License](https://img.shields.io/badge/license-MIT--derived%20with%20website%20link-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 `CanDoItAll.IPFS` provides an embedded IPFS engine, reusable IPFS contracts, a typed
 .NET client, and a Blazor node-control application for operating a local or remote node.
@@ -162,13 +162,10 @@ independently maintained CanDoItAll IPFS implementation.
 
 ## License And Contributions
 
-This repository uses the
-[MIT-Derived License with CanDoItAll Website Link Requirement](LICENSE). Redistributions
-of the software or a substantial portion of it in source or binary form must include at
-least one link to [aicandoitall.com](https://aicandoitall.com). One such link satisfies
-the added condition for a distribution containing multiple covered CanDoItAll
-libraries. The current work is copyright (c) 2026 `fyziktom`; Richard Schneider's
-original 2018 copyright notice is retained for the upstream foundation.
+This repository uses the [MIT License](LICENSE). The current work is copyright
+(c) 2026 `fyziktom`; Richard Schneider's original 2018 copyright notice is retained for
+the upstream foundation. Additional copied-source attribution is recorded in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 Code contributions are limited to partners explicitly approved by the maintainer.
 Unsolicited pull requests are not accepted. See [CONTRIBUTING.md](CONTRIBUTING.md) and

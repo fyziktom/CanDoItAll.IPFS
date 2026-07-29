@@ -6,7 +6,8 @@ Builds, tests, packs, and validates the public IPFS NuGet packages.
 Build configuration. The default is Release.
 
 .PARAMETER OutputDirectory
-Absolute or repository-relative package destination.
+Absolute or repository-relative package destination. When omitted, a
+versioned, timestamped run directory is created below artifacts/packages.
 
 .PARAMETER NoRestore
 Skips restore when the caller guarantees it has already completed.
@@ -16,6 +17,10 @@ Skips build and tests when the caller guarantees both have already completed.
 
 .PARAMETER Version
 Overrides the package version without editing the project files.
+
+.PARAMETER CreateRunDirectory
+Treats an explicitly supplied OutputDirectory as a root and creates a
+versioned, timestamped child below it.
 
 .EXAMPLE
 .\tools\deployment\nugets\Build-NuGets.ps1 -Version '0.1.15'
@@ -31,7 +36,9 @@ param(
 
     [switch]$NoBuild,
 
-    [string]$Version = ''
+    [string]$Version = '',
+
+    [switch]$CreateRunDirectory
 )
 
 $ErrorActionPreference = 'Stop'
@@ -100,10 +107,23 @@ if ($versionWasOverridden) {
 }
 
 if (-not $OutputDirectory) {
-    $OutputDirectory = Join-Path $repositoryRoot 'artifacts\packages'
+    $outputRoot = Join-Path $repositoryRoot 'artifacts\packages'
+    $createRunDirectory = $true
 }
-elseif (-not [System.IO.Path]::IsPathRooted($OutputDirectory)) {
-    $OutputDirectory = Join-Path $repositoryRoot $OutputDirectory
+elseif ([System.IO.Path]::IsPathRooted($OutputDirectory)) {
+    $outputRoot = $OutputDirectory
+    $createRunDirectory = $CreateRunDirectory.IsPresent
+}
+else {
+    $outputRoot = Join-Path $repositoryRoot $OutputDirectory
+    $createRunDirectory = $CreateRunDirectory.IsPresent
+}
+if ($createRunDirectory) {
+    $runTimestamp = Get-Date -Format 'yyyyMMdd-HHmmssfff'
+    $OutputDirectory = Join-Path $outputRoot "${effectiveVersion}_$runTimestamp"
+}
+else {
+    $OutputDirectory = $outputRoot
 }
 
 $OutputDirectory = [System.IO.Path]::GetFullPath($OutputDirectory)

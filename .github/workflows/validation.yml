@@ -55,7 +55,6 @@ jobs:
         run: >
           .\tools\deployment\nugets\Build-NuGets.ps1
           -Configuration Release
-          -OutputDirectory .\artifacts\packages
           -NoRestore
           -NoBuild
 
@@ -64,8 +63,8 @@ jobs:
         with:
           name: nuget-packages
           path: |
-            artifacts/packages/*.nupkg
-            artifacts/packages/*.snupkg
+            artifacts/packages/**/*.nupkg
+            artifacts/packages/**/*.snupkg
           if-no-files-found: error
 
   containers:
@@ -141,7 +140,7 @@ jobs:
             org.opencontainers.image.title=${{ matrix.name }}
             org.opencontainers.image.description=${{ matrix.description }}
             org.opencontainers.image.vendor=CanDoItAll
-            org.opencontainers.image.licenses=LicenseRef-CanDoItAll-MIT-Derived
+            org.opencontainers.image.licenses=MIT
             org.opencontainers.image.documentation=https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/operations/containers.md
 
       - name: Build and publish image
