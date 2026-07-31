@@ -49,7 +49,7 @@ dotnet add package CanDoItAll.IPFS.Engine
 
 ## Requirements
 
-- .NET SDK `10.0.200`, with compatible patch roll-forward as pinned by `global.json`.
+- .NET SDK `10.0.302`, with compatible patch roll-forward as pinned by `global.json`.
 - Access to [nuget.org](https://www.nuget.org/) for package restore.
 - Docker Desktop or a compatible Docker Engine for container validation and local
   container workflows.

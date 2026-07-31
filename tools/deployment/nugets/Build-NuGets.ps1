@@ -53,13 +53,20 @@ function Invoke-DotNetCommand {
         [string]$Description
     )
 
-    & dotnet @Arguments
-    if ($LASTEXITCODE -ne 0) {
-        throw "$Description failed with exit code $LASTEXITCODE."
+    Push-Location -LiteralPath $repositoryRoot
+    try {
+        & dotnet @Arguments
+        if ($LASTEXITCODE -ne 0) {
+            throw "$Description failed with exit code $LASTEXITCODE."
+        }
+    }
+    finally {
+        Pop-Location
     }
 }
 
 $repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
+$globalJsonPath = Join-Path $repositoryRoot 'global.json'
 $solutionPath = Join-Path $repositoryRoot 'CanDoItAll.IPFS.slnx'
 $packageProjects = @(
     (Join-Path $repositoryRoot 'src\CanDoItAll.IPFS.Client\CanDoItAll.IPFS.Client.csproj')
@@ -67,7 +74,7 @@ $packageProjects = @(
     (Join-Path $repositoryRoot 'src\CanDoItAll.IPFS.Engine\CanDoItAll.IPFS.Engine.csproj')
 )
 
-$requiredPaths = @($solutionPath) + $packageProjects
+$requiredPaths = @($globalJsonPath, $solutionPath) + $packageProjects
 foreach ($requiredPath in $requiredPaths) {
     if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
         throw "Required packaging input was not found: '$requiredPath'."
